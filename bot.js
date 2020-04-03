@@ -40,18 +40,18 @@ bot.diceData = require("./diceData.json");
 // JOIN ME ONLINE Interval check
 setInterval(function () {
     // console.log("running removeTempOnlineRole at " + GetTimeStamp());
-    removeTempOnlineRole()
+    // removeTempOnlineRole()
 }, 60000); // 86400000 = 1day, 3600000 = 1hr, 60000 = 1min
 
 // Main Args/Response 
 bot.on('message', (message) => {
     if (!message.author.bot) {
         // console.log(message)
-        if (message.channel.type === "dm") {
-            dmArchive(message)
-        } else {
-            messageArchive(message)
-        }
+        // if (message.channel.type === "dm") {
+        //     dmArchive(message)
+        // } else {
+        //     messageArchive(message)
+        // }
     }
     if (!message.content.startsWith(PREFIX) || message.author.bot) {
         return;
