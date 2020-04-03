@@ -1,0 +1,410 @@
+[
+  {
+    "dice_Id": 1,
+    "side1": {
+      "letter": "o",
+      "emoji": ":oo:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    },
+    "side2": {
+      "letter": "t",
+      "emoji": ":tt:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side3": {
+      "letter": "d",
+      "emoji": ":dd:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side4": {
+      "letter": "p",
+      "emoji": ":pp:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side5": {
+      "letter": "j",
+      "emoji": ":jj:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    },
+    "side6": {
+      "letter": "2x",
+      "emoji": ":2x:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": true
+    }
+  },
+  {
+    "dice_Id": 2,
+    "side1": {
+      "letter": "i",
+      "emoji": ":ii:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    },
+    "side2": {
+      "letter": "r",
+      "emoji": ":rr:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side3": {
+      "letter": "c",
+      "emoji": ":cr:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side4": {
+      "letter": "f",
+      "emoji": ":ff:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side5": {
+      "letter": "e",
+      "emoji": ":eb:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    },
+    "side6": {
+      "letter": "2x",
+      "emoji": ":2x:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": true
+    }
+  },
+  {
+    "dice_Id": 3,
+    "side1": {
+      "letter": "d",
+      "emoji": ":dd:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side2": {
+      "letter": "m",
+      "emoji": ":mm:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side3": {
+      "letter": "l",
+      "emoji": ":lr:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side4": {
+      "letter": "t",
+      "emoji": ":tt:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side5": {
+      "letter": "a",
+      "emoji": ":aa:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    },
+    "side6": {
+      "letter": "h",
+      "emoji": ":hb:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    }
+  },
+  {
+    "dice_Id": 4,
+    "side1": {
+      "letter": "",
+      "emoji": ":blank:",
+      "color": "red",
+      "color_value": "1",
+      "blank": true,
+      "2x": false
+    },
+    "side2": {
+      "letter": "s",
+      "emoji": ":sr:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side3": {
+      "letter": "w",
+      "emoji": ":wr:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side4": {
+      "letter": "r",
+      "emoji": ":rr:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side5": {
+      "letter": "c",
+      "emoji": ":cb:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    },
+    "side6": {
+      "letter": "z",
+      "emoji": ":zz:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    }
+  },
+  {
+    "dice_Id": 5,
+    "side1": {
+      "letter": "u",
+      "emoji": ":uu:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    },
+    "side2": {
+      "letter": "n",
+      "emoji": ":nn:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side3": {
+      "letter": "h",
+      "emoji": ":hr:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side4": {
+      "letter": "m",
+      "emoji": ":mm:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side5": {
+      "letter": "l",
+      "emoji": ":lb:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    },
+    "side6": {
+      "letter": "2x",
+      "emoji": ":2x:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": true
+    }
+  },
+  {
+    "dice_Id": 6,
+    "side1": {
+      "letter": "t",
+      "emoji": ":tt:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side2": {
+      "letter": "b",
+      "emoji": ":bb:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side3": {
+      "letter": "g",
+      "emoji": ":gr:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side4": {
+      "letter": "s",
+      "emoji": ":sr:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side5": {
+      "letter": "q",
+      "emoji": ":qq:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    },
+    "side6": {
+      "letter": "w",
+      "emoji": ":wb:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    }
+  },
+  {
+    "dice_Id": 7,
+    "side1": {
+      "letter": "v",
+      "emoji": ":vv:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    },
+    "side2": {
+      "letter": "p",
+      "emoji": ":pp:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side3": {
+      "letter": "k",
+      "emoji": ":kk:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side4": {
+      "letter": "n",
+      "emoji": ":nn:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side5": {
+      "letter": "g",
+      "emoji": ":gb:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    },
+    "side6": {
+      "letter": "r",
+      "emoji": ":rb:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    }
+  },
+  {
+    "dice_Id": 8,
+    "side1": {
+      "letter": "",
+      "emoji": ":blank:",
+      "color": "red",
+      "color_value": "1",
+      "blank": true,
+      "2x": false
+    },
+    "side2": {
+      "letter": "f",
+      "emoji": ":ff:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side3": {
+      "letter": "e",
+      "emoji": ":er:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side4": {
+      "letter": "b",
+      "emoji": ":bb:",
+      "color": "red",
+      "color_value": "1",
+      "blank": false,
+      "2x": false
+    },
+    "side5": {
+      "letter": "y",
+      "emoji": ":yy:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    },
+    "side6": {
+      "letter": "s",
+      "emoji": ":sb:",
+      "color": "blue",
+      "color_value": "0",
+      "blank": false,
+      "2x": false
+    }
+  }
+]
