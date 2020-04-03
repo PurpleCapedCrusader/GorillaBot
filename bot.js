@@ -47,11 +47,11 @@ setInterval(function () {
 bot.on('message', (message) => {
     if (!message.author.bot) {
         // console.log(message)
-        // if (message.channel.type === "dm") {
-        //     dmArchive(message)
-        // } else {
-        //     messageArchive(message)
-        // }
+        if (message.channel.type === "dm") {
+            dmArchive(message)
+        } else {
+            messageArchive(message)
+        }
     }
     if (!message.content.startsWith(PREFIX) || message.author.bot) {
         return;
