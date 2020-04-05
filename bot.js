@@ -47,11 +47,11 @@ setInterval(function () {
 bot.on('message', (message) => {
     if (!message.author.bot) {
         // console.log(message)
-        if (message.channel.type === "dm") {
-            dmArchive(message)
-        } else {
-            messageArchive(message)
-        }
+        // if (message.channel.type === "dm") {
+        //     dmArchive(message)
+        // } else {
+        //     messageArchive(message)
+        // }
     }
     if (!message.content.startsWith(PREFIX) || message.author.bot) {
         return;
@@ -111,7 +111,7 @@ bot.on('message', (message) => {
                 return;
             }
         } else {
-            message.channel.send(`That command only works in the #eris-bot channel.`)
+            message.channel.send(`That command only works in the #gorilla-bot channel.`)
         }
     };
 
@@ -124,24 +124,49 @@ bot.on('message', (message) => {
     switch (args[0]) {
 
         case 'roll':
-            var diceArray = [1, 2, 3, 4, 5, 6, 7, 8];
-            shuffle(diceArray);
-            console.log(`diceArray = ${diceArray}`);
-            
-            // dice = (Math.floor(Math.random() * 6) + 1);
-                
-            console.log(`dice1 = ${diceArray[0]}`);
-            console.log(`dice2 = ${diceArray[1]}`);
-            console.log(`dice3 = ${diceArray[2]}`);
-            console.log(`dice4 = ${diceArray[3]}`);
-            console.log(`dice5 = ${diceArray[4]}`);
-            console.log(`dice6 = ${diceArray[5]}`);
-            console.log(`dice7 = ${diceArray[6]}`);
-            console.log(`dice8 = ${diceArray[7]}`);
+            var diceId = [0, 1, 2, 3, 4, 5, 6, 7];
+            var diceSide = [0, 1, 2, 3, 4, 5];
+            var redCount = 0;
+            var diceCount = 0;
+            var diceString = "";
+            var diceEmoji = "";
+            var blankFace = 0;
+            shuffle(diceId);
+            for (var i = 0; i < diceId.length; i++) {
+                if (redCount < 2 && diceCount < 4) {
+                shuffle(diceSide);
+                blankFace += bot.diceData[diceId[i]].sides[diceSide[0]].blank;
+                console.log(JSON.stringify(bot.diceData[diceId[i]].sides[diceSide[0]].emoji));
+
+                if (blankFace < 2) {
+                    var nextDice = bot.diceData[diceId[i]].sides[diceSide[0]].emoji;
+                    diceString = diceString.concat(`${nextDice} `);
+                    var nextEmoji = emoji(bot.diceData[diceId[i]].sides[diceSide[0]].emojiId);
+                    diceEmoji = diceEmoji.concat(`${nextEmoji} `);
+                    diceCount += 1;
+                    redCount += bot.diceData[diceId[i]].sides[diceSide[0]].color_value;
+                    console.log(`diceString = ${diceString}`);
+                    console.log(`diceCount = ${diceCount}`);
+                    console.log(`redCount = ${redCount}`);
+                } else {
+                    console.log(`DOUBLE BLANKS`);
+                    i = 0;
+                    redCount = 0;
+                    diceCount = 0;
+                    diceString = "";
+                    diceEmoji = "";
+                    blankFace = 0;
+                }
+
+                }
+            }
+            // message.channel.send(diceString);
+            message.channel.send(diceEmoji);
             break;
 
-        case 'test':
-            console.log("test");
+        case 'emojis':
+            const emojiList = message.guild.emojis.cache.map((e, x) => (x + ' = ' + e) + ' | ' +e.name).join('\n');
+            message.channel.send(emojiList);
             break;
     }
 });
@@ -193,6 +218,10 @@ bot.on('message', (message) => {
 function GetTimeStamp() {
     let now = new Date();
     return "[" + now.toLocaleString() + "]";
+}
+
+function emoji(id) {
+    return bot.emojis.cache.get(id).toString();
 }
 
 function shuffle(array) {
