@@ -8,7 +8,9 @@ const databaseCheck = require('./databaseBuilder.js');
 const fs = require("fs");
 const bot = new Discord.Client();
 const PREFIX = config.prefix;
-const {Pool} = require('pg');
+const {
+    Pool
+} = require('pg');
 const pool = new Pool(dbCreds);
 
 var dice1 = "";
@@ -57,7 +59,7 @@ bot.on('message', (message) => {
         return;
     }
 
-// Add God Role (remove old god role if exists)
+    // Add God Role (remove old god role if exists)
     // if (message.content.slice(0, 4).toLowerCase() === '!iam') {
     //     if (message.channel.name === 'eris-bot') {
     //         let lastLetter = message.content.length;
@@ -97,7 +99,7 @@ bot.on('message', (message) => {
     //     }
     // };
 
-// Add Online Role and remove after a time
+    // Add Online Role and remove after a time
     if (message.content.slice(0, 7).toLowerCase() === '!online') {
         if (message.channel.name === 'gorilla-bot') {
             const args = message.content.slice(PREFIX.length).toLowerCase().trim().split(/ +/g);
@@ -118,10 +120,37 @@ bot.on('message', (message) => {
     let args = message.content.substring(PREFIX.length).split(/ +/g);
     // console.log ("args = " + args);
     // console.log(`${message.author.username} ${message.author.discriminator} id = ${message.author.id} looked up ${args} #${godArray.indexOf(lowerCase(args[0]))} - ${GetTimeStamp()}`);
-        
-        
+
+
     args[0] = lowerCase(args[0]);
     switch (args[0]) {
+
+        case 'start':
+            var voiceChannelId = message.member.voice.channelID;
+            // var listOfPlayers = voiceChannel
+            console.log(voiceChannelId);
+            // console.log(listOfPlayers);
+            // let listOfPlayers = message.guild.voice.channelID.(voiceChannelId).members.map(m => m.user);
+            // listOfPlayers.forEach((member) => {
+            //     console.log(`member.username = ${member.username}`);
+            // });
+
+            voiceChannelId.members.forEach(function(guildMember, guildMemberId) {
+                console.log(guildMemberId, guildMember.user.username);
+                
+             })
+
+            // let membersWithRole = message.guild.roles.cache.get(online_notify_role_id).members.map(m => m.user);
+            // console.log(`membersWithRole = ${membersWithRole}`)
+            // listOfPlayers.forEach((member) => {
+            //     console.log(`member.username = ${member.username}`);
+            // };
+
+//  chimp voice = 696604903229096017
+//  gibbon voice = 696605911585783899
+//  gorilla voice = 696604177446469666
+
+            break;
 
         case 'roll':
             var diceId = [0, 1, 2, 3, 4, 5, 6, 7];
@@ -134,30 +163,29 @@ bot.on('message', (message) => {
             shuffle(diceId);
             for (var i = 0; i < diceId.length; i++) {
                 if (redCount < 2 && diceCount < 4) {
-                shuffle(diceSide);
-                blankFace += bot.diceData[diceId[i]].sides[diceSide[0]].blank;
-                console.log(JSON.stringify(bot.diceData[diceId[i]].sides[diceSide[0]].emoji));
-
-                if (blankFace < 2) {
-                    var nextDice = bot.diceData[diceId[i]].sides[diceSide[0]].emoji;
-                    diceString = diceString.concat(`${nextDice} `);
-                    var nextEmoji = emoji(bot.diceData[diceId[i]].sides[diceSide[0]].emojiId);
-                    diceEmoji = diceEmoji.concat(`${nextEmoji} `);
-                    diceCount += 1;
-                    redCount += bot.diceData[diceId[i]].sides[diceSide[0]].color_value;
-                    console.log(`diceString = ${diceString}`);
-                    console.log(`diceCount = ${diceCount}`);
-                    console.log(`redCount = ${redCount}`);
-                } else {
-                    console.log(`DOUBLE BLANKS`);
-                    i = 0;
-                    redCount = 0;
-                    diceCount = 0;
-                    diceString = "";
-                    diceEmoji = "";
-                    blankFace = 0;
-                }
-
+                    shuffle(diceSide);
+                    blankFace += bot.diceData[diceId[i]].sides[diceSide[0]].blank;
+                    console.log(JSON.stringify(bot.diceData[diceId[i]].sides[diceSide[0]].emoji));
+                    if (blankFace < 2) {
+                        var nextDice = bot.diceData[diceId[i]].sides[diceSide[0]].emoji;
+                        diceString = diceString.concat(`${nextDice} `);
+                        var nextEmoji = emoji(bot.diceData[diceId[i]].sides[diceSide[0]].emojiId);
+                        diceEmoji = diceEmoji.concat(`${nextEmoji} `);
+                        diceCount += 1;
+                        redCount += bot.diceData[diceId[i]].sides[diceSide[0]].color_value;
+                        console.log(`diceString = ${diceString}`);
+                        console.log(`diceString = ${diceEmoji}`);
+                        console.log(`diceCount = ${diceCount}`);
+                        console.log(`redCount = ${redCount}`);
+                    } else {
+                        console.log(`DOUBLE BLANKS`);
+                        i = 0;
+                        redCount = 0;
+                        diceCount = 0;
+                        diceString = "";
+                        diceEmoji = "";
+                        blankFace = 0;
+                    }
                 }
             }
             // message.channel.send(diceString);
@@ -165,55 +193,54 @@ bot.on('message', (message) => {
             break;
 
         case 'emojis':
-            const emojiList = message.guild.emojis.cache.map((e, x) => (x + ' = ' + e) + ' | ' +e.name).join('\n');
+            const emojiList = message.guild.emojis.cache.map((e, x) => (x + ' = ' + e) + ' | ' + e.name).join('\n');
             message.channel.send(emojiList);
             break;
     }
 });
 
 // GOD INFO - MUST GO LAST BECAUSE IT TAKES ALL CASES
-        //     case (args[0]):
-        //         var arrayLength = godArray.length;
-        //         for (var i = 0; i < arrayLength; i++) {
-        //             //console.log(godArray[i]);
-        //             if (godArray[i] == (lowerCase(args[0]))) {
-        //                 var godSearched = godArray.indexOf(lowerCase(args[0]));
-        //                 //console.log("godSearched = " + godSearched);
-        //                 // console.log("args[1] = " + args[1]);
-        //                 if (bot.godData[godSearched].update == "Updated") {
-        //                     const embed = new Discord.MessageEmbed()
-        //                         .attachFiles(['../ErisBot/images/' + (bot.godData[godSearched].imageName) + '.jpg'])
-        //                         .setColor("0x" + bot.godData[godSearched].borderColor)
-        //                         .addField(bot.godData[godSearched].name, bot.godData[godSearched].title + "\n\u200b")
-        //                         .addField('Ability(updated):', bot.godData[godSearched].updatedAbilityFormatted + "\n\u200b")
-        //                         .addField('Ability(original):', bot.godData[godSearched].originalAbilityFormatted + "\n\u200b")
-        //                         .addField('Banned Opponents:', bot.godData[godSearched].banned + "\n\u200b")
-        //                         .addField('Character Category:', bot.godData[godSearched].group + "\n\u200b")
-        //                         .addField('App Availability:', bot.godData[godSearched].inAppPurchase + "\n\u200b")
-        //                         .addField('Compatible with', bot.godData[godSearched].compatability)
-        //                         .setThumbnail('attachment://' + (bot.godData[godSearched].imageName) + '.jpg');
-        //                     message.channel.send(embed).catch(console.error);
-        //                     break;
-        //                 } else if (bot.godData[godSearched].update == "Same") {
-        //                     const embed = new Discord.MessageEmbed()
-        //                         .attachFiles(['../ErisBot/images/' + (bot.godData[godSearched].imageName) + '.jpg'])
-        //                         .setColor("0x" + bot.godData[godSearched].borderColor)
-        //                         .addField(bot.godData[godSearched].name, bot.godData[godSearched].title + "\n\u200b")
-        //                         .addField('Ability:', bot.godData[godSearched].originalAbilityFormatted + "\n\u200b")
-        //                         .addField('Banned Opponents:', bot.godData[godSearched].banned + "\n\u200b")
-        //                         .addField('Character Category:', bot.godData[godSearched].group + "\n\u200b")
-        //                         .addField('App Availability:', bot.godData[godSearched].inAppPurchase + "\n\u200b")
-        //                         .addField('Compatible with', bot.godData[godSearched].compatability)
-        //                         .setThumbnail('attachment://' + (bot.godData[godSearched].imageName) + '.jpg');
-        //                     message.channel.send(embed).catch(console.error);
-        //                     break;
-        //                 } else {
-        //                     break;
-        //                 }
-        //             }
-        //         }
-        // // }
-
+//     case (args[0]):
+//         var arrayLength = godArray.length;
+//         for (var i = 0; i < arrayLength; i++) {
+//             //console.log(godArray[i]);
+//             if (godArray[i] == (lowerCase(args[0]))) {
+//                 var godSearched = godArray.indexOf(lowerCase(args[0]));
+//                 //console.log("godSearched = " + godSearched);
+//                 // console.log("args[1] = " + args[1]);
+//                 if (bot.godData[godSearched].update == "Updated") {
+//                     const embed = new Discord.MessageEmbed()
+//                         .attachFiles(['../ErisBot/images/' + (bot.godData[godSearched].imageName) + '.jpg'])
+//                         .setColor("0x" + bot.godData[godSearched].borderColor)
+//                         .addField(bot.godData[godSearched].name, bot.godData[godSearched].title + "\n\u200b")
+//                         .addField('Ability(updated):', bot.godData[godSearched].updatedAbilityFormatted + "\n\u200b")
+//                         .addField('Ability(original):', bot.godData[godSearched].originalAbilityFormatted + "\n\u200b")
+//                         .addField('Banned Opponents:', bot.godData[godSearched].banned + "\n\u200b")
+//                         .addField('Character Category:', bot.godData[godSearched].group + "\n\u200b")
+//                         .addField('App Availability:', bot.godData[godSearched].inAppPurchase + "\n\u200b")
+//                         .addField('Compatible with', bot.godData[godSearched].compatability)
+//                         .setThumbnail('attachment://' + (bot.godData[godSearched].imageName) + '.jpg');
+//                     message.channel.send(embed).catch(console.error);
+//                     break;
+//                 } else if (bot.godData[godSearched].update == "Same") {
+//                     const embed = new Discord.MessageEmbed()
+//                         .attachFiles(['../ErisBot/images/' + (bot.godData[godSearched].imageName) + '.jpg'])
+//                         .setColor("0x" + bot.godData[godSearched].borderColor)
+//                         .addField(bot.godData[godSearched].name, bot.godData[godSearched].title + "\n\u200b")
+//                         .addField('Ability:', bot.godData[godSearched].originalAbilityFormatted + "\n\u200b")
+//                         .addField('Banned Opponents:', bot.godData[godSearched].banned + "\n\u200b")
+//                         .addField('Character Category:', bot.godData[godSearched].group + "\n\u200b")
+//                         .addField('App Availability:', bot.godData[godSearched].inAppPurchase + "\n\u200b")
+//                         .addField('Compatible with', bot.godData[godSearched].compatability)
+//                         .setThumbnail('attachment://' + (bot.godData[godSearched].imageName) + '.jpg');
+//                     message.channel.send(embed).catch(console.error);
+//                     break;
+//                 } else {
+//                     break;
+//                 }
+//             }
+//         }
+// // }
 
 function GetTimeStamp() {
     let now = new Date();
@@ -225,22 +252,23 @@ function emoji(id) {
 }
 
 function shuffle(array) {
-    var currentIndex = array.length, temporaryValue, randomIndex;
-  
+    var currentIndex = array.length,
+        temporaryValue, randomIndex;
+
     // While there remain elements to shuffle...
     while (0 !== currentIndex) {
-  
-      // Pick a remaining element...
-      randomIndex = Math.floor(Math.random() * currentIndex);
-      currentIndex -= 1;
-  
-      // And swap it with the current element.
-      temporaryValue = array[currentIndex];
-      array[currentIndex] = array[randomIndex];
-      array[randomIndex] = temporaryValue;
+
+        // Pick a remaining element...
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+
+        // And swap it with the current element.
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
     }
     return array;
-  }
+}
 
 // async function removeTempOnlineRole() {
 //     ;
