@@ -36,11 +36,11 @@ bot.diceData = require("./diceData.json");
 bot.on('message', (message) => {
     if (!message.author.bot) {
         // console.log(message)
-        if (message.channel.type === "dm") {
-            dmArchive(message)
-        } else {
-            messageArchive(message)
-        }
+        // if (message.channel.type === "dm") {
+        //     dmArchive(message)
+        // } else {
+        //     messageArchive(message)
+        // }
     }
 
     if (!message.content.startsWith(PREFIX) || message.author.bot) {
@@ -69,12 +69,17 @@ bot.on('message', (message) => {
     // console.log ("args = " + args);
     // console.log(`${message.author.username} ${message.author.discriminator} id = ${message.author.id} looked up ${args} #${godArray.indexOf(lowerCase(args[0]))} - ${GetTimeStamp()}`);
 
-
     args[0] = lowerCase(args[0]);
     switch (args[0]) {
 
+        case 'emojis':
+            const emojiList = message.guild.emojis.cache.map((e, x) => (x + ' = ' + e) + ' | ' + e.name).join('\n');
+            message.channel.send(emojiList);
+            break;
+
         case 'roll':
         case '🦍':
+        case'🎲':
             console.log(`message.member.voice.channel = ${message.member.voice.channel}`)
             if (message.member.voice.channel != null) {
                 console.log(`message.member.voice.channel.members.size = ${message.member.voice.channel.members.size}`)
@@ -83,7 +88,9 @@ bot.on('message', (message) => {
                     message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
                         console.log(guildMemberId, guildMember.user.username);
                         if (message.member.id != guildMemberId) {
-                            message.channel.send(`<@${guildMemberId}>: ${rollDice()}`);
+                            let playersDice = rollDice();
+                            message.channel.send(`<@${guildMemberId}>: ${playersDice}`);
+                            // guildMember.send(`${playersDice}`);
                         }
                     })
                 } else {
@@ -94,12 +101,18 @@ bot.on('message', (message) => {
             }
             break;
 
-        case 'emojis':
-            const emojiList = message.guild.emojis.cache.map((e, x) => (x + ' = ' + e) + ' | ' + e.name).join('\n');
-            message.channel.send(emojiList);
+        case 'reset':
+            resetTable();
             break;
     }
 });
+
+function resetTable() {
+    // !setgameroom by admin updates game room database and sets channel as a game room 
+    // if last message in a game room is older than 10 minutes, post game/bot guide
+
+
+}
 
 function rollDice() {
     var diceId = [0, 1, 2, 3, 4, 5, 6, 7];
