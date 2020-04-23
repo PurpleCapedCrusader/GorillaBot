@@ -10,6 +10,61 @@ async function createDatabaseTablesIfNotExist() {
     (async () => {
         const client = await pool.connect()
         try {
+            console.log(`creating tables`);
+            await client.query(`CREATE TABLE IF NOT EXISTS public.games
+            (
+                game_id SERIAL NOT NULL,
+                game_is_active boolean NOT NULL,
+                readable_timestamp character varying(30) COLLATE pg_catalog."default",
+                message_timestamp bigint,
+                guild_name character varying(32) COLLATE pg_catalog."default",
+                guild_id bigint,
+                category_name character varying(32) COLLATE pg_catalog."default",
+                category_id bigint,
+                text_channel_id bigint,
+                voice_channel_id bigint,
+                message_id bigint,
+                author_id bigint,
+                author_username character varying(32) COLLATE pg_catalog."default",
+                CONSTRAINT game_id_pkey PRIMARY KEY (game_id)
+            )
+            WITH (
+                OIDS = FALSE
+            )
+            TABLESPACE pg_default;
+            ALTER TABLE public.message_archive
+                OWNER to ${config.connUser};`)
+
+            await client.query(`CREATE TABLE IF NOT EXISTS public.turns
+            (
+                turns_id SERIAL NOT NULL,
+                game_session_id int,
+                game_is_active boolean,
+                turn_is_active boolean,
+                readable_timestamp character varying(30) COLLATE pg_catalog."default",
+                message_timestamp bigint,
+                category_name character varying(32) COLLATE pg_catalog."default",
+                category_id bigint,
+                text_channel_id bigint,
+                voice_channel_id bigint,
+                message_id bigint,
+                active_player_id bigint,
+                active_player_username character varying(32) COLLATE pg_catalog."default",
+                player_id bigint,
+                player_username character varying(32) COLLATE pg_catalog."default",
+                letters_given character varying(250) COLLATE pg_catalog."default",
+                title_tagline character varying(250) COLLATE pg_catalog."default",
+                title_tagline_is_submitted boolean NOT NULL,
+                point_earned int,
+                CONSTRAINT turns_id_pkey PRIMARY KEY (turns_id)
+            )
+            WITH (
+                OIDS = FALSE
+            )
+            TABLESPACE pg_default;
+            ALTER TABLE public.message_archive
+                OWNER to ${config.connUser};`)
+
             await client.query(`CREATE TABLE IF NOT EXISTS public.dm_archive
             (
                 dm_archive_id SERIAL NOT NULL,
@@ -23,8 +78,7 @@ async function createDatabaseTablesIfNotExist() {
             WITH (
                 OIDS = FALSE
             )
-            TABLESPACE pg_default;
-            
+            TABLESPACE pg_default;            
             ALTER TABLE public.dm_archive
                 OWNER to ${config.connUser};`)
 
@@ -47,10 +101,10 @@ async function createDatabaseTablesIfNotExist() {
             WITH (
                 OIDS = FALSE
             )
-            TABLESPACE pg_default;
-            
+            TABLESPACE pg_default;            
             ALTER TABLE public.message_archive
                 OWNER to ${config.connUser};`)
+                
         } catch (e) {
             await client.query('ROLLBACK')
             throw e
