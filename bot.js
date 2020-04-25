@@ -4,9 +4,9 @@ var dbCreds = require('./dbCreds.js');
 var lowerCase = require('lower-case');
 var gameRooms = require('./gameRooms.js');
 const databaseCheck = require('./databaseBuilder.js');
-// const fs = require("fs");
-// var check = require('check-types');
-// const express = require('express');
+const fs = require("fs");
+var check = require('check-types');
+const express = require('express');
 const bot = new Discord.Client();
 const PREFIX = config.prefix;
 const {
@@ -104,15 +104,17 @@ bot.on('message', (message) => {
                     let voiceChannelIndex = gameRooms.voiceChannels.indexOf(message.member.voice.channel.name);
                     if (gameRooms.textChannels.indexOf(message.channel.name) >= 0 && gameRooms.textChannels.indexOf(message.channel.name) <= gameRooms.textChannels.length && textChannelIndex === voiceChannelIndex) {
                         if (message.member.voice.channel.members.size >= 2) { //TODO update to 3 upon deploy
-                            let gameIsActive = getGameId(message).then((x => console.log(`returned from .then is: ${x}`)));
-
-                            if (gameIsActive != null || gameIsActive == undefined) {
-                                console.log(`inside case roll - roll_for_game - gameIsActive = ${gameIsActive}`);
-                                roll_for_game(message);
-                            } else {
-                                console.log(`inside case roll - rollDice - gameIsActive = ${gameIsActive}`);
-                                message.channel.send(rollDice());
-                            }
+                            gameIsInProgress(message)
+                                .then(results => {
+                                    gameIs = results;
+                                    console.log(`inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`);
+                                    if (gameIs == "true") {
+                                        roll_for_game(message);
+                                    } else {
+                                        message.channel.send(`Once all players are in the voice channel, use the **!start** command to start a game.`)
+                                    }
+                                })
+                                .catch(err => console.error(err));
                         } else {
                             message.channel.send(rollDice());
                         }
@@ -138,31 +140,17 @@ bot.on('message', (message) => {
                             message.member.voice.channel.parent.children.forEach(function (channel_id) {
                                 console.log(channel_id.name, channel_id.id);
                             });
-
-                            (async () => {
-                                var gameIsActive = await gameIsInProgress(message);
-                                console.log(`anon immediate async = ${gameIsActive}`)
-                                return gameIsActive;
-                            })();
-
-                            // // (async () => {
-                            //     var gameIsActive = gameIsInProgress(message);
-                            //     console.log(`anon immediate async = ${gameIsActive}`)
-                            //     // return gameIsActive;
-                            // // })();
-
-
-                            // ;
-                            // (async () => {
-                            //     const {
-                            //         rows
-                            //     } = await pool.query('SELECT game_id FROM public.games WHERE category_id = $1 AND game_is_active = true', [message.channel.parent.id])
-                            //     console.log('new code - game_id:', rows[0])
-                            // })().catch(err =>
-                            //     setImmediate(() => {
-                            //         throw err
-                            //     })
-                            // )
+                                gameIsInProgress(message)
+                                .then(results => {
+                                    gameIs = results;
+                                    console.log(`inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`);
+                                    if (gameIs == true) {
+                                        message.channel.send(`This table is in use. Please choose a different table or use the **!reset** command to close the current game.`)
+                                    } else {
+                                        startGame(message);
+                                    }
+                                })
+                                .catch(err => console.error(err));
                         } else {
                             message.channel.send(`To start a game, there must be at least 3 players using the text and voice channels from the same game room.`);
                             console.log(`!START FAILED: Not enough players`);
@@ -190,82 +178,38 @@ function clean(text) {
     }
 }
 
-function dmAnswerFromPlayer() {
-    // if message came from a member in a current game, log it in the database
-    // if all players in that game have sent their answer post them to the channel as individual messages
-    // when one of the messages gets an emoji, send the player's name to the channel and add a point tho that player's score.
-}
-
 function emoji(id) {
     return bot.emojis.cache.get(id).toString();
 }
 
 async function gameIsInProgress(message) {
-    ;
-    (async () => {
-        const client = await pool.connect()
-        try {
-            let gameIsActive = Boolean;
-            const query = await client.query(`SELECT * FROM public.games WHERE category_id = ${message.member.voice.channel.parent.id} AND game_is_active = true ORDER BY message_timestamp DESC LIMIT 1`)
-            query.rows.forEach(row => {
-                console.log(`game_id = ${row.game_id}, category_name = ${row.category_name}, game_is_active = ${row.game_is_active}`);
-                gameIsActive = row.game_is_active;
-            })
-            if (gameIsActive == true) {
-                message.channel.send(`There is already a game in progress at this table.`);
-            } else {
-                startGame(message);
-            }
-        } catch (e) {
-            await client.query('ROLLBACK')
-            throw e
-        } finally {
-            client.release()
-        }
-    })().catch(err => console.log(err.stack))
+    const client = await pool.connect()
+    const result = await client.query({
+        rowMode: 'array',
+        text:`SELECT game_is_active FROM public.games WHERE category_id = ${message.member.voice.channel.parent.id} ORDER BY message_timestamp DESC LIMIT 1`,
+    })
+    await client.release()
+    console.log(`gameIsInProgres result.rows = ${result.rows}`);
+    if (result.rows.length === 0) {
+        return false;
+    } else {
+        return result.rows;
+    }
 }
 
-// function gameIsInProgress(message) {
-//     const client = pool.connect()
-//     let gameIsActive = Boolean;
-//     const query = client.query(`SELECT * FROM public.games WHERE category_id = ${message.member.voice.channel.parent.id} AND game_is_active = true ORDER BY message_timestamp DESC LIMIT 1`)
-//     query.rows.forEach(row => {
-//         console.log(`game_id = ${row.game_id}, category_name = ${row.category_name}, game_is_active = ${row.game_is_active}`);
-//         gameIsActive = row.game_is_active;
-//     })
-//     client.release()
-//     if (gameIsActive == true) {
-//         message.channel.send(`There is already a game in progress at this table.`);
-//         return gameIsActive;
-//     } else {
-//         startGame(message);
-//         return gameIsActive;
-//     }
-// }
-
 async function getGameId(message) {
-    // ;
-    // (async () => {
     const client = await pool.connect()
-    try {
-        // let game_id = "";
-        const query = await client.query({
-            rowMode: 'array',
-            text: `SELECT game_id FROM public.games WHERE category_id = ${message.member.voice.channel.parent.id} AND game_is_active = true ORDER BY message_timestamp DESC LIMIT 1;`
-        })
-        console.log(query.fields[0].name)
-        await query.rows.forEach(row => {
-            console.log(`getGame_Id row.game_id = ${row.game_id}`);
-            // return row.game_id;
-            return (row.game_id);
-        })
-    } catch (e) {
-        console.log(e.stack)
-        throw e
-    } finally {
-        client.release()
+    const result = await client.query({
+        rowMode: 'array',
+        text: `SELECT game_id FROM public.games WHERE category_id = ${message.member.voice.channel.parent.id} AND game_is_active = true ORDER BY message_timestamp DESC LIMIT 1;`
+    })
+    await client.release()
+    console.log(`getGameId result.rows = ${result.rows}`);
+    if (result.rows.length === 0) {
+        return false;
+    } else {
+        return result.rows;
     }
-    // })().catch(err => console.log(err.stack))
 }
 
 function GetTimeStamp() {
@@ -274,26 +218,22 @@ function GetTimeStamp() {
 }
 
 async function resetTable(message) {
-    ;
-    (async () => {
-        const client = await pool.connect()
-        try {
-            const query = await client.query(`SELECT * FROM public.games WHERE category_id = ${message.channel.parent.id} AND game_is_active = true`)
-            query.rows.forEach(row => {
-                client.query(`UPDATE public.games SET game_is_active = false WHERE game_id = ${row.game_id}`)
-                client.query(`UPDATE public.turns SET game_is_active = false WHERE game_session_id = ${row.game_id}`)
-                client.query(`UPDATE public.turns SET turn_is_active = false WHERE game_session_id = ${row.game_id}`)
-            })
-            message.channel.send(`The ${message.channel.parent.name} is ready for a new game. Use !start to begin.`)
-        } catch (e) {
-            await client.query('ROLLBACK')
-            throw e
-        } finally {
-            // Make sure to release the client before any error handling,
-            // just in case the error handling itself throws an error.
-            client.release()
-        }
-    })().catch(err => console.log(err.stack))
+    const client = await pool.connect()
+    try {
+        const query = await client.query(`SELECT * FROM public.games WHERE category_id = ${message.channel.parent.id} AND game_is_active = true`)
+        query.rows.forEach(row => {
+            client.query(`UPDATE public.games SET game_is_active = false WHERE game_id = ${row.game_id}`)
+            client.query(`UPDATE public.turns SET game_is_active = false WHERE game_session_id = ${row.game_id}`)
+            client.query(`UPDATE public.turns SET turn_is_active = false WHERE game_session_id = ${row.game_id}`)
+        })
+        message.channel.send(`The ${message.channel.parent.name} is ready for a new game. Use !start to begin.`)
+    } catch(err){
+        console.log(err.stack)
+        await client.query('ROLLBACK')
+        throw err
+    } finally {
+        client.release()
+    }
 }
 
 function rollDice() {
@@ -398,57 +338,53 @@ function shuffle(array) {
 }
 
 async function startGame(message) {
-    ;
-    (async () => {
-        const client = await pool.connect()
-        try {
-            const prepGameStart = {
-                'game_is_active': true,
-                'readable_timestamp': GetTimeStamp(),
-                'message_timestamp': message.createdTimestamp,
-                'guild_name': message.guild.name,
-                'guild_id': message.guild.id,
-                'category_name': message.member.voice.channel.parent.name,
-                'category_id': message.member.voice.channel.parent.id,
-                'text_channel_id': message.channel.id,
-                'voice_channel_id': message.member.voice.channel.id,
-                'message_id': message.id,
-                'author_id': message.author.id,
-                'author_username': message.author.username
-            }
-            await client.query('BEGIN')
-            const insertGameStartText = 'INSERT INTO public.games(game_is_active, readable_timestamp, message_timestamp, guild_name, guild_id, category_name, category_id, text_channel_id, voice_channel_id, message_id, author_id, author_username) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)'
-            const insertGameStartValues = [prepGameStart.game_is_active, prepGameStart.readable_timestamp, prepGameStart.message_timestamp, prepGameStart.guild_name, prepGameStart.guild_id, prepGameStart.category_name, prepGameStart.category_id, prepGameStart.text_channel_id, prepGameStart.voice_channel_id, prepGameStart.message_id, prepGameStart.author_id, prepGameStart.author_username]
-            await client.query(insertGameStartText, insertGameStartValues)
-            await client.query('COMMIT')
-            message.channel.send(`Starting Gorilla Marketing.`);
-            message.channel.send(`TODO: add rules and bot instructions.`);
-        } catch (e) {
-            await client.query('ROLLBACK')
-            throw e
-        } finally {
-            client.release()
+    const client = await pool.connect()
+    try {
+        const prepGameStart = {
+            'game_is_active': true,
+            'readable_timestamp': GetTimeStamp(),
+            'message_timestamp': message.createdTimestamp,
+            'guild_name': message.guild.name,
+            'guild_id': message.guild.id,
+            'category_name': message.member.voice.channel.parent.name,
+            'category_id': message.member.voice.channel.parent.id,
+            'text_channel_id': message.channel.id,
+            'voice_channel_id': message.member.voice.channel.id,
+            'message_id': message.id,
+            'author_id': message.author.id,
+            'author_username': message.author.username
         }
-    })().catch(err => console.log(err.stack))
+        await client.query('BEGIN')
+        const insertGameStartText = 'INSERT INTO public.games(game_is_active, readable_timestamp, message_timestamp, guild_name, guild_id, category_name, category_id, text_channel_id, voice_channel_id, message_id, author_id, author_username) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)'
+        const insertGameStartValues = [prepGameStart.game_is_active, prepGameStart.readable_timestamp, prepGameStart.message_timestamp, prepGameStart.guild_name, prepGameStart.guild_id, prepGameStart.category_name, prepGameStart.category_id, prepGameStart.text_channel_id, prepGameStart.voice_channel_id, prepGameStart.message_id, prepGameStart.author_id, prepGameStart.author_username]
+        await client.query(insertGameStartText, insertGameStartValues)
+        await client.query('COMMIT')
+        message.channel.send(`Starting Gorilla Marketing.`);
+        message.channel.send(`TODO: add rules and bot instructions.`);
+    } catch(err){
+        console.log(err.stack)
+        await client.query('ROLLBACK')
+        throw err
+    } finally {
+        client.release()
+    }
 }
 
 async function titleTaglineFromPlayer(message) {
-    // console.log(`INSIDE titleTaglineFromPlayer function`);
-    ;
-    (async () => {
-        const client = await pool.connect()
-        try {
-            let titleTagline = clean(message.content);
-            console.log(`${message.author.username} sent ${titleTagline}`);
-            client.query(`UPDATE public.turns SET title_tagline = $$${titleTagline}$$ WHERE player_id = ${message.author.id} AND title_tagline_is_submitted = false AND turn_is_active = true And message_timestamp = (SELECT MAX(message_timestamp) from public.turns);`)
-            client.query(`UPDATE public.turns SET title_tagline_is_submitted = true WHERE player_id = ${message.author.id} AND title_tagline_is_submitted = false;`)
-        } catch (e) {
-            await client.query('ROLLBACK')
-            throw e
-        } finally {
-            client.release()
-        }
-    })().catch(err => console.log(err.stack))
+    const client = await pool.connect()
+    try {
+        let titleTagline = clean(message.content);
+        console.log(`${message.author.username} sent ${titleTagline}`);
+        client.query(`UPDATE public.turns SET title_tagline = $$${titleTagline}$$ WHERE player_id = ${message.author.id} AND title_tagline_is_submitted = false AND turn_is_active = true And message_timestamp = (SELECT MAX(message_timestamp) from public.turns);`)
+        client.query(`UPDATE public.turns SET title_tagline_is_submitted = true WHERE player_id = ${message.author.id} AND title_tagline_is_submitted = false;`)
+        
+    } catch(err){
+        console.log(err.stack)
+        await client.query('ROLLBACK')
+        throw err
+    } finally {
+        client.release()
+    }
 }
 
 async function updateStatus() {
@@ -477,61 +413,57 @@ async function updateStatus() {
 }
 
 async function messageArchive(message) {
-    ;
-    (async () => {
-        const client = await pool.connect()
-        try {
-            const prepMessageArchive = {
-                'readable_timestamp': GetTimeStamp(),
-                'guild_name': message.guild.name,
-                'guild_id': message.guild.id,
-                'channel_name': message.channel.name,
-                'channel_id': message.channel.id,
-                'message_id': message.id,
-                'author_id': message.author.id,
-                'author_username': message.author.username,
-                'member_nickname': message.member.nickname,
-                'message_timestamp': message.createdTimestamp,
-                'message_content': message.mentions._content
-            }
-            await client.query('BEGIN')
-            const insertMessageArchiveText = 'INSERT INTO public.message_archive(readable_timestamp, guild_name, guild_id, channel_name, channel_id, message_id, author_id, author_username, member_nickname, message_timestamp, message_content) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)'
-            const insertMessageArchiveValues = [prepMessageArchive.readable_timestamp, prepMessageArchive.guild_name, prepMessageArchive.guild_id, prepMessageArchive.channel_name, prepMessageArchive.channel_id, prepMessageArchive.message_id, prepMessageArchive.author_id, prepMessageArchive.author_username, prepMessageArchive.member_nickname, prepMessageArchive.message_timestamp, prepMessageArchive.message_content]
-            await client.query(insertMessageArchiveText, insertMessageArchiveValues)
-            await client.query('COMMIT')
-        } catch (e) {
-            await client.query('ROLLBACK')
-            throw e
-        } finally {
-            client.release()
+    const client = await pool.connect()
+    try {
+        const prepMessageArchive = {
+            'readable_timestamp': GetTimeStamp(),
+            'guild_name': message.guild.name,
+            'guild_id': message.guild.id,
+            'channel_name': message.channel.name,
+            'channel_id': message.channel.id,
+            'message_id': message.id,
+            'author_id': message.author.id,
+            'author_username': message.author.username,
+            'member_nickname': message.member.nickname,
+            'message_timestamp': message.createdTimestamp,
+            'message_content': message.mentions._content
         }
-    })().catch(err => console.log(err.stack))
+        await client.query('BEGIN')
+        const insertMessageArchiveText = 'INSERT INTO public.message_archive(readable_timestamp, guild_name, guild_id, channel_name, channel_id, message_id, author_id, author_username, member_nickname, message_timestamp, message_content) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)'
+        const insertMessageArchiveValues = [prepMessageArchive.readable_timestamp, prepMessageArchive.guild_name, prepMessageArchive.guild_id, prepMessageArchive.channel_name, prepMessageArchive.channel_id, prepMessageArchive.message_id, prepMessageArchive.author_id, prepMessageArchive.author_username, prepMessageArchive.member_nickname, prepMessageArchive.message_timestamp, prepMessageArchive.message_content]
+        await client.query(insertMessageArchiveText, insertMessageArchiveValues)
+        await client.query('COMMIT')
+    } catch(err){
+        console.log(err.stack)
+        await client.query('ROLLBACK')
+        throw err
+    } finally {
+        client.release()
+    }
 }
 
 async function dmArchive(message) {
-    ;
-    (async () => {
-        const client = await pool.connect()
-        try {
-            const prepDmArchive = {
-                'readable_timestamp': GetTimeStamp(),
-                'author_username': message.author.username,
-                'author_id': message.author.id,
-                'message_timestamp': message.createdTimestamp,
-                'message_content': message.content
-            }
-            await client.query('BEGIN')
-            const insertDmArchiveText = 'INSERT INTO public.dm_archive(readable_timestamp, author_username, author_id, message_timestamp, message_content) VALUES ($1, $2, $3, $4, $5)'
-            const insertDmArchiveValues = [prepDmArchive.readable_timestamp, prepDmArchive.author_username, prepDmArchive.author_id, prepDmArchive.message_timestamp, prepDmArchive.message_content]
-            await client.query(insertDmArchiveText, insertDmArchiveValues)
-            await client.query('COMMIT')
-        } catch (e) {
-            await client.query('ROLLBACK')
-            throw e
-        } finally {
-            client.release()
+    const client = await pool.connect()
+    try {
+        const prepDmArchive = {
+            'readable_timestamp': GetTimeStamp(),
+            'author_username': message.author.username,
+            'author_id': message.author.id,
+            'message_timestamp': message.createdTimestamp,
+            'message_content': message.content
         }
-    })().catch(err => console.log(err.stack))
+        await client.query('BEGIN')
+        const insertDmArchiveText = 'INSERT INTO public.dm_archive(readable_timestamp, author_username, author_id, message_timestamp, message_content) VALUES ($1, $2, $3, $4, $5)'
+        const insertDmArchiveValues = [prepDmArchive.readable_timestamp, prepDmArchive.author_username, prepDmArchive.author_id, prepDmArchive.message_timestamp, prepDmArchive.message_content]
+        await client.query(insertDmArchiveText, insertDmArchiveValues)
+        await client.query('COMMIT')
+    } catch(err){
+        console.log(err.stack)
+        await client.query('ROLLBACK')
+        throw err
+    } finally {
+        client.release()
+    }
 }
 // Super Secret Token!!!
 bot.login(config.token);
