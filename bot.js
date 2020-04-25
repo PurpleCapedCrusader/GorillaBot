@@ -168,6 +168,12 @@ bot.on('message', (message) => {
     }
 });
 
+function banana() {  // TODO
+    // if emoji from active player and text from an active turn
+    // add 1 to score
+    // update all turn_is_active in that channel to false
+}
+
 function clean(text) {
     if (typeof (text) === "string") {
         console.log(`clean() input`);
@@ -271,11 +277,14 @@ function rollDice() {
 
 function roll_for_game(message) {
     message.channel.send(`${message.member}: **ACTIVE PLAYER**`);
+    // TODO:
+    // SELECT title_tagline WHERE active_player_id = message.member.id AND game_is_active = true AND point_earned = 1;
+    // if not null
+    // message.channel.send(`${title_tagline}`);
     message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
         console.log(guildMemberId, guildMember.user.username);
         if (message.member.id != guildMemberId) {
             let playersDice = rollDice();
-            // message.channel.send(`<@${guildMemberId}>: ||${playersDice}||`);
             guildMember.send(`${playersDice}`);;
             (async () => {
                 const client = await pool.connect()
@@ -373,11 +382,40 @@ async function startGame(message) {
 async function titleTaglineFromPlayer(message) {
     const client = await pool.connect()
     try {
+        //TODO check for already submitted
         let titleTagline = clean(message.content);
         console.log(`${message.author.username} sent ${titleTagline}`);
-        client.query(`UPDATE public.turns SET title_tagline = $$${titleTagline}$$ WHERE player_id = ${message.author.id} AND title_tagline_is_submitted = false AND turn_is_active = true And message_timestamp = (SELECT MAX(message_timestamp) from public.turns);`)
-        client.query(`UPDATE public.turns SET title_tagline_is_submitted = true WHERE player_id = ${message.author.id} AND title_tagline_is_submitted = false;`)
-        
+        await client.query(`UPDATE public.turns SET title_tagline = $$${titleTagline}$$ WHERE player_id = ${message.author.id} AND turn_is_active = true And message_timestamp = (SELECT MAX(message_timestamp) from public.turns);`)
+        await client.query(`UPDATE public.turns SET title_tagline_is_submitted = true WHERE player_id = ${message.author.id} AND title_tagline_is_submitted = false;`)
+        const gameSessionID = await client.query({
+            rowMode: 'array',
+            text:`SELECT game_session_id FROM public.turns WHERE title_tagline = $$${titleTagline}$$ AND turn_is_active = true LIMIT 1`,
+        })
+        const playerCount = await client.query({
+            rowMode: 'array',
+            text:`SELECT turns_id FROM public.turns WHERE game_session_id = ${gameSessionID.rows} AND turn_is_active = true`,
+        })
+        const taglineCount = await client.query({
+            rowMode: 'array',
+            text:`SELECT turns_id FROM public.turns WHERE game_session_id = ${gameSessionID.rows} AND turn_is_active = true AND title_tagline_is_submitted = true`,
+        })
+        // console.log(`gameSessionID = ${gameSessionID.rows}`);
+        // console.log(`playerCount = ${playerCount.rows.length}`);
+        // console.log(`taglinecount = ${taglineCount.rows.length}`);
+        if (playerCount.rows.length == taglineCount.rows.length){
+            // console.log("message sending");
+            const allTaglines = await client.query(`SELECT * FROM public.turns WHERE game_session_id = ${gameSessionID.rows} AND turn_is_active = true ORDER BY RANDOM()`)
+            // const allTaglines = await client.query(`SELECT text_channel_id, letters_given, title_tagline FROM public.turns WHERE game_session_id = ${gameSessionID.rows} AND turn_is_active = true ORDER BY RANDOM()`)
+            allTaglines.rows.forEach(row => {
+                // console.log(`${row.text_channel_id}  ::  ${row.letters_given}: ${row.title_tagline}`);
+                bot.channels.fetch(`${row.text_channel_id}`)
+                .then(results => {
+                    gameChannel = results;
+                    gameChannel.send(`${row.letters_given}: ${row.title_tagline}`);
+                })
+                .catch(err => console.error(err));
+            })
+        }
     } catch(err){
         console.log(err.stack)
         await client.query('ROLLBACK')
@@ -396,9 +434,8 @@ async function updateStatus() {
         "Donkey Kong Barrel Blast",
         "Mario Kart",
         "Gorilla Marketing",
-        "GRASS: Bananaham",
+        "GRASS: Birnanaham",
         "Donkey Kong Jr.",
-        "Zooloretto: The Gorilla",
         "Banana Blast",
         "Cheeky Monkey",
         "Monkey Madness",
