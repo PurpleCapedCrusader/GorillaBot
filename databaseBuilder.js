@@ -56,6 +56,7 @@ async function createDatabaseTablesIfNotExist() {
                 title_tagline character varying(250) COLLATE pg_catalog."default",
                 title_tagline_is_submitted boolean NOT NULL,
                 point_earned int,
+                dice_and_tagline character varying(500) COLLATE pg_catalog."default",
                 CONSTRAINT turns_id_pkey PRIMARY KEY (turns_id)
             )
             WITH (

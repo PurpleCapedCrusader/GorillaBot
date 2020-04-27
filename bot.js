@@ -30,7 +30,7 @@ bot.on("error", (e) => console.error(`${GetTimeStamp()} :: ${e}`));
 bot.on("warn", (e) => console.warn(`${GetTimeStamp()} :: ${e}`));
 bot.on("debug", (e) => console.info(`${GetTimeStamp()} :: ${e}`));
 
-// Link to God data
+// Link to dice data
 bot.diceData = require("./diceData.json");
 
 // JOIN ME ONLINE Interval check
@@ -45,7 +45,9 @@ bot.on('message', (message) => {
         // console.log(message)
         if (message.channel.type === "dm") {
             dmArchive(message);
-            titleTaglineFromPlayer(message);
+            if (!message.content.startsWith(PREFIX) || message.author.bot) {
+                titleTaglineFromPlayer(message);
+            };
         } else {
             messageArchive(message)
         }
@@ -57,7 +59,7 @@ bot.on('message', (message) => {
 
     let args = message.content.substring(PREFIX.length).split(/ +/g);
     // console.log ("args = " + args);
-    // console.log(`${message.author.username} ${message.author.discriminator} id = ${message.author.id} looked up ${args} #${godArray.indexOf(lowerCase(args[0]))} - ${GetTimeStamp()}`);
+    console.log(`${message.author.username} ${message.author.discriminator} id = ${message.author.id} looked up ${args} - ${GetTimeStamp()}`);
 
     args[0] = lowerCase(args[0]);
     switch (args[0]) {
@@ -127,6 +129,11 @@ bot.on('message', (message) => {
             }
             break;
 
+            case 'score': //TODO
+            case '🍌':
+                //  check and display score
+                break;
+
         case 'start':
             if (message.channel.type === "dm") {
                 message.author.send(`That command doesn't work in direct messages.`)
@@ -144,7 +151,7 @@ bot.on('message', (message) => {
                                 .then(results => {
                                     gameIs = results;
                                     console.log(`inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`);
-                                    if (gameIs == true) {
+                                    if (gameIs == "true") {
                                         message.channel.send(`This table is in use. Please choose a different table or use the **!reset** command to close the current game.`)
                                     } else {
                                         startGame(message);
@@ -165,6 +172,77 @@ bot.on('message', (message) => {
                 }
             }
             break;
+    }
+});
+
+bot.on('messageReactionAdd', async (reaction, user) => {
+	// When we receive a reaction we check if the reaction is partial or not
+	if (reaction.partial) {
+		// If the message this reaction belongs to was removed the fetching might result in an API error, which we need to handle
+		try {
+			await reaction.fetch();
+		} catch (error) {
+			console.log('Something went wrong when fetching the message: ', error);
+			// Return as `reaction.message.author` may be undefined/null
+			return;
+		}
+    }
+    console.log(`reaction.message.content = ${reaction.message.content}`);
+    console.log(`reaction.message.channel.id = ${reaction.message.channel.id}`);
+    const client = await pool.connect()
+    try {
+
+
+        
+// TODO: CHECK FOR ANY POINTS GIVEN ALREADY
+
+
+        const activePlayerId = await client.query({
+            rowMode: 'array',
+            text: `SELECT active_player_id FROM public.turns WHERE dice_and_tagline = $$${reaction.message.content}$$ AND game_is_active = true ORDER BY message_timestamp DESC LIMIT 1;`
+        })
+        if (activePlayerId.rows == user.id) { 
+            await client.query(`UPDATE public.turns SET point_earned = 1 WHERE active_player_id = ${user.id} AND dice_and_tagline = $$${reaction.message.content}$$ AND point_earned = 0;`)
+            // reaction.remove();
+        }
+    } catch(err){
+        console.log(err.stack)
+        await client.query('ROLLBACK')
+        throw err
+    } finally {
+        client.release()
+    }
+});
+
+bot.on('messageReactionRemove', async (reaction, user) => {
+	// When we receive a reaction we check if the reaction is partial or not
+	if (reaction.partial) {
+		// If the message this reaction belongs to was removed the fetching might result in an API error, which we need to handle
+		try {
+			await reaction.fetch();
+		} catch (error) {
+			console.log('Something went wrong when fetching the message: ', error);
+			// Return as `reaction.message.author` may be undefined/null
+			return;
+		}
+    }
+    console.log(`reaction.message.content = ${reaction.message.content}`);
+    console.log(`reaction.message.channel.id = ${reaction.message.channel.id}`);
+    const client = await pool.connect()
+    try {
+        const activePlayerId = await client.query({
+            rowMode: 'array',
+            text: `SELECT active_player_id FROM public.turns WHERE dice_and_tagline = $$${reaction.message.content}$$ AND game_is_active = true ORDER BY message_timestamp DESC LIMIT 1;`
+        })
+        if (activePlayerId.rows == user.id) { 
+            await client.query(`UPDATE public.turns SET point_earned = 0 WHERE active_player_id = ${user.id} AND dice_and_tagline = $$${reaction.message.content}$$ AND point_earned = 1;`)
+        }
+    } catch(err){
+        console.log(err.stack)
+        await client.query('ROLLBACK')
+        throw err
+    } finally {
+        client.release()
     }
 });
 
@@ -203,21 +281,6 @@ async function gameIsInProgress(message) {
     }
 }
 
-async function getGameId(message) {
-    const client = await pool.connect()
-    const result = await client.query({
-        rowMode: 'array',
-        text: `SELECT game_id FROM public.games WHERE category_id = ${message.member.voice.channel.parent.id} AND game_is_active = true ORDER BY message_timestamp DESC LIMIT 1;`
-    })
-    await client.release()
-    console.log(`getGameId result.rows = ${result.rows}`);
-    if (result.rows.length === 0) {
-        return false;
-    } else {
-        return result.rows;
-    }
-}
-
 function GetTimeStamp() {
     let now = new Date();
     return "[" + now.toLocaleString() + "]";
@@ -231,6 +294,7 @@ async function resetTable(message) {
             client.query(`UPDATE public.games SET game_is_active = false WHERE game_id = ${row.game_id}`)
             client.query(`UPDATE public.turns SET game_is_active = false WHERE game_session_id = ${row.game_id}`)
             client.query(`UPDATE public.turns SET turn_is_active = false WHERE game_session_id = ${row.game_id}`)
+            client.query(`UPDATE public.turns SET title_tagline_is_submitted = true WHERE game_session_id = ${row.game_id}`)
         })
         message.channel.send(`The ${message.channel.parent.name} is ready for a new game. Use !start to begin.`)
     } catch(err){
@@ -281,6 +345,17 @@ function roll_for_game(message) {
     // SELECT title_tagline WHERE active_player_id = message.member.id AND game_is_active = true AND point_earned = 1;
     // if not null
     // message.channel.send(`${title_tagline}`);
+    (async () => {
+        const client = await pool.connect()
+        try {
+            await client.query(`UPDATE public.turns SET turn_is_active = false WHERE text_channel_id = ${message.channel.id};`)
+        } catch (e) {
+            await client.query('ROLLBACK')
+            throw e
+        } finally {
+            client.release()
+        }
+    });
     message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
         console.log(guildMemberId, guildMember.user.username);
         if (message.member.id != guildMemberId) {
@@ -289,7 +364,7 @@ function roll_for_game(message) {
             (async () => {
                 const client = await pool.connect()
                 try {
-                    const query = await client.query(`SELECT game_id FROM public.games WHERE category_id = ${message.member.voice.channel.parent.id} AND game_is_active = true ORDER BY message_timestamp DESC LIMIT 1`)
+                    const query = await client.query(`SELECT game_id FROM public.games WHERE category_id = ${message.member.voice.channel.parent.id} AND game_is_active = true ORDER BY message_timestamp DESC LIMIT 1;`)
                     query.rows.forEach(row => {
                         game_id = row.game_id;
                     })
@@ -382,13 +457,27 @@ async function startGame(message) {
 async function titleTaglineFromPlayer(message) {
     const client = await pool.connect()
     try {
+        console.log(`titleTaglineFromPlayer => message.type = ${message.author.id}`);
+        const titleTaglineIsSubmitted = await client.query({
+            rowMode: 'array',
+            text: `SELECT title_tagline_is_submitted FROM public.turns WHERE player_id = ${message.author.id} ORDER BY message_timestamp DESC LIMIT 1;`
+        })
+        console.log(`titleTaglineFromPlayer => titleTaglineIsSubmitted.rows = ${titleTaglineIsSubmitted.rows}`);
+        if (titleTaglineIsSubmitted.rows == "true") { 
+            return
+        } 
         //TODO check for already submitted
         let titleTagline = clean(message.content);
         console.log(`${message.author.username} sent ${titleTagline}`);
         await client.query(`UPDATE public.turns SET title_tagline = $$${titleTagline}$$ WHERE player_id = ${message.author.id} AND turn_is_active = true And message_timestamp = (SELECT MAX(message_timestamp) from public.turns);`)
+        const lettersGiven = await client.query({
+            rowMode: 'array',           
+            text:`SELECT letters_given FROM public.turns WHERE title_tagline = $$${titleTagline}$$ AND turn_is_active = true LIMIT 1`,
+        })
+        await client.query(`UPDATE public.turns SET dice_and_tagline = $$${lettersGiven.rows}: ${titleTagline}$$ WHERE player_id = ${message.author.id} AND turn_is_active = true And message_timestamp = (SELECT MAX(message_timestamp) from public.turns);`)
         await client.query(`UPDATE public.turns SET title_tagline_is_submitted = true WHERE player_id = ${message.author.id} AND title_tagline_is_submitted = false;`)
         const gameSessionID = await client.query({
-            rowMode: 'array',
+            rowMode: 'array',           
             text:`SELECT game_session_id FROM public.turns WHERE title_tagline = $$${titleTagline}$$ AND turn_is_active = true LIMIT 1`,
         })
         const playerCount = await client.query({
@@ -402,7 +491,7 @@ async function titleTaglineFromPlayer(message) {
         // console.log(`gameSessionID = ${gameSessionID.rows}`);
         // console.log(`playerCount = ${playerCount.rows.length}`);
         // console.log(`taglinecount = ${taglineCount.rows.length}`);
-        if (playerCount.rows.length == taglineCount.rows.length){
+        if (playerCount.rows.length == taglineCount.rows.length) {
             // console.log("message sending");
             const allTaglines = await client.query(`SELECT * FROM public.turns WHERE game_session_id = ${gameSessionID.rows} AND turn_is_active = true ORDER BY RANDOM()`)
             // const allTaglines = await client.query(`SELECT text_channel_id, letters_given, title_tagline FROM public.turns WHERE game_session_id = ${gameSessionID.rows} AND turn_is_active = true ORDER BY RANDOM()`)
@@ -425,6 +514,21 @@ async function titleTaglineFromPlayer(message) {
     }
 }
 
+async function turnIsInProgress(message) {
+    console.log(`turnIsInProgress message.member = ${message.member}`);
+    const client = await pool.connect()
+    const result = await client.query({
+        rowMode: 'array',
+        text: `SELECT turn_is_active FROM public.games WHERE category_id = ${message.member.voice.channel.parent.id} ORDER BY message_timestamp DESC LIMIT 1;`
+    })
+    await client.release()
+    console.log(`turnIsInProgress result.rows = ${result.rows}`);
+    if (result.rows.length === 0) {
+        return false;
+    } else {
+        return result.rows;
+    }
+}
 async function updateStatus() {
     var statusArray = [
         "Barrel of Monkeys",
