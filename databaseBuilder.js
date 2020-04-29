@@ -24,6 +24,7 @@ async function createDatabaseTablesIfNotExist() {
                 text_channel_id bigint,
                 voice_channel_id bigint,
                 message_id bigint,
+                game_theme character varying(32) COLLATE pg_catalog."default",
                 author_id bigint,
                 author_username character varying(32) COLLATE pg_catalog."default",
                 CONSTRAINT game_id_pkey PRIMARY KEY (game_id)
@@ -32,7 +33,7 @@ async function createDatabaseTablesIfNotExist() {
                 OIDS = FALSE
             )
             TABLESPACE pg_default;
-            ALTER TABLE public.message_archive
+            ALTER TABLE public.games
                 OWNER to ${config.connUser};`)
 
             await client.query(`CREATE TABLE IF NOT EXISTS public.turns
@@ -48,6 +49,7 @@ async function createDatabaseTablesIfNotExist() {
                 text_channel_id bigint,
                 voice_channel_id bigint,
                 message_id bigint,
+                game_theme character varying(32) COLLATE pg_catalog."default",
                 active_player_id bigint,
                 active_player_username character varying(32) COLLATE pg_catalog."default",
                 player_id bigint,
@@ -63,7 +65,31 @@ async function createDatabaseTablesIfNotExist() {
                 OIDS = FALSE
             )
             TABLESPACE pg_default;
-            ALTER TABLE public.message_archive
+            ALTER TABLE public.turns
+                OWNER to ${config.connUser};`)
+
+            await client.query(`CREATE TABLE IF NOT EXISTS public.gameLeaflet 
+            (
+                gameLeaflet_id SERIAL NOT NULL,
+                game_session_id int,
+                game_is_active boolean,
+                player_id bigint,
+                turns_as_active_player int,
+                theme_category_roll int,
+                title_judge_roll int,
+                title_judge_choice int,
+                tagline_judge_roll int,
+                tagline_judge_choice int,
+                category_id bigint,
+                text_channel_id bigint,
+                voice_channel_id bigint,
+                CONSTRAINT gameLeaflet_id_pkey PRIMARY KEY (gameLeaflet_id)
+            )
+            WITH (
+                OIDS = FALSE
+            )
+            TABLESPACE pg_default;
+            ALTER TABLE public.gameLeaflet
                 OWNER to ${config.connUser};`)
 
             await client.query(`CREATE TABLE IF NOT EXISTS public.dm_archive
