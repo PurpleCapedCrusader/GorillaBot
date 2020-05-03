@@ -17,7 +17,7 @@ const pool = new Pool(dbCreds);
 // var diceActivePlayer = "<:aa:693193020866297886><:cr:693193020572565527><:tt:693193021373546528><:ii:693193021100916836><:vv:693193021319282798><:er:693193020870492246>  <:pp:693193021260300288><:lr:693193021360963664><:aa:693193020866297886><:yy:693193021516415017><:er:693193020870492246><:rr:693193020958310462>";
 
 bot.on('ready', () => {
-    console.log(`${GetTimeStamp()} :: GorillaBot is ready to serve on ${bot.guilds.cache.size} servers, for ${bot.users.cache.size} users.`)
+    console.log(`${getTimeStamp()} :: GorillaBot is ready to serve on ${bot.guilds.cache.size} servers, for ${bot.users.cache.size} users.`)
     bot.user.setActivity("Gorilla Marketing", {
         type: "Playing"
     }); //TODO: get status working
@@ -25,18 +25,18 @@ bot.on('ready', () => {
 });
 
 // error catch-all
-bot.on("error", (e) => console.error(`${GetTimeStamp()} :: ${e}`));
-bot.on("warn", (e) => console.warn(`${GetTimeStamp()} :: ${e}`));
-bot.on("debug", (e) => console.info(`${GetTimeStamp()} :: ${e}`));
+bot.on("error", (e) => console.error(`${getTimeStamp()} :: ${e}`));
+bot.on("warn", (e) => console.warn(`${getTimeStamp()} :: ${e}`));
+bot.on("debug", (e) => console.info(`${getTimeStamp()} :: ${e}`));
 
 // Link to game data
 bot.diceData = require("./diceData.json");
 bot.leafletData = require("./leafletData.json");
 
-setInterval(function () {
-    // console.log("running removeTempOnlineRole at " + GetTimeStamp());
-    // updateStatus()  
-}, 3000); // 86400000 = 1day, 3600000 = 1hr, 60000 = 1min
+// setInterval(function () {
+//     // console.log("running removeTempOnlineRole at " + GetTimeStamp());
+//     // updateStatus()  
+// }, 3000); // 86400000 = 1day, 3600000 = 1hr, 60000 = 1min
 
 // Main Args/Response 
 bot.on('message', (message) => {
@@ -58,7 +58,7 @@ bot.on('message', (message) => {
 
     let args = message.content.substring(PREFIX.length).split(/ +/g);
     // console.log ("args = " + args);
-    console.log(`${message.author.username} ${message.author.discriminator} id = ${message.author.id} looked up ${args} - ${GetTimeStamp()}`);
+    console.log(`${message.author.username} ${message.author.discriminator} id = ${message.author.id} looked up ${args} - ${getTimeStamp()}`);
 
     args[0] = lowerCase(args[0]);
     switch (args[0]) {
@@ -90,7 +90,13 @@ bot.on('message', (message) => {
             if (message.channel.type === "dm") {
                 message.author.send(`That command doesn't work in direct messages.`)
             } else {
-                resetTable(message);
+                getGameId(message)
+                    .then(results => {
+                        gameId = results;
+                        if (gameId != false) {
+                            resetTable(gameId);
+                        }
+                    })
             }
             break;
 
@@ -105,15 +111,34 @@ bot.on('message', (message) => {
                     let voiceChannelIndex = gameRooms.voiceChannels.indexOf(message.member.voice.channel.name);
                     if (gameRooms.textChannels.indexOf(message.channel.name) >= 0 && gameRooms.textChannels.indexOf(message.channel.name) <= gameRooms.textChannels.length && textChannelIndex === voiceChannelIndex) {
                         if (message.member.voice.channel.members.size >= 2) { //TODO update to 3 upon deploy
-                            gameIsInProgress(message)
+                            playerTurnsTaken(message)
                                 .then(results => {
-                                    gameIs = results;
-                                    console.log(`inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`);
-                                    if (gameIs == "true") {
-                                        endTurn(message)
-                                            .then(roll_for_game(message));
-                                    } else {
-                                        message.channel.send(`Once all players are in the voice channel, use the **!start** command to start a game.`)
+                                    turnsTaken = results;
+                                    console.log(`inside case roll -> playerTurnsTaken() -> turnsTaken = ${turnsTaken}`);
+                                    if (turnsTaken >= 2) {
+                                        message.channel.send(`${message.member}: You've already been the Active Player twice.`)
+                                        return;
+                                    } else if (turnsTaken < 2) {
+                                        gameIsInProgress(message)
+                                            .then(results => {
+                                                gameIs = results;
+                                                console.log(`inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`);
+                                                if (gameIs == "true") {
+                                                    turnIsInProgress(message)
+                                                        .then(results => {
+                                                            turnIs = results;
+                                                            console.log(`inside case roll -> turnIsInProgress() -> turnIs = ${turnIs}`);
+                                                            if (turnIs == true) {
+                                                                message.channel.send(`The Active Player must use a reaction emoji on the winning title or tagline before the next player can !roll.`)
+                                                            } else {
+                                                                endTurn(message)
+                                                                    .then(roll_for_game(message));
+                                                            }
+                                                        });
+                                                } else {
+                                                    message.channel.send(`Once all players are in the voice channel, use the **!start** command to start a game.`)
+                                                }
+                                            })
                                     }
                                 })
                                 .catch(err => console.error(err));
@@ -129,9 +154,27 @@ bot.on('message', (message) => {
             }
             break;
 
-        case 'score': //TODO
+        case 'score':
         case '🍌':
-            //  check and display score
+            if (message.channel.type === "dm") {
+                message.author.send(`That command doesn't work in direct messages.`)
+            } else {
+                (async () => {
+                    const client = await pool.connect()
+                    try {
+                        const gameSessionId = await client.query({
+                            rowMode: 'array',
+                            text: `SELECT game_session_id FROM public.turns WHERE text_channel_id = ${message.channel.id} AND turn_is_active = true ORDER BY message_timestamp DESC LIMIT 1;`,
+                        })
+                        let gameId = gameSessionId.rows;
+                        score(gameId);
+                    } catch (e) {
+                        throw e
+                    } finally {
+                        client.release()
+                    }
+                })().catch(err => console.log(err.stack))
+            }
             break;
 
         case 'movies':
@@ -196,13 +239,10 @@ bot.on('messageReactionAdd', async (reaction, user) => {
     console.log(`reaction.message.content = ${reaction.message.content}`);
     console.log(`reaction.message.channel.id = ${reaction.message.channel.id}`);
     console.log(`reaction.message.channel.type = ${reaction.message.channel.type}`);
-    console.log(`reaction = ${reaction}`);
     console.log(`user.id = ${user.id}`);
-    console.log(`reaction.me = ${reaction.me}`);
 
     const client = await pool.connect()
     try {
-
         if (reaction.message.channel.type == "dm") {
             const turnIsActive = await client.query({
                 rowMode: 'array',
@@ -210,21 +250,25 @@ bot.on('messageReactionAdd', async (reaction, user) => {
             })
             const turnAsActivePlayer = await client.query({
                 rowMode: 'array',
-                text: `SELECT turns_as_active_player FROM public.gameLeaflet WHERE player_id = ${user.id} AND game_is_active = true ORDER BY gameleaflet_id DESC LIMIT 1;`
+                text: `SELECT turns_as_active_player FROM public.game_leaflet WHERE player_id = ${user.id} AND game_is_active = true ORDER BY game_leaflet_id DESC LIMIT 1;`
             })
-
+            const gameSessionID = await client.query({
+                rowMode: 'array',
+                text: `SELECT game_session_id FROM public.game_leaflet WHERE player_id = ${user.id} AND game_is_active = true ORDER BY game_leaflet_id DESC LIMIT 1`,
+            })
             console.log(`pre turnAsActivePlayer = ${turnAsActivePlayer.rows}`)
             console.log(`turnIsActive.rows = ${turnIsActive.rows}`)
             if (turnIsActive.rows == "true") {
                 if (turnAsActivePlayer.rows == 1) {
                     console.log(`turnAsActivePlayer = ${turnAsActivePlayer.rows}`)
-                    await client.query(`UPDATE public.gameLeaflet SET title_judge_choice = $$${reaction.message.content}$$ WHERE player_id = ${user.id} AND game_is_active = true;`)
+                    await client.query(`UPDATE public.game_leaflet SET title_judge_choice = $$${reaction.message.content}$$ WHERE player_id = ${user.id} AND game_is_active = true;`)
                 }
                 if (turnAsActivePlayer.rows == 2) {
                     console.log(`turnAsActivePlayer = ${turnAsActivePlayer.rows}`)
-                    await client.query(`UPDATE public.gameLeaflet SET tagline_judge_choice = $$${reaction.message.content}$$ WHERE player_id = ${user.id} AND game_is_active = true;`)
+                    await client.query(`UPDATE public.game_leaflet SET tagline_judge_choice = $$${reaction.message.content}$$ WHERE player_id = ${user.id} AND game_is_active = true;`)
                 }
             }
+            sendToTextChannel(gameSessionID.rows);
         }
         if (reaction.message.channel.type != "dm") {
             const pointAlreadyGiven = await client.query(`SELECT point_earned FROM public.turns WHERE active_player_id = ${user.id} AND text_channel_id = ${reaction.message.channel.id} AND turn_is_active = true`)
@@ -240,11 +284,51 @@ bot.on('messageReactionAdd', async (reaction, user) => {
                 rowMode: 'array',
                 text: `SELECT active_player_id FROM public.turns WHERE dice_and_tagline = $$${reaction.message.content}$$ AND turn_is_active = true ORDER BY message_timestamp DESC LIMIT 1;`
             })
+            const turnWinnerData = await client.query(`SELECT * FROM public.turns WHERE dice_and_tagline = $$${reaction.message.content}$$ AND turn_is_active = true ORDER BY message_timestamp DESC LIMIT 1;`)
+            turnWinnerData.rows.forEach(row => {
+                gameSessionId = row.game_session_id;
+                playerId = row.player_id;
+            })
             if (activePlayerId.rows == user.id) {
                 await client.query(`UPDATE public.turns SET point_earned = 1 WHERE active_player_id = ${user.id} AND dice_and_tagline = $$${reaction.message.content}$$ AND point_earned = 0;`)
+                const total_points = await client.query({
+                    rowMode: 'array',
+                    text: `SELECT total_points FROM public.game_leaflet WHERE game_session_id = ${gameSessionId} AND player_id = ${playerId};`
+                })
+                let playerPoints = parseInt(total_points.rows);
+                playerPoints += 1;
+                await client.query(`UPDATE public.game_leaflet SET total_points = ${playerPoints} WHERE game_session_id = ${gameSessionId} AND player_id = ${playerId}`)
 
-                // if all players turns_as_active_player == 2, scores();
-
+                const turnWinnerData = await client.query(`SELECT * FROM public.turns WHERE dice_and_tagline = $$${reaction.message.content}$$ AND turn_is_active = true ORDER BY message_timestamp DESC LIMIT 1;`)
+                turnWinnerData.rows.forEach(row => {
+                    gameSessionId = row.game_session_id;
+                    playerId = row.player_id;
+                    textChannelId = row.text_channel_id;
+                })
+                const total_players = await client.query({
+                    rowMode: 'array',
+                    text: `SELECT game_leaflet_id FROM public.game_leaflet WHERE game_session_id = ${gameSessionId};`
+                })
+                const twoTurns = await client.query({
+                    rowMode: 'array',
+                    text: `SELECT game_leaflet_id FROM public.game_leaflet WHERE game_session_id = ${gameSessionId} AND turns_as_active_player = 2;`
+                })
+                console.log(`total_players.rows.length = ${total_players.rows.length}`)
+                console.log(`twoTurns.rows.length = ${twoTurns.rows.length}`)
+                console.log(`gameSessionId = ${gameSessionId}`)
+                if (total_players.rows.length === twoTurns.rows.length) {
+                    bot.channels.fetch(`${textChannelId}`)
+                        .then(results => {
+                            gameChannel = results;
+                            gameChannel.send(`\n\u200b\n\u200b**Final Score:**`);
+                        })
+                        .then(
+                            score(gameSessionId)
+                        )
+                        .then(
+                            resetTable(gameSessionId)
+                        )
+                }
             }
         }
     } catch (err) {
@@ -314,6 +398,25 @@ async function endTurn(message) {
     }
 }
 
+async function getGameId(message) {
+    const client = await pool.connect()
+    try {
+        const gameSessionId = await client.query({
+            rowMode: 'array',
+            text: `SELECT game_id FROM public.games WHERE text_channel_id = ${message.channel.id} ORDER BY message_timestamp DESC LIMIT 1;`,
+        })
+        if (gameSessionId.rows.length === 0) {
+            return false;
+        } else {
+            return gameSessionId.rows;
+        }
+    } catch (e) {
+        throw e
+    } finally {
+        client.release()
+    }
+}
+
 async function gameIsInProgress(message) {
     const client = await pool.connect()
     const result = await client.query({
@@ -329,23 +432,46 @@ async function gameIsInProgress(message) {
     }
 }
 
-function GetTimeStamp() {
+function getTimeStamp() {
     let now = new Date();
     return "[" + now.toLocaleString() + "]";
 }
 
-async function resetTable(message) {
+async function playerTurnsTaken(message) {
     const client = await pool.connect()
     try {
-        const query = await client.query(`SELECT * FROM public.games WHERE category_id = ${message.channel.parent.id} AND game_is_active = true`)
-        query.rows.forEach(row => {
-            client.query(`UPDATE public.games SET game_is_active = false WHERE game_id = ${row.game_id}`)
-            client.query(`UPDATE public.turns SET game_is_active = false WHERE game_session_id = ${row.game_id}`)
-            client.query(`UPDATE public.turns SET turn_is_active = false WHERE game_session_id = ${row.game_id}`)
-            client.query(`UPDATE public.turns SET title_tagline_is_submitted = true WHERE game_session_id = ${row.game_id}`)
-            client.query(`UPDATE public.gameLeaflet SET game_is_active = false WHERE game_session_id = ${row.game_id}`)
+        const numberOfTurns = await client.query({
+            rowMode: 'array',
+            text: `SELECT turns_as_active_player FROM public.game_leaflet WHERE player_id = ${message.member.id} AND game_is_active = true;`,
         })
-        message.channel.send(`The ${message.channel.parent.name} is ready.\n\u200bType **!Bands**, **!College Courses**, **!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or **!Products** to choose your theme.`)
+        return numberOfTurns.rows;
+    } catch (e) {
+        throw e
+    } finally {
+        client.release()
+    }
+}
+
+async function resetTable(gameId) { // change to accept gameId
+    const client = await pool.connect()
+    try {
+        // const query = await client.query(`SELECT * FROM public.games WHERE category_id = ${message.channel.parent.id} AND game_is_active = true`)
+        // query.rows.forEach(row => {
+        const textChannelId = await client.query({
+            rowMode: 'array',
+            text: `SELECT text_channel_id FROM public.games WHERE game_id = ${gameId} ORDER BY message_timestamp DESC LIMIT 1;`,
+        })
+        client.query(`UPDATE public.games SET game_is_active = false WHERE game_id = ${gameId}`)
+        client.query(`UPDATE public.turns SET game_is_active = false WHERE game_session_id = ${gameId}`)
+        client.query(`UPDATE public.turns SET turn_is_active = false WHERE game_session_id = ${gameId}`)
+        client.query(`UPDATE public.turns SET title_tagline_is_submitted = true WHERE game_session_id = ${gameId}`)
+        client.query(`UPDATE public.game_leaflet SET game_is_active = false WHERE game_session_id = ${gameId}`)
+        // })
+        bot.channels.fetch(`${textChannelId.rows}`)
+            .then(results => {
+                gameChannel = results;
+                gameChannel.send(`\n\u200b\n\u200bType **!Bands**, **!College Courses**, **!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or **!Products** to choose your theme.`);
+            })
     } catch (err) {
         console.log(err.stack)
         await client.query('ROLLBACK')
@@ -392,10 +518,7 @@ function roll_for_game(message) {
     (async () => {
         const client = await pool.connect()
         try {
-
-            //TODO: if public.games game_id isn't in public.turns, allow roll. If active_turn with no points earned, don't allow roll... send message to choose a winner first.
-
-            const gameLeafletData = await client.query(`SELECT * FROM public.gameLeaflet WHERE player_id = ${message.member.id} AND game_is_active = true`)
+            const gameLeafletData = await client.query(`SELECT * FROM public.game_leaflet WHERE player_id = ${message.member.id} AND game_is_active = true`)
             gameLeafletData.rows.forEach(row => {
                 gameSessionId = row.game_session_id;
                 gameIsActive = row.game_is_active;
@@ -412,10 +535,10 @@ function roll_for_game(message) {
             }
             if (turnsAsActivePlayer == 0) {
                 turnsAsActivePlayer += 1;
-                await client.query(`UPDATE public.gameLeaflet SET turns_as_active_player = 1 WHERE player_id = ${message.member.id} AND game_is_active = true;`)
+                await client.query(`UPDATE public.game_leaflet SET turns_as_active_player = 1 WHERE player_id = ${message.member.id} AND game_is_active = true;`)
             } else if (turnsAsActivePlayer == 1) {
                 turnsAsActivePlayer += 1;
-                await client.query(`UPDATE public.gameLeaflet SET turns_as_active_player = 2 WHERE player_id = ${message.member.id} AND game_is_active = true;`)
+                await client.query(`UPDATE public.game_leaflet SET turns_as_active_player = 2 WHERE player_id = ${message.member.id} AND game_is_active = true;`)
                 const roundOneWinner = await client.query({
                     rowMode: 'array',
                     text: `SELECT title_tagline FROM public.turns WHERE active_player_id = ${message.member.id} AND game_is_active = true AND point_earned = 1 ORDER BY message_timestamp DESC LIMIT 1;`,
@@ -424,7 +547,7 @@ function roll_for_game(message) {
             }
             const gameTheme = await client.query({
                 rowMode: 'array',
-                text: `SELECT game_theme FROM public.games WHERE category_id = ${message.member.voice.channel.parent.id} AND game_is_active = true ORDER BY message_timestamp DESC LIMIT 1;`,
+                text: `SELECT game_theme FROM public.games WHERE category_id = ${message.member.voice.channel.parent.id} AND game_is_active = true ORDER BY message_timestamp DESC LIMIT 1;`, //TODO: make this more simple
             })
             let gameThemeRows = gameTheme.rows;
             let themeCategoryText = bot.leafletData[gameThemeRows]["category"][themeCategory];
@@ -437,6 +560,8 @@ function roll_for_game(message) {
                 message.channel.send(`Winning Title: **${winningTitle}**`);
             }
             message.channel.send(`${message.member}: **ACTIVE PLAYER**`);
+
+            // TODO: check public.game_leaflet for users in game instead of voice channel
             message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
                 if (message.member.id == guildMemberId) {
                     guildMember.send(`**Add a reaction to the award you choose to give.**`)
@@ -450,6 +575,7 @@ function roll_for_game(message) {
                     }
                 }
             });
+            //TODO: get list of players from public.game_leaflet instead of members in voice channel
             message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
                 console.log(guildMemberId, guildMember.user.username);
                 if (message.member.id != guildMemberId) {
@@ -471,7 +597,7 @@ function roll_for_game(message) {
                                 'game_session_id': parseInt(gameId.rows),
                                 'game_is_active': true,
                                 'turn_is_active': true,
-                                'readable_timestamp': GetTimeStamp(),
+                                'readable_timestamp': getTimeStamp(),
                                 'message_timestamp': message.createdTimestamp,
                                 'category_name': message.member.voice.channel.parent.name,
                                 'category_id': message.member.voice.channel.parent.id,
@@ -511,8 +637,81 @@ function roll_for_game(message) {
     })().catch(err => console.log(err.stack))
 }
 
-async function score() {
-//  TODO: create!!
+function score(gameId) {
+    (async () => {
+        const client = await pool.connect()
+        const gameLeafletData = await client.query(`SELECT * FROM public.game_leaflet WHERE game_session_id = ${gameId}`); // AND game_is_active = true
+        gameLeafletData.rows.forEach(row => {
+            bot.channels.fetch(`${row.text_channel_id}`)
+                .then(results => {
+                    let bananaScore = "";
+                    if (row.total_points === 0) {
+                        bananaScore = "<:blank:693193020455125094> ";
+                    }
+                    for (var i = 1; i <= row.total_points; i++) {
+                        bananaScore = bananaScore.concat(":banana:");
+                    }
+                    gameChannel = results;
+                    gameChannel.send(`<@${row.player_id}>: ${bananaScore}`);
+                })
+        });
+        // gameChannel.send(`\n\u200b\n\u200b`);
+    })().catch(err => console.log(err.stack))
+}
+
+async function sendToTextChannel(gameSessionID) {
+    const client = await pool.connect()
+    const playerCount = await client.query({
+        rowMode: 'array',
+        text: `SELECT turns_id FROM public.turns WHERE game_session_id = ${gameSessionID} AND turn_is_active = true`,
+    });
+    const activePlayer = await client.query({
+        rowMode: 'array',
+        text: `SELECT active_player_id FROM public.turns WHERE game_session_id = ${gameSessionID} AND turn_is_active = true ORDER BY message_timestamp DESC LIMIT 1`,
+    });
+    const taglineCount = await client.query({
+        rowMode: 'array',
+        text: `SELECT turns_id FROM public.turns WHERE game_session_id = ${gameSessionID} AND turn_is_active = true AND title_tagline_is_submitted = true`,
+    });
+    const gameLeafletData = await client.query(`SELECT * FROM public.game_leaflet WHERE player_id = ${activePlayer.rows} AND game_session_id = ${gameSessionID}`);
+    gameLeafletData.rows.forEach(row => {
+        turnsAsActivePlayer = row.turns_as_active_player;
+        titleJudge = row.title_judge_choice;
+        taglineJudge = row.tagline_judge_choice;
+        textChannelId = row.text_channel_id;
+    });
+    var awardChoice;
+    console.log(`turnsAsActivePlayer = ${turnsAsActivePlayer}`);
+    console.log(`titleJudge = ${titleJudge}`);
+    console.log(`taglineJudge = ${taglineJudge}`);
+    console.log(`textChannelId = ${textChannelId}`);
+    if (turnsAsActivePlayer == 1) {
+        awardChoice = titleJudge;
+    }
+    if (turnsAsActivePlayer == 2) {
+        awardChoice = taglineJudge;
+    }
+    if (awardChoice != null) {
+        if (playerCount.rows.length == taglineCount.rows.length) {
+            bot.channels.fetch(`${textChannelId}`)
+                .then(results => {
+                    textChannel = results;
+                    console.log(`textChannel = ${textChannel}`);
+                    textChannel.send(`Award: **${awardChoice}**`);
+                })
+                .catch(err => console.error(err));
+            const allTaglines = await client.query(`SELECT * FROM public.turns WHERE game_session_id = ${gameSessionID} AND turn_is_active = true ORDER BY RANDOM()`);
+            allTaglines.rows.forEach(row => {
+                bot.channels.fetch(`${row.text_channel_id}`)
+                    .then(results => {
+                        gameChannel = results;
+                        console.log(`gameChannel = ${gameChannel}`);
+                        gameChannel.send(`${row.letters_given}: ${row.title_tagline}`);
+                    })
+                    .catch(err => console.error(err));
+            });
+        }
+    }
 }
 
 function shuffle(array) {
@@ -536,11 +735,11 @@ async function startGame(message) {
     const client = await pool.connect()
     try {
 
-        // TODO check if people in voice channel are already in another active game
+        // TODO: check if people in voice channel are already in another active game
 
         const prepGameStart = {
             'game_is_active': true,
-            'readable_timestamp': GetTimeStamp(),
+            'readable_timestamp': getTimeStamp(),
             'message_timestamp': message.createdTimestamp,
             'guild_name': message.guild.name,
             'guild_id': message.guild.id,
@@ -576,23 +775,34 @@ async function startGame(message) {
                     'turns_as_active_player': 0,
                     'theme_category_roll': themeCategoryRoll[i],
                     'title_judge_roll': titleJudgeRoll[i],
-                    'title_judge_choice': 0,
+                    'title_judge_choice': null,
                     'tagline_judge_roll': taglineJudgeRoll[i],
-                    'tagline_judge_choice': 0,
+                    'tagline_judge_choice': null,
+                    'total_points': 0,
                     'category_id': message.member.voice.channel.parent.id,
                     'text_channel_id': message.channel.id,
                     'voice_channel_id': message.member.voice.channel.id,
                 }
                 await client.query('BEGIN')
-                const insertGameLeafletText = 'INSERT INTO public.gameLeaflet(game_session_id, game_is_active, player_id, turns_as_active_player, theme_category_roll, title_judge_roll, title_judge_choice, tagline_judge_roll, tagline_judge_choice, category_id, text_channel_id, voice_channel_id ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)'
-                const insertGameLeafletValues = [prepGameLeaflet.game_session_id, prepGameLeaflet.game_is_active, prepGameLeaflet.player_id, prepGameLeaflet.turns_as_active_player, prepGameLeaflet.theme_category_roll, prepGameLeaflet.title_judge_roll, prepGameLeaflet.title_judge_choice, prepGameLeaflet.tagline_judge_roll, prepGameLeaflet.tagline_judge_choice, prepGameLeaflet.category_id, prepGameLeaflet.text_channel_id, prepGameLeaflet.voice_channel_id]
+                const insertGameLeafletText = 'INSERT INTO public.game_leaflet(game_session_id, game_is_active, player_id, turns_as_active_player, theme_category_roll, title_judge_roll, title_judge_choice, tagline_judge_roll, tagline_judge_choice, total_points, category_id, text_channel_id, voice_channel_id ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)'
+                const insertGameLeafletValues = [prepGameLeaflet.game_session_id, prepGameLeaflet.game_is_active, prepGameLeaflet.player_id, prepGameLeaflet.turns_as_active_player, prepGameLeaflet.theme_category_roll, prepGameLeaflet.title_judge_roll, prepGameLeaflet.title_judge_choice, prepGameLeaflet.tagline_judge_roll, prepGameLeaflet.tagline_judge_choice, prepGameLeaflet.total_points, prepGameLeaflet.category_id, prepGameLeaflet.text_channel_id, prepGameLeaflet.voice_channel_id]
                 await client.query(insertGameLeafletText, insertGameLeafletValues)
                 await client.query('COMMIT')
             })().catch(err => console.log(err.stack))
             i += 1;
         })
-        message.channel.send(`Starting Gorilla Marketing.`);
-        message.channel.send(`TODO: add rules and bot instructions.`);
+        message.channel.send(`**Starting Gorilla Marketing**`);
+        message.channel.send(
+            `**1**. **!roll** - Sets Active Player and starts turn.\n\u200b` +
+            `**2**. All players go to GorillaBot DM.\n\u200b` +
+            `   - Active Player: add a reaction emoji to the award you want to give.\n\u200b` +
+            `   - Players: respond with your title or tagline.\n\u200b` +
+            `**3**. All players come back to this game table.\n\u200b` +
+            `**4**. Active Player: add a reaction emoji to the best title or tagline.\n\u200b` +
+            `**5**. Repeat and have fun!!!\n\u200b\n\u200b` +
+            `Commands:\n\u200b` +
+            `  **!reset** - clears the table for a new game.\n\u200b` +
+            `  **!score** - displays current scores.\n\u200b\ `);
     } catch (err) {
         console.log(err.stack)
         await client.query('ROLLBACK')
@@ -620,7 +830,7 @@ async function titleTaglineFromPlayer(message) {
         //  Checking for tagline already submitted 
         const titleTaglineIsSubmitted = await client.query({
             rowMode: 'array',
-            text: `SELECT title_tagline_is_submitted FROM public.turns WHERE player_id = ${message.author.id} ORDER BY message_timestamp DESC LIMIT 1;`
+            text: `SELECT title_tagline_is_submitted FROM public.turns WHERE player_id = ${message.author.id}ORDER BY message_timestamp DESC LIMIT 1;`
         })
         if (titleTaglineIsSubmitted.rows == "true") {
             return
@@ -630,65 +840,15 @@ async function titleTaglineFromPlayer(message) {
         await client.query(`UPDATE public.turns SET title_tagline = $$${titleTagline}$$ WHERE player_id = ${message.author.id} AND turn_is_active = true And message_timestamp = (SELECT MAX(message_timestamp) from public.turns);`)
         const lettersGiven = await client.query({
             rowMode: 'array',
-            text: `SELECT letters_given FROM public.turns WHERE title_tagline = $$${titleTagline}$$ AND turn_is_active = true LIMIT 1`,
+            text: `SELECT letters_given FROM public.turns WHERE title_tagline = $$${titleTagline}$$ AND turn_is_active = true LIMIT 1;`
         })
         await client.query(`UPDATE public.turns SET dice_and_tagline = $$${lettersGiven.rows}: ${titleTagline}$$ WHERE player_id = ${message.author.id} AND turn_is_active = true And message_timestamp = (SELECT MAX(message_timestamp) from public.turns);`)
         await client.query(`UPDATE public.turns SET title_tagline_is_submitted = true WHERE player_id = ${message.author.id} AND title_tagline_is_submitted = false;`)
         const gameSessionID = await client.query({
             rowMode: 'array',
-            text: `SELECT game_session_id FROM public.turns WHERE title_tagline = $$${titleTagline}$$ AND turn_is_active = true LIMIT 1`,
-        })
-        const playerCount = await client.query({
-            rowMode: 'array',
-            text: `SELECT turns_id FROM public.turns WHERE game_session_id = ${gameSessionID.rows} AND turn_is_active = true`,
-        })
-        const activePlayer = await client.query({
-            rowMode: 'array',
-            text: `SELECT active_player_id FROM public.turns WHERE game_session_id = ${gameSessionID.rows} AND turn_is_active = true ORDER BY message_timestamp DESC LIMIT 1`,
-        })
-        const taglineCount = await client.query({
-            rowMode: 'array',
-            text: `SELECT turns_id FROM public.turns WHERE game_session_id = ${gameSessionID.rows} AND turn_is_active = true AND title_tagline_is_submitted = true`,
-        })
-
-        const gameLeafletData = await client.query(`SELECT * FROM public.gameLeaflet WHERE player_id = ${activePlayer.rows} AND game_is_active = true`)
-            gameLeafletData.rows.forEach(row => {
-                turnsAsActivePlayer = row.turns_as_active_player;
-                titleJudge = row.title_judge_choice;
-                taglineJudge = row.tagline_judge_choice;
-                textChannelId = row.text_channel_id;
-            })
-            var awardChoice;
-            console.log(`turnsAsActivePlayer = ${turnsAsActivePlayer}`)
-            console.log(`titleJudge = ${titleJudge}`)
-            console.log(`taglineJudge = ${taglineJudge}`)
-            console.log(`textChannelId = ${textChannelId}`)
-            if (turnsAsActivePlayer == 1) {
-                awardChoice = titleJudge;
-            }if (turnsAsActivePlayer == 2) {
-                awardChoice = taglineJudge;
-            }
-        if (awardChoice != 0) {
-            if (playerCount.rows.length == taglineCount.rows.length) {
-                bot.channels.fetch(`${textChannelId}`)
-                        .then(results => {
-                            textChannel = results;
-                            console.log(`textChannel = ${textChannel}`)
-                            textChannel.send(`Award: **${awardChoice}**`);
-                        })
-                        .catch(err => console.error(err));
-                const allTaglines = await client.query(`SELECT * FROM public.turns WHERE game_session_id = ${gameSessionID.rows} AND turn_is_active = true ORDER BY RANDOM()`)
-                allTaglines.rows.forEach(row => {
-                    bot.channels.fetch(`${row.text_channel_id}`)
-                        .then(results => {
-                            gameChannel = results;
-                            console.log(`gameChannel = ${gameChannel}`)
-                            gameChannel.send(`${row.letters_given}: ${row.title_tagline}`);
-                        })
-                        .catch(err => console.error(err));
-                })
-            }
-        }
+            text: `SELECT game_session_id FROM public.turns WHERE title_tagline = $$${titleTagline}$$ AND turn_is_active = true LIMIT 1 `
+        });
+        await sendToTextChannel(gameSessionID.rows);
     } catch (err) {
         console.log(err.stack)
         await client.query('ROLLBACK')
@@ -699,18 +859,39 @@ async function titleTaglineFromPlayer(message) {
 }
 
 async function turnIsInProgress(message) {
-    console.log(`turnIsInProgress message.member = ${message.member}`);
     const client = await pool.connect()
-    const result = await client.query({
-        rowMode: 'array',
-        text: `SELECT turn_is_active FROM public.games WHERE category_id = ${message.member.voice.channel.parent.id} ORDER BY message_timestamp DESC LIMIT 1;`
-    })
-    await client.release()
-    console.log(`turnIsInProgress result.rows = ${result.rows}`);
-    if (result.rows.length === 0) {
-        return false;
-    } else {
-        return result.rows;
+    try {
+        const gameId = await client.query({
+            rowMode: 'array',
+            text: `SELECT game_id FROM public.games WHERE category_id = ${message.member.voice.channel.parent.id} AND game_is_active = true ORDER BY message_timestamp DESC LIMIT 1;`
+        })
+        let activeGameId = gameId.rows;
+        const gameIdInTurns = await client.query({
+            rowMode: 'array',
+            text: `SELECT game_session_id FROM public.turns WHERE game_session_id = ${activeGameId} ORDER BY message_timestamp DESC LIMIT 1;`
+        })
+        if (gameIdInTurns.rows.length === 0) {
+            return false;
+        } else {
+            console.log(`turnIsInProgress message.member = ${message.member}`);
+            const result = await client.query({
+                rowMode: 'array',
+                text: `SELECT turns_id FROM public.turns WHERE text_channel_id = ${message.channel.id} AND turn_is_active = true AND point_earned = 1 ORDER BY message_timestamp DESC LIMIT 1;`
+            })
+            console.log(`turnIsInProgress result.rows = ${result.rows}`);
+            console.log(`turnIsInProgress result.rows.length = ${result.rows.length}`);
+            if (result.rows.length === 1) {
+                return false;
+            }
+            if (result.rows.length === 0) {
+                return true;
+            }
+        }
+    } catch (err) {
+        console.log(err.stack)
+        throw err
+    } finally {
+        client.release()
     }
 }
 
@@ -723,7 +904,7 @@ async function updateStatus() {
         "Donkey Kong Barrel Blast",
         "Mario Kart",
         "Gorilla Marketing",
-        "GRASS: Birnanaham",
+        "GRASS: Bananaham",
         "Donkey Kong Jr.",
         "Banana Blast",
         "Cheeky Monkey",
@@ -735,14 +916,18 @@ async function updateStatus() {
     var test = await (bot.user.setActivity("Gorilla Marketing", {
         type: "Playing"
     }));
-    console.log(`test = ${Promise.resolve(test)}`);
+    console.log(`
+                    test = $ {
+                        Promise.resolve(test)
+                    }
+                    `);
 }
 
 async function messageArchive(message) {
     const client = await pool.connect()
     try {
         const prepMessageArchive = {
-            'readable_timestamp': GetTimeStamp(),
+            'readable_timestamp': getTimeStamp(),
             'guild_name': message.guild.name,
             'guild_id': message.guild.id,
             'channel_name': message.channel.name,
@@ -772,7 +957,7 @@ async function dmArchive(message) {
     const client = await pool.connect()
     try {
         const prepDmArchive = {
-            'readable_timestamp': GetTimeStamp(),
+            'readable_timestamp': getTimeStamp(),
             'author_username': message.author.username,
             'author_id': message.author.id,
             'message_timestamp': message.createdTimestamp,

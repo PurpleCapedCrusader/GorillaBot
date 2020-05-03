@@ -68,9 +68,9 @@ async function createDatabaseTablesIfNotExist() {
             ALTER TABLE public.turns
                 OWNER to ${config.connUser};`)
 
-            await client.query(`CREATE TABLE IF NOT EXISTS public.gameLeaflet 
+            await client.query(`CREATE TABLE IF NOT EXISTS public.game_leaflet 
             (
-                gameLeaflet_id SERIAL NOT NULL,
+                game_leaflet_id SERIAL NOT NULL,
                 game_session_id int,
                 game_is_active boolean,
                 player_id bigint,
@@ -80,16 +80,17 @@ async function createDatabaseTablesIfNotExist() {
                 title_judge_choice character varying(64) COLLATE pg_catalog."default",
                 tagline_judge_roll int,
                 tagline_judge_choice character varying(64) COLLATE pg_catalog."default",
+                total_points int,
                 category_id bigint,
                 text_channel_id bigint,
                 voice_channel_id bigint,
-                CONSTRAINT gameLeaflet_id_pkey PRIMARY KEY (gameLeaflet_id)
+                CONSTRAINT game_leaflet_id_pkey PRIMARY KEY (game_leaflet_id)
             )
             WITH (
                 OIDS = FALSE
             )
             TABLESPACE pg_default;
-            ALTER TABLE public.gameLeaflet
+            ALTER TABLE public.game_leaflet
                 OWNER to ${config.connUser};`)
 
             await client.query(`CREATE TABLE IF NOT EXISTS public.dm_archive
