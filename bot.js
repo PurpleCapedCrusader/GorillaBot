@@ -165,9 +165,13 @@ bot.on('message', (message) => {
                         const gameSessionId = await client.query({
                             rowMode: 'array',
                             text: `SELECT game_session_id FROM public.turns WHERE text_channel_id = ${message.channel.id} AND turn_is_active = true ORDER BY message_timestamp DESC LIMIT 1;`,
-                        })
-                        let gameId = gameSessionId.rows;
-                        score(gameId);
+                        });
+                        if (gameSessionId.rows.length != 0) {
+                        score(gameSessionId.rows);
+                        } else {
+                            message.channel.send(`There is no score yet.`)
+                            return;
+                        }
                     } catch (e) {
                         throw e
                     } finally {
@@ -316,6 +320,13 @@ bot.on('messageReactionAdd', async (reaction, user) => {
                 console.log(`total_players.rows.length = ${total_players.rows.length}`)
                 console.log(`twoTurns.rows.length = ${twoTurns.rows.length}`)
                 console.log(`gameSessionId = ${gameSessionId}`)
+                if (total_players.rows.length != twoTurns.rows.length) {
+                    bot.channels.fetch(`${textChannelId}`)
+                        .then(results => {
+                            gameChannel = results;
+                            gameChannel.send(`\n\u200b\n\u200bReady for next player to **!roll**`);
+                        })
+                }
                 if (total_players.rows.length === twoTurns.rows.length) {
                     bot.channels.fetch(`${textChannelId}`)
                         .then(results => {
@@ -401,14 +412,14 @@ async function endTurn(message) {
 async function getGameId(message) {
     const client = await pool.connect()
     try {
-        const gameSessionId = await client.query({
+        const gameId = await client.query({
             rowMode: 'array',
             text: `SELECT game_id FROM public.games WHERE text_channel_id = ${message.channel.id} ORDER BY message_timestamp DESC LIMIT 1;`,
         })
-        if (gameSessionId.rows.length === 0) {
+        if (gameId.rows.length === 0) {
             return false;
         } else {
-            return gameSessionId.rows;
+            return gameId.rows;
         }
     } catch (e) {
         throw e
@@ -442,7 +453,7 @@ async function playerTurnsTaken(message) {
     try {
         const numberOfTurns = await client.query({
             rowMode: 'array',
-            text: `SELECT turns_as_active_player FROM public.game_leaflet WHERE player_id = ${message.member.id} AND game_is_active = true;`,
+            text: `SELECT turns_as_active_player FROM public.game_leaflet WHERE player_id = ${message.member.id} AND text_channel_id = ${message.channel.id} AND game_is_active = true;`,
         })
         return numberOfTurns.rows;
     } catch (e) {
@@ -470,7 +481,7 @@ async function resetTable(gameId) { // change to accept gameId
         bot.channels.fetch(`${textChannelId.rows}`)
             .then(results => {
                 gameChannel = results;
-                gameChannel.send(`\n\u200b\n\u200bType **!Bands**, **!College Courses**, **!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or **!Products** to choose your theme.`);
+                gameChannel.send(`\n\u200bType **!Bands**, **!College Courses**, **!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or **!Products** to choose your theme.`);
             })
     } catch (err) {
         console.log(err.stack)
@@ -580,6 +591,10 @@ function roll_for_game(message) {
                 console.log(guildMemberId, guildMember.user.username);
                 if (message.member.id != guildMemberId) {
                     let playersDice = rollDice();
+                    guildMember.send(`${gameThemeRows}: **${themeCategoryText}**`)
+                    if (turnsAsActivePlayer == 2) {
+                        guildMember.send(`Winning Title: **${winningTitle}**`);
+                    }
                     guildMember.send(`${playersDice}`);
                     (async () => {
                         const client = await pool.connect()
@@ -638,9 +653,24 @@ function roll_for_game(message) {
 }
 
 function score(gameId) {
+
     (async () => {
         const client = await pool.connect()
-        const gameLeafletData = await client.query(`SELECT * FROM public.game_leaflet WHERE game_session_id = ${gameId}`); // AND game_is_active = true
+        const gameLeafletData = await client.query(`SELECT * FROM public.game_leaflet WHERE game_session_id = ${gameId};`); // AND game_is_active = true
+        if (gameLeafletData.rows.length == 0) {
+            bot.channels.fetch(`${row.text_channel_id}`)
+                .then(results => {
+                    let bananaScore = "";
+                    if (row.total_points === 0) {
+                        bananaScore = "<:blank:693193020455125094> ";
+                    }
+                    for (var i = 1; i <= row.total_points; i++) {
+                        bananaScore = bananaScore.concat(":banana:");
+                    }
+                    gameChannel = results;
+                    gameChannel.send(`<@${row.player_id}>: ${bananaScore}`);
+                })
+        }
         gameLeafletData.rows.forEach(row => {
             bot.channels.fetch(`${row.text_channel_id}`)
                 .then(results => {
