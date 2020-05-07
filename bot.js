@@ -14,8 +14,6 @@ const {
 } = require("pg");
 const pool = new Pool(dbCreds);
 
-// var diceActivePlayer = "<:aa:693193020866297886><:cr:693193020572565527><:tt:693193021373546528><:ii:693193021100916836><:vv:693193021319282798><:er:693193020870492246>  <:pp:693193021260300288><:lr:693193021360963664><:aa:693193020866297886><:yy:693193021516415017><:er:693193020870492246><:rr:693193020958310462>";
-
 bot.on("ready", () => {
     console.log(
         `${getTimeStamp()} :: GorillaBot is ready to serve on ${
@@ -38,6 +36,8 @@ bot.diceData = require("./diceData.json");
 bot.leafletData = require("./leafletData.json");
 
 // setInterval(function () {
+//     // TODO: reset active game with no members in voice channel
+
 //     // console.log("running removeTempOnlineRole at " + GetTimeStamp());
 //     // updateStatus()
 // }, 3000); // 86400000 = 1day, 3600000 = 1hr, 60000 = 1min
@@ -70,6 +70,14 @@ bot.on("message", (message) => {
 
     args[0] = lowerCase(args[0]);
     switch (args[0]) {
+        // case "add":
+        //     // TODO: !add @username - adds player to game
+        // break;
+
+        // case "change":
+        //     // TODO: update current turn with a new title or tagline submission
+        // break;
+
         case "emojis":
             const emojiList = message.guild.emojis.cache
                 .map((e, x) => x + " = " + e + " | " + e.name)
@@ -92,6 +100,20 @@ bot.on("message", (message) => {
                 });
             } catch (err) {
                 message.channel.send(`\`ERROR\` \`\`\`xl\n${clean(err)}\n\`\`\``);
+            }
+            break;
+
+        // case "remove":
+        //     // TODO: !remove @username - removes player from game
+        // break;
+
+        case "play":
+        case "start":
+        case "begin":
+            if (message.channel.type === "dm") {
+                message.author.send(`That command doesn't work in direct messages.`);
+            } else {
+                message.channel.send(`Use the **!Bands**, **!College Courses**, **!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or **!Products** command to start a game.`);
             }
             break;
 
@@ -118,6 +140,7 @@ bot.on("message", (message) => {
                     let textChannelIndex = gameRooms.textChannels.indexOf(
                         message.channel.name
                     );
+                    // TODO: pull player list from public.leaflet
                     let voiceChannelIndex = gameRooms.voiceChannels.indexOf(
                         message.member.voice.channel.name
                     );
@@ -128,7 +151,7 @@ bot.on("message", (message) => {
                         textChannelIndex === voiceChannelIndex
                     ) {
                         if (message.member.voice.channel.members.size >= 2) {
-                            //TODO update to 3 upon deploy
+                            //TODO: update to 3 upon deploy
                             playerTurnsTaken(message)
                                 .then((results) => {
                                     turnsTaken = results;
@@ -219,6 +242,7 @@ bot.on("message", (message) => {
                 message.author.send(`That command doesn't work in direct messages.`);
             } else {
                 if (message.member.voice.channel != null) {
+                    // TODO: don't allow players to be in more than 1 active game
                     let textChannelIndex = gameRooms.textChannels.indexOf(
                         message.channel.name
                     );
@@ -232,7 +256,7 @@ bot.on("message", (message) => {
                         textChannelIndex === voiceChannelIndex
                     ) {
                         if (message.member.voice.channel.members.size >= 2) {
-                            //TODO update to 3 upon deploy
+                            //TODO: update to 3 upon deploy
                             console.log(
                                 message.member.voice.channel.parent.name,
                                 message.member.voice.channel.parent.id
@@ -277,6 +301,11 @@ bot.on("message", (message) => {
                 }
             }
             break;
+
+        // case "word":
+        //     //TODO: use Datamuse https://api.datamuse.com/words?ml=MOVIES&sp=LETTER*&max=100
+        //     //TODO: replace THEME with a random word that is related to the category or theme
+        //     break;
     }
 });
 
@@ -784,7 +813,6 @@ function score(gameId) {
 }
 
 async function sendToTextChannel(gameSessionID) {
-    console.log(`inside sendToTextChannel(${gameSessionID})`)
     const client = await pool.connect();
     try {
         const playerCount = await client.query({
@@ -793,45 +821,36 @@ async function sendToTextChannel(gameSessionID) {
         });
         console.log(`playerCount = ${playerCount.rows}`)
         console.log(`playerCount length = ${playerCount.rows.length}`)
-        console.log(`inside sendToTextChannel(2)`)
         const activePlayer = await client.query({
             rowMode: "array",
             text: `SELECT active_player_id FROM public.turns WHERE game_session_id = ${gameSessionID} AND turn_is_active = true ORDER BY message_timestamp DESC LIMIT 1`,
         });
-        console.log(`inside sendToTextChannel(3)`)
         const taglineCount = await client.query({
             rowMode: "array",
             text: `SELECT turns_id FROM public.turns WHERE game_session_id = ${gameSessionID} AND turn_is_active = true AND title_tagline_is_submitted = true`,
         });
-        console.log(`inside sendToTextChannel(4)`)
         const gameLeafletData = await client.query(
             `SELECT * FROM public.game_leaflet WHERE player_id = ${activePlayer.rows} AND game_session_id = ${gameSessionID}`
         );
-        console.log(`inside sendToTextChannel(5)`)
         gameLeafletData.rows.forEach((row) => {
             turnsAsActivePlayer = row.turns_as_active_player;
             titleJudge = row.title_judge_choice;
             taglineJudge = row.tagline_judge_choice;
             textChannelId = row.text_channel_id;
         });
-        console.log(`inside sendToTextChannel(6)`)
         var awardChoice;
         console.log(`turnsAsActivePlayer = ${turnsAsActivePlayer}`);
         console.log(`titleJudge = ${titleJudge}`);
         console.log(`taglineJudge = ${taglineJudge}`);
         console.log(`textChannelId = ${textChannelId}`);
         if (turnsAsActivePlayer == 1) {
-            console.log(`inside sendToTextChannel(7)`)
             awardChoice = titleJudge;
         }
         if (turnsAsActivePlayer == 2) {
-            console.log(`inside sendToTextChannel(8)`)
             awardChoice = taglineJudge;
         }
         if (awardChoice != null) {
-            console.log(`inside sendToTextChannel(8)`)
             if (playerCount.rows.length == taglineCount.rows.length) {
-                console.log(`inside sendToTextChannel(10)`)
                 bot.channels
                     .fetch(`${textChannelId}`)
                     .then((results) => {
@@ -840,11 +859,8 @@ async function sendToTextChannel(gameSessionID) {
                         textChannel.send(`Award: **${awardChoice}**`);
                     })
                     .catch((err) => console.error(err));
-                console.log(`inside sendToTextChannel(11)`)
                 const allTaglines = await client.query(`SELECT * FROM public.turns WHERE game_session_id = ${gameSessionID} AND turn_is_active = true ORDER BY RANDOM()`);
-                console.log(`inside sendToTextChannel(12)`)
                 allTaglines.rows.forEach((row) => {
-                    console.log(`inside sendToTextChannel(13)`)
                     bot.channels
                         .fetch(`${row.text_channel_id}`)
                         .then((results) => {
@@ -853,11 +869,9 @@ async function sendToTextChannel(gameSessionID) {
                             gameChannel.send(`${row.letters_given}: ${row.title_tagline}`);
                         })
                         .catch((err) => console.error(err));
-                    console.log(`inside sendToTextChannel(14)`)
                 });
             }
         }
-
     } catch (err) {
         console.log(err.stack);
         await client.query("ROLLBACK");
