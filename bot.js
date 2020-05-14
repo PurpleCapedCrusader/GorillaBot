@@ -4,9 +4,10 @@ var dbCreds = require("./dbCreds.js");
 var lowerCase = require("lower-case");
 var gameRooms = require("./gameRooms.js");
 const databaseCheck = require("./databaseBuilder.js");
-const fs = require("fs");
-var check = require("check-types");
-const express = require("express");
+var _ = require('lodash');
+// const fs = require("fs");
+// var check = require("check-types");
+// const express = require("express");
 const bot = new Discord.Client();
 const PREFIX = config.prefix;
 const {
@@ -77,6 +78,10 @@ bot.on("message", (message) => {
         // case "change":
         //     // TODO: update current turn with a new title or tagline submission
         // break;
+
+        case "lodash":
+            playerInActiveGame(message);
+            break;
 
         case "emojis":
             const emojiList = message.guild.emojis.cache
@@ -282,7 +287,7 @@ bot.on("message", (message) => {
                                                 console.log(`playerInGame = ${playerInGame}`);
                                                 if (playerInGame == "true") {
                                                     return;
-                                                } else {
+                                                } else if (playerInGame == "false") {
                                                     startGame(message);
                                                 }
                                             })
@@ -621,15 +626,27 @@ function getTimeStamp() {
 async function playerInActiveGame(message) {
     const client = await pool.connect();
     try {
-        const playersInActiveGames = await client.query({
-            rowMode: "array",
-            text: `SELECT player_id ` +
-                `FROM public.game_leaflet ` +
-                `WHERE game_is_active = true;`,
+        const playersInActiveGames = await client.query(
+            `SELECT player_id ` +
+            `FROM public.game_leaflet ` +
+            `WHERE game_is_active = true;`,
+        );
+        var playersInActiveGamesArray = [];
+        playersInActiveGames.rows.forEach((row) => {
+            playersInActiveGamesArray.push(row.player_id);
         });
-        // message.member.voice.channel.members.forEach(function (guildmember){
-
-        // }
+        var playersInThisChannel = [];
+        message.member.voice.channel.members.forEach(function(guildmember) {
+            playersInThisChannel.push(guildmember.id);
+        });
+        var intersection = _.intersection(playersInThisChannel,playersInActiveGamesArray);
+        console.log(`Players trying to join 2 games at the same time = ${intersection}`);
+        if (intersection.length === 0) {
+            return "false";
+        } else {
+            message.channel.send(`${intersection} are currently in another game.`);
+            return "true";
+        }
     } catch (e) {
         throw e;
     } finally {
