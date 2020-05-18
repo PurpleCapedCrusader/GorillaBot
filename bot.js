@@ -1383,6 +1383,17 @@ async function updateStatus() {
         "Cheeky Monkey",
         "Monkey Madness",
         "Go Ape!",
+        "Rumble in the Jungle",
+        "Bananagrams",
+        "Santorini",
+        "Dice Throne",
+        "Dice Throne Adventures",
+        "Steampunk Rally",
+        "Steampunk Rally Fusion",
+        "Super Motherload",
+        "Brass: Birmingham",
+        "Brass: Lancashire",
+        "SKYRISE"
     ];
     shuffle(statusArray);
     console.log(statusArray[0]);
