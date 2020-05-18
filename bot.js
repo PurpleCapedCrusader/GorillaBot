@@ -36,6 +36,40 @@ bot.on("debug", (e) => console.info(`${getTimeStamp()} :: ${e}`));
 bot.diceData = require("./diceData.json");
 bot.leafletData = require("./leafletData.json");
 
+// bot.on('voiceStateUpdate', () => {
+//     console.log("voiceStateUpdate");
+//     new Discord.VoiceState(guild, data);
+// });
+bot.on("voiceStateUpdate", async (oldMember, newMember) => {
+    const client = await pool.connect();
+    try {
+        let oldUserChannel = oldMember.channel.id;
+        let oldUserChannelSize = oldMember.channel.members.size;
+        if (oldUserChannelSize == 0) {
+            const gameId = await client.query({
+                rowMode: "array",
+                text: `SELECT game_id ` +
+                    `FROM public.games ` +
+                    `WHERE voice_channel_id = ${oldUserChannel} ` +
+                    `AND game_is_active = true;`,
+            });
+            console.log(`gameId.rows = ${gameId.rows}`);
+            if (gameId.rows.length === 0) {
+                console.log(`0 gameId.rows = ${gameId.rows}`);
+                return;
+            } else if (gameId.rows.length === 1) {
+                console.log(`1 gameId.rows = ${gameId.rows}`);
+                resetTable(gameId.rows);
+            } else {
+                return;
+            }
+        }
+    } catch (err) {
+        console.log(err.stack);
+        throw err;
+    }
+});
+
 // setInterval(function () {
 //     // TODO: reset active game with no members in voice channel
 
@@ -372,17 +406,17 @@ bot.on("messageReactionAdd", async (reaction, user) => {
                     `ORDER BY game_leaflet_id DESC LIMIT 1`,
             });
             console.log(`pre turnAsActivePlayer = ${turnAsActivePlayer.rows}`);
-            console.log(`turnIsActive.rows = ${turnIsActive.rows}`);
+            console.log(`last turnIsActive.rows = ${turnIsActive.rows}`);
             if (turnIsActive.rows == "true") {
-                if (turnAsActivePlayer.rows == 1) {
+                if (turnAsActivePlayer.rows == "1") {
                     console.log(`turnAsActivePlayer = ${turnAsActivePlayer.rows}`);
                     await client.query(
-                        `UPDATE public.game_leaflet` +
+                        `UPDATE public.game_leaflet ` +
                         `SET title_judge_choice = $$${reaction.message.content}$$ ` +
                         `WHERE player_id = ${user.id} ` +
                         `AND game_is_active = true;`);
                 }
-                if (turnAsActivePlayer.rows == 2) {
+                if (turnAsActivePlayer.rows == "2") {
                     console.log(`turnAsActivePlayer = ${turnAsActivePlayer.rows}`);
                     await client.query(
                         `UPDATE public.game_leaflet ` +
