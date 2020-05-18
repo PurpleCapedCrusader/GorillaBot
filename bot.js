@@ -640,7 +640,7 @@ async function playerInActiveGame(message) {
             playersInThisChannel.push(guildmember.id);
         });
         var intersection = _.intersection(playersInThisChannel,playersInActiveGamesArray);
-        console.log(`Players trying to join 2 games at the same time = ${intersection}`);
+        console.log(`${intersection.length} Players trying to join 2 games at the same time = ${intersection}`);
         if (intersection.length === 0) {
             return "false";
         } else {
@@ -653,14 +653,14 @@ async function playerInActiveGame(message) {
             if (intersection.length > 2) {
                 var playerList = "";
                 for (var i = 0; i <= intersection.length; i++) {
-                    if(i < intersection.length) {
-                        intersection[i] = playerList.concat(`<@ ${intersection[i]},`);
+                    if(i < intersection.length -1) {
+                        playerList = playerList.concat(`<@${intersection[i]}>, `);
                     }
-                    if(i == intersection.length) {
-                        intersection[i] = playerList.concat(` and <@ ${intersection[i]}`);
+                    if(i == intersection.length -1) {
+                        playerList = playerList.concat(` and <@${intersection[i]}>`);
                     }
-                    message.channel.send(`${playerList} are currently in other games.`);
                 }
+                message.channel.send(`${playerList} are currently in other games.`);
             }
             return "true";
         }
