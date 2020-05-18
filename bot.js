@@ -21,9 +21,7 @@ bot.on("ready", () => {
       bot.guilds.cache.size
     } servers, for ${bot.users.cache.size} users.`
     );
-    bot.user.setActivity("Gorilla Marketing", {
-        type: "Playing",
-    }); //TODO: get status working
+    updateStatus()
     databaseCheck.createDatabaseTablesIfNotExist;
 });
 
@@ -70,12 +68,9 @@ bot.on("voiceStateUpdate", async (oldMember, newMember) => {
     }
 });
 
-// setInterval(function () {
-//     // TODO: reset active game with no members in voice channel
-
-//     // console.log("running removeTempOnlineRole at " + GetTimeStamp());
-//     // updateStatus()
-// }, 3000); // 86400000 = 1day, 3600000 = 1hr, 60000 = 1min
+setInterval(function () {
+    updateStatus()
+}, 900000); // 86400000 = 1day, 3600000 = 1hr, 60000 = 1min
 
 // Main Args/Response
 bot.on("message", (message) => {
@@ -1391,10 +1386,9 @@ async function updateStatus() {
     ];
     shuffle(statusArray);
     console.log(statusArray[0]);
-    var test = await bot.user.setActivity("Gorilla Marketing", {
-        type: "Playing",
-    });
-    console.log(`test = ${Promise.resolve(test)}`);
+    bot.user.setActivity(statusArray[0], { type: 'PLAYING' })
+    .then(presence => console.log(`Activity set to ${presence.activities[0].name}`))
+    .catch(console.error);
 }
 
 async function messageArchive(message) {
