@@ -644,7 +644,24 @@ async function playerInActiveGame(message) {
         if (intersection.length === 0) {
             return "false";
         } else {
-            message.channel.send(`${intersection} are currently in another game.`);
+            if (intersection.length === 1) {
+                message.channel.send(`<@${intersection}> is currently in another game.`);
+            }
+            if (intersection.length === 2) {
+                message.channel.send(`<@${intersection[0]}> and <@${intersection[1]}> are currently in other games.`);
+            }
+            if (intersection.length > 2) {
+                var playerList = "";
+                for (var i = 0; i <= intersection.length; i++) {
+                    if(i < intersection.length) {
+                        intersection[i] = playerList.concat(`<@ ${intersection[i]},`);
+                    }
+                    if(i == intersection.length) {
+                        intersection[i] = playerList.concat(` and <@ ${intersection[i]}`);
+                    }
+                    message.channel.send(`${playerList} are currently in other games.`);
+                }
+            }
             return "true";
         }
     } catch (e) {
