@@ -1369,37 +1369,82 @@ async function turnIsInProgress(message) {
 }
 
 async function updateStatus() {
-    var statusArray = [
-        "Barrel of Monkeys",
-        "Donkey Kong",
-        "Donkey Kong Country",
-        "Diddy Kong Racing",
-        "Donkey Kong Barrel Blast",
-        "Mario Kart",
-        "Gorilla Marketing",
-        "GRASS: Bananaham",
-        "Donkey Kong Jr.",
-        "Banana Blast",
-        "Cheeky Monkey",
-        "Monkey Madness",
-        "Go Ape!",
-        "Rumble in the Jungle",
-        "Bananagrams",
-        "Santorini",
-        "Dice Throne",
-        "Dice Throne Adventures",
-        "Steampunk Rally",
-        "Steampunk Rally Fusion",
-        "Super Motherload",
-        "Brass: Birmingham",
-        "Brass: Lancashire",
-        "SKYRISE"
-    ];
-    shuffle(statusArray);
-    console.log(statusArray[0]);
-    bot.user.setActivity(statusArray[0], { type: 'PLAYING' })
-    .then(presence => console.log(`Activity set to ${presence.activities[0].name}`))
-    .catch(console.error);
+    var watchPlay = [0, 1]
+    shuffle(watchPlay);
+    if (watchPlay[0] == 0) {
+        var statusArray = [
+            "Barrel of Monkeys",
+            "Donkey Kong",
+            "Donkey Kong Country",
+            "Diddy Kong Racing",
+            "Donkey Kong Barrel Blast",
+            "Mario Kart",
+            "Gorilla Marketing",
+            "GRASS: Bananaham",
+            "Donkey Kong Jr.",
+            "Banana Blast",
+            "Cheeky Monkey",
+            "Monkey Madness",
+            "Go Ape!",
+            "Rumble in the Jungle",
+            "Bananagrams",
+            "Santorini",
+            "Dice Throne",
+            "Dice Throne Adventures",
+            "Steampunk Rally",
+            "Steampunk Rally Fusion",
+            "Super Motherload",
+            "Brass: Birmingham",
+            "Brass: Lancashire",
+            "SKYRISE",
+            "Santorini App",
+            "with a coconut",
+            "Win, Lose, Or Banana",
+            "Tiny Epic Apes",
+            "One Night Ultimate Were-ape",
+            "Hey, That's My Banana!",
+            "Dominant Species",
+            "Evolution",
+            "Castles of Mad King Kong",
+            "Zooloretto",
+            "A Few Acres of Jungle",
+            "without a full deck",
+            "for keeps",
+            "with fire",
+            "devil's advocate",
+            "in traffic",
+            "bongos"
+        ];
+        shuffle(statusArray);
+        bot.user.setActivity(statusArray[0], {
+                type: 'PLAYING'
+            })
+            .then(presence => console.log(`Activity set to ${presence.activities[0].name}`))
+            .catch(console.error);
+    } else if (watchPlay[0] == 1) {
+        var statusArray = [
+            "King Kong",
+            "Congo",
+            "Planet of the Apes",
+            "Gorillas in the Mist",
+            "Kong: Skull Island",
+            "Tarzan",
+            "The One and Only Ivan",
+            "George of the Jungle",
+            "Mighty Joe Young",
+            "Bride of the Gorilla",
+            "Queen Kong",
+            "Son of Kong",
+            "Magilla Gorilla",
+            "Curious George"
+        ];
+        shuffle(statusArray);
+        bot.user.setActivity(statusArray[0], {
+                type: 'WATCHING'
+            })
+            .then(presence => console.log(`Activity set to ${presence.activities[0].name}`))
+            .catch(console.error);
+    }
 }
 
 async function messageArchive(message) {
