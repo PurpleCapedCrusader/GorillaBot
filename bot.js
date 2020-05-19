@@ -1414,12 +1414,14 @@ async function updateStatus() {
             "devil's advocate",
             "in traffic",
             "bongos",
-            "Simian Says",
-            "Exploding Gibbons",
-            "Gibbons In A Blender",
-            "Macaque: The Gathering",
-            "Too Many Bonobos",
-            "Rum & Bonobos"
+            "Fruit Ninja",
+            "Super Monkey Ball",
+            "Ape Escape",
+            "Ape Out",
+            "Dissection: Murder By King Kong",
+            "Monkey Island",
+            "that funky music, white boy",
+            "games with your heart"
         ];
         shuffle(statusArray);
         bot.user.setActivity(statusArray[0], {
@@ -1429,26 +1431,6 @@ async function updateStatus() {
             .catch(console.error);
     } else if (watchPlay[0] == 1) {
         var statusArray = [
-            "Rahdo Runs Through",
-            "The Undead Viking",
-            "Watch It Played",
-            "Tantrum House",
-            "Man Vs. Meeple",
-            "The Cardboard Kid",
-            "Gaming With Edo",
-            "Shut Up & Sit Down",
-            "LoadingReadyRun",
-            "Actualol",
-            "No Pun Included",
-            "Drive Thru Review",
-            "The Game Boy Geek",
-            "The Dice Tower",
-            "Jon Gets Games",
-            "Heavy Cardboard",
-            "Roxley's YouTube Channel",
-            "Board Game Revolution",
-            "Geek & Sundry",
-            "Meeple University",
             "King Kong",
             "Congo",
             "Planet of the Apes",
@@ -1463,10 +1445,21 @@ async function updateStatus() {
             "Son of Kong",
             "Magilla Gorilla",
             "Curious George",
-            "Orangutan Is The New Black",
-            "The Big Baboon Theory",
-            "Ape Vs. Meeple",
-            "Love, Death, & Primates"
+            "The Jungle Book",
+            "Bananas In Pyjamas",
+            "12 Monkeys",
+            "Zoboomafoo",
+            "Swingers",
+            "Space Chimps",
+            "Dora The Explorer",
+            "Family Guy",
+            "his weight",
+            "his language",
+            "the clock",
+            "paint dry",
+            "the watchers",
+            "a very slow progress bar",
+            "Animal Planet"
         ];
         shuffle(statusArray);
         bot.user.setActivity(statusArray[0], {
