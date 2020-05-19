@@ -1369,9 +1369,9 @@ async function turnIsInProgress(message) {
 }
 
 async function updateStatus() {
-    var watchPlay = [0, 1]
+    var watchPlay = [0, 1, 2, 3, 4]
     shuffle(watchPlay);
-    if (watchPlay[0] == 0) {
+    if (watchPlay[0] == 0 || watchPlay[0] == 1) {
         var statusArray = [
             "Barrel of Monkeys",
             "Donkey Kong",
@@ -1427,9 +1427,9 @@ async function updateStatus() {
         bot.user.setActivity(statusArray[0], {
                 type: 'PLAYING'
             })
-            .then(presence => console.log(`Activity set to ${presence.activities[0].name}`))
+            .then(presence => console.log(`Playing ${presence.activities[0].name}`))
             .catch(console.error);
-    } else if (watchPlay[0] == 1) {
+    } else if (watchPlay[0] == 2 || watchPlay[0] == 3) {
         var statusArray = [
             "King Kong",
             "Congo",
@@ -1465,7 +1465,39 @@ async function updateStatus() {
         bot.user.setActivity(statusArray[0], {
                 type: 'WATCHING'
             })
-            .then(presence => console.log(`Activity set to ${presence.activities[0].name}`))
+            .then(presence => console.log(`Watching ${presence.activities[0].name}`))
+            .catch(console.error);
+    } else if (watchPlay[0] == 4) {
+        var statusArray = [
+            "Monkey, by George Michael",
+            "Brass Monkey, by the Beastie Boys",
+            "Peter Gabriel - Shock The Monkey",
+            "Monkey Wrench, by the Foo Fighters",
+            "The Monkees - Daydream Believer",
+            "Monkey Man, by the Rolling Stones",
+            "Copa Banana, by Barry Manilow",
+            "Gorillaz - Rock The House feat. Del The Funky Homosapien",
+            "My Brother The Ape, by They Might Be Giants",
+            "Bananarama - Venus",
+            "Love Monkey #9, by Bootsauce",
+            "Arctic Monkeys - I Bet You Look Good On The Dancefloor",
+            "Tarzan Boy, by Baltimora",
+            "Jungle Love, by the Steve Miller Band",
+            "Welcome To The Jungle, by Guns N' Roses",
+            "Jungle Love, by Morris Day and The Time",
+            "Bananaphone, by Raffi" ,
+            "Yes, We Have No Bananas, by Louis Prima",
+            "Banana Boat Song (Day-O), by Harry Belafonte",
+            "Space Monkey, by John Prine",
+            "Tweeter and the Monkey Man, by the Traveling Wilburys",
+            "99 Red Baboons, by Nena",
+            "Code Monkey, by Jonathan Coulton"
+        ];
+        shuffle(statusArray);
+        bot.user.setActivity(`to ${statusArray[0]}`, {
+                type: 'LISTENING'
+            })
+            .then(presence => console.log(`Listening to ${presence.activities[0].name}`))
             .catch(console.error);
     }
 }
