@@ -1413,7 +1413,13 @@ async function updateStatus() {
             "with fire",
             "devil's advocate",
             "in traffic",
-            "bongos"
+            "bongos",
+            "Simian Says",
+            "Exploding Gibbons",
+            "Gibbons In A Blender",
+            "Macaque: The Gathering",
+            "Too Many Bonobos",
+            "Rum & Bonobos"
         ];
         shuffle(statusArray);
         bot.user.setActivity(statusArray[0], {
@@ -1423,6 +1429,26 @@ async function updateStatus() {
             .catch(console.error);
     } else if (watchPlay[0] == 1) {
         var statusArray = [
+            "Rahdo Runs Through",
+            "The Undead Viking",
+            "Watch It Played",
+            "Tantrum House",
+            "Man Vs. Meeple",
+            "The Cardboard Kid",
+            "Gaming With Edo",
+            "Shut Up & Sit Down",
+            "LoadingReadyRun",
+            "Actualol",
+            "No Pun Included",
+            "Drive Thru Review",
+            "The Game Boy Geek",
+            "The Dice Tower",
+            "Jon Gets Games",
+            "Heavy Cardboard",
+            "Roxley's YouTube Channel",
+            "Board Game Revolution",
+            "Geek & Sundry",
+            "Meeple University",
             "King Kong",
             "Congo",
             "Planet of the Apes",
@@ -1436,7 +1462,11 @@ async function updateStatus() {
             "Queen Kong",
             "Son of Kong",
             "Magilla Gorilla",
-            "Curious George"
+            "Curious George",
+            "Orangutan Is The New Black",
+            "The Big Baboon Theory",
+            "Ape Vs. Meeple",
+            "Love, Death, & Primates"
         ];
         shuffle(statusArray);
         bot.user.setActivity(statusArray[0], {
