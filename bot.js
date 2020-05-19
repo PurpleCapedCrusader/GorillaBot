@@ -1494,7 +1494,7 @@ async function updateStatus() {
             "Code Monkey, by Jonathan Coulton"
         ];
         shuffle(statusArray);
-        bot.user.setActivity(`to ${statusArray[0]}`, {
+        bot.user.setActivity(`${statusArray[0]}`, {
                 type: 'LISTENING'
             })
             .then(presence => console.log(`Listening to ${presence.activities[0].name}`))
