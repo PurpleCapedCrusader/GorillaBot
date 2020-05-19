@@ -5,6 +5,7 @@ var lowerCase = require("lower-case");
 var gameRooms = require("./gameRooms.js");
 const databaseCheck = require("./databaseBuilder.js");
 var _ = require('lodash');
+const fetch = require('node-fetch');
 // const fs = require("fs");
 // var check = require("check-types");
 // const express = require("express");
@@ -93,9 +94,7 @@ bot.on("message", (message) => {
     let args = message.content.substring(PREFIX.length).split(/ +/g);
     // console.log ("args = " + args);
     console.log(
-        `${message.author.username} ${message.author.discriminator} id = ${
-      message.author.id
-    } looked up ${args} - ${getTimeStamp()}`
+        `${message.author.username} ${message.author.discriminator} id = ${message.author.id} looked up ${args} - ${getTimeStamp()}`
     );
 
     args[0] = lowerCase(args[0]);
@@ -348,11 +347,15 @@ bot.on("message", (message) => {
             }
             break;
 
-            // case "word":
-            //     //TODO: use Datamuse https://api.datamuse.com/words?ml=MOVIES&sp=LETTER*&max=100
-            //     //TODO: replace THEME with a random word that is related to the category or theme
-            //     break;
-    }
+            case "word":
+            case "words":
+                if (message.channel.type === "dm") {
+                    datamuse(message);
+                } else {
+                    message.channel.send(`That command only works in direct messages.`);
+                }
+            break;
+    }       
 });
 
 bot.on("messageReactionAdd", async (reaction, user) => {
@@ -575,6 +578,38 @@ bot.on("messageReactionRemove", async (reaction, user) => {
         client.release();
     }
 });
+
+async function datamuse(message) {
+    try {
+        let params = message.content.substring(PREFIX.length).split(/ +/g);
+        console.log(`${params[0]}`);
+        console.log(`${params[1]}`);
+        console.log(`${params[2]}`);
+        //     //TODO: use Datamuse https://api.datamuse.com/words?ml=MOVIES&sp=LETTER*&max=100
+        //     //TODO: replace THEME with a random word that is related to the category or theme
+        if (!params.length) {
+            return message.channel.send('You need to supply a search term!');
+        }
+        console.log(`${params[1]}`);
+        console.log(`${params[2]}`);
+        const list = await fetch(`http://api.datamuse.com/words?ml=${params[1]}&sp=${params[2]}*`).then(response => response.json());
+        if (!list.length) {
+            return message.channel.send(`No results found for **${params.join(' ')}**.`);
+        }
+        let wordList = "";
+        for (var i = 0; i <= list.length; i++) {
+                wordList = wordList.concat(`${list[i].word}, `);
+                if (i == 25 || i == list.length - 1) {
+                    message.channel.send(wordList);
+                    return;
+                }
+        }
+    } catch (e) {
+        console.log(e.stack);
+        throw e;
+    }
+
+}
 
 function clean(text) {
     if (typeof text === "string") {
