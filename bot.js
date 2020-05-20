@@ -107,11 +107,8 @@ bot.on('guildMemberAdd', member => {
         `**!roll** - When used while not in a game, GorillaBot will send a single dice roll to the same channel.\n\u200b` +
         `**!score** - displays current score.\n\u200b` +
         `**!reset** - clears the table for a new game.\n\u200b`)
-    .setURL([`Gorilla Marketing Rules`](`https://cdn.shopify.com/s/files/1/0246/2190/8043/t/5/assets/07d4153e02b0--Gorilla-Marketing-Rulebook-Web-2020.02.01-fa36f9.pdf?6037`))
+    // .setURL([`Gorilla Marketing Rules`](`https://cdn.shopify.com/s/files/1/0246/2190/8043/t/5/assets/07d4153e02b0--Gorilla-Marketing-Rulebook-Web-2020.02.01-fa36f9.pdf?6037`))
     member.send(embed3).catch(console.error);
-    
-    // .setURL(`[Gorilla Marketing Rules](https://cdn.shopify.com/s/files/1/0246/2190/8043/t/5/assets/07d4153e02b0--Gorilla-Marketing-Rulebook-Web-2020.02.01-fa36f9.pdf?6037)
-
 });
 
 setInterval(function () {
