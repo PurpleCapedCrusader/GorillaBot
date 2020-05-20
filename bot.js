@@ -153,7 +153,7 @@ bot.on("message", (message) => {
             var embed = new Discord.MessageEmbed()
                 .setColor("0xff0000")
                 .addField(`**JOIN A TABLE**`,
-                    `All players join the voice channel of an available primate table.`)
+                    `All players join the voice channel of an available primate table.\n\u200b`)
                 .addField(`**START GAME**`,
                     `Choose a player to be the first Active Player\n\u200b` +
                     `In the text channel of your table, the Active Player types **!Bands**, **!College Courses**, ` +
@@ -174,10 +174,10 @@ bot.on("message", (message) => {
                 .addField(`**GAME OVER**`,
                     `The game ends once all players have completed two turns as the Active Player.\n\u200b` +
                     `The score is displayed and the table is reset for the next game.\n\u200b`)
-                .addField(`WORD HELP`,
+                .addField(`**WORD HELP**`,
                     `While in the GorillaBot DM channel, enter "!word", a single word, and a single letter.\n\u200b` +
-                    `**!word gorilla m** will return up to 25 words that start with the letter "M" and that are related to the word "Gorilla".`)
-                .addField(`COMMANDS`,
+                    `**!word gorilla m** will return up to 25 words that start with the letter "M" and that are related to the word "Gorilla".\n\u200b`)
+                .addField(`**COMMANDS**`,
                     `**!roll** - When used while not in a game, GorillaBot will send a single dice roll to the same channel.\n\u200b` +
                     `**!score** - displays current score.\n\u200b` +
                     `**!reset** - clears the table for a new game.\n\u200b`)
