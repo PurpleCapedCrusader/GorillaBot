@@ -69,28 +69,28 @@ bot.on('guildMemberAdd', member => {
     const embed1 = new Discord.MessageEmbed()
         .setColor("0xff0000")
         .setTitle('**Welcome**')
-        .addField(`GLAD YOU'RE HERE!!`,
+        .addField(`**GLAD YOU'RE HERE!!**`,
         `I'm GorillaBot and I help run the games.\n\u200b` +
         `Use the commands below to play games and interact with me.\n\u200b`)
         .addField(`**LIST OF COMMANDS**`,
         `**!help** - There's no need to remember all of these commands. Use !help to bring up this list.\n\u200b`)
-        .addField(`JOIN A TABLE`,
-        `All players join the voice channel of an available primate table.`)
+        .addField(`**JOIN A TABLE**`,
+        `All players join the voice channel of an available primate table.\n\u200b\n\u200b`)
         .addField(`**START GAME**`,
-        `Choose a player to be the first Active Player\n\u200b` +
-        `In the text channel of your table, the Active Player types **!Bands**, **!College Courses**, ` +
+        `Choose a player to be the first Active Player.\n\u200b` +
+        `**Active Player**: In the text channel of your table, type **!Bands**, **!College Courses**, ` +
         `**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
         `**!Products** to choose the theme and start the game.\n\u200b`)
         .addField(`**ROLL**`,
-        `Active Player: use the **!roll** command to start the turn.\n\u200b` +
+        `**Active Player**: use the **!roll** command to start the turn.\n\u200b` +
         `GorillaBot will DM all players.\n\u200b`)
         .addField(`**WRITE**`,
-        `All Players: Open your DM from GorillaBot\n\u200b` +
-        `Active Player: Add a reaction emoji to the award you want to give.\n\u200b` +
-        `All Other Players: Respond with the Title (round 1) or Tagline (round 2) you create based on the acronym formed by your dice.\n\u200b` +
-        `All players: Return to the text channel at your table.\n\u200b`)
+        `**All Players**: Open your DM from GorillaBot\n\u200b` +
+        `**Active Player**: Add a reaction emoji to the award you want to give.\n\u200b` +
+        `**All Other Players**: Respond with the Title (round 1) or Tagline (round 2) you create based on the acronym formed by your dice.\n\u200b` +
+        `**All players**: Return to the text channel at your table.\n\u200b`)
         .addField(`**AWARD**`,
-        `Active Player: Use a reaction emoji to award your favorite title or tagline with a banana (point).\n\u200b` +
+        `**Active Player**: Use a reaction emoji to award your favorite title or tagline with a banana (point).\n\u200b` +
         `Choose a player, who hasn't been the Active Player this round, to be the new Active Player\n\u200b` +
         `Repeat from the **ROLL** phase and have fun!!!\n\u200b\n\u200b`)
         .addField(`**GAME OVER**`,
@@ -153,38 +153,38 @@ bot.on("message", (message) => {
         // break;
         
         case 'help':
-            const embed1 = new Discord.MessageEmbed()
-            .setColor("0xff0000")
-            .addField(`JOIN A TABLE`,
-                `All players join the voice channel of an available primate table.`)
-            .addField(`**START GAME**`,
-                `Choose a player to be the first Active Player\n\u200b` +
-                `In the text channel of your table, the Active Player types **!Bands**, **!College Courses**, ` +
-                `**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
-                `**!Products** to choose the theme and start the game.\n\u200b`)
-            .addField(`**ROLL**`,
-                `Active Player: use the **!roll** command to start the turn.\n\u200b` +
-                `GorillaBot will DM all players.\n\u200b`)
-            .addField(`**WRITE**`,
-                `All Players: Open your DM from GorillaBot\n\u200b` +
-                `Active Player: Add a reaction emoji to the award you want to give.\n\u200b` +
-                `All Other Players: Respond with the Title (round 1) or Tagline (round 2) you create based on the acronym formed by your dice.\n\u200b` +
-                `All players: Return to the text channel at your table.\n\u200b`)
-            .addField(`**AWARD**`,
-                `Active Player: Use a reaction emoji to award your favorite title or tagline with a banana (point).\n\u200b` +
-                `Choose a player, who hasn't been the Active Player this round, to be the new Active Player\n\u200b` +
-                `Repeat from the **ROLL** phase and have fun!!!\n\u200b\n\u200b`)
-            .addField(`**GAME OVER**`,
-                `The game ends once all players have completed two turns as the Active Player.\n\u200b` +
-                `The score is displayed and the table is reset for the next game.\n\u200b\n\u200b`)
-            .addField(`WORD HELP`,
-                `While in the GorillaBot DM channel, enter "!word", a single word, and a single letter.\n\u200b` +
-                `**!word gorilla m** will return up to 25 words that start with the letter "M" and that are related to the word "Gorilla".`)
-        .addField(`COMMANDS`,
-                `**!roll** - When used while not in a game, GorillaBot will send a single dice roll to the same channel.\n\u200b` +
-                `**!score** - displays current score.\n\u200b` +
-                `**!reset** - clears the table for a new game.\n\u200b`)
-            member.send(embed3).catch(console.error);
+            var embed = new Discord.MessageEmbed()
+                .setColor("0xff0000")
+                .addField(`**JOIN A TABLE**`,
+                    `All players join the voice channel of an available primate table.`)
+                .addField(`**START GAME**`,
+                    `Choose a player to be the first Active Player\n\u200b` +
+                    `In the text channel of your table, the Active Player types **!Bands**, **!College Courses**, ` +
+                    `**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
+                    `**!Products** to choose the theme and start the game.\n\u200b`)
+                .addField(`**ROLL**`,
+                    `Active Player: use the **!roll** command to start the turn.\n\u200b` +
+                    `GorillaBot will DM all players.\n\u200b`)
+                .addField(`**WRITE**`,
+                    `All Players: Open your DM from GorillaBot\n\u200b` +
+                    `Active Player: Add a reaction emoji to the award you want to give.\n\u200b` +
+                    `All Other Players: Respond with the Title (round 1) or Tagline (round 2) you create based on the acronym formed by your dice.\n\u200b` +
+                    `All players: Return to the text channel at your table.\n\u200b`)
+                .addField(`**AWARD**`,
+                    `Active Player: Use a reaction emoji to award your favorite title or tagline with a banana (point).\n\u200b` +
+                    `Choose a player, who hasn't been the Active Player this round, to be the new Active Player\n\u200b` +
+                    `Repeat from the **ROLL** phase and have fun!!!\n\u200b`)
+                .addField(`**GAME OVER**`,
+                    `The game ends once all players have completed two turns as the Active Player.\n\u200b` +
+                    `The score is displayed and the table is reset for the next game.\n\u200b`)
+                .addField(`WORD HELP`,
+                    `While in the GorillaBot DM channel, enter "!word", a single word, and a single letter.\n\u200b` +
+                    `**!word gorilla m** will return up to 25 words that start with the letter "M" and that are related to the word "Gorilla".`)
+                .addField(`COMMANDS`,
+                    `**!roll** - When used while not in a game, GorillaBot will send a single dice roll to the same channel.\n\u200b` +
+                    `**!score** - displays current score.\n\u200b` +
+                    `**!reset** - clears the table for a new game.\n\u200b`)
+            message.channel.send(embed).catch(console.error);
             break;
 
         case "lodash":
