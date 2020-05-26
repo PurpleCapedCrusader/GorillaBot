@@ -145,6 +145,18 @@ bot.on("message", (message) => {
         //     // TODO: !add @username - adds player to game
         // break;
 
+        // case "remove":
+        //     // TODO: !remove @username - removes player from game
+        // break;
+
+        // case "answers":
+        // case "titles":
+        // case "taglines":
+        // case "tag":
+        // case "tags":
+        //     // TODO: set all submissions to true and display answers
+        // break;
+
         // case "change":
         //     // TODO: update current turn with a new title or tagline submission
         // break;
@@ -267,38 +279,27 @@ bot.on("message", (message) => {
                             playerTurnsTaken(message)
                                 .then((results) => {
                                     turnsTaken = results;
-                                    console.log(
-                                        `inside case roll -> playerTurnsTaken() -> turnsTaken = ${turnsTaken}`
-                                    );
+                                    console.log(`inside case roll -> playerTurnsTaken() -> turnsTaken = ${turnsTaken}`);
                                     if (turnsTaken >= 2) {
                                         message.channel.send(
-                                            `${message.member}: You've already been the Active Player twice.`
-                                        );
+                                            `${message.member}: You've already been the Active Player twice.`);
                                         return;
                                     } else if (turnsTaken < 2) {
                                         gameIsInProgress(message).then((results) => {
                                             gameIs = results;
-                                            console.log(
-                                                `inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`
-                                            );
+                                            console.log(`inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`);
                                             if (gameIs == "true") {
                                                 turnIsInProgress(message).then((results) => {
                                                     turnIs = results;
-                                                    console.log(
-                                                        `inside case roll -> turnIsInProgress() -> turnIs = ${turnIs}`
-                                                    );
+                                                    console.log( `inside case roll -> turnIsInProgress() -> turnIs = ${turnIs}`);
                                                     if (turnIs == true) {
-                                                        message.channel.send(
-                                                            `The Active Player must use a reaction emoji on the winning title or tagline before the next player can !roll.`
-                                                        );
+                                                        message.channel.send(`The Active Player must use a reaction emoji on the winning title or tagline before the next player can !roll.`);
                                                     } else {
                                                         endTurn(message).then(roll_for_game(message));
                                                     }
                                                 });
                                             } else {
-                                                message.channel.send(
-                                                    `Once all players are in the voice channel, use the **!Bands**, **!College Courses**, **!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or **!Products** command to start a game.`
-                                                );
+                                                message.channel.send(`Once all players are in the voice channel, use the **!Bands**, **!College Courses**, **!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or **!Products** command to start a game.`);
                                             }
                                         });
                                     }
@@ -358,7 +359,6 @@ bot.on("message", (message) => {
                 message.author.send(`That command doesn't work in direct messages.`);
             } else {
                 if (message.member.voice.channel != null) {
-                    // TODO: don't allow players to be in more than 1 active game
                     let textChannelIndex = gameRooms.textChannels.indexOf(message.channel.name);
                     let voiceChannelIndex = gameRooms.voiceChannels.indexOf(message.member.voice.channel.name);
                     if (
@@ -921,9 +921,7 @@ function roll_for_game(message) {
             let winningTitle;
             console.log(`turnsAsActivePlayer = ${turnsAsActivePlayer}`);
             if (turnsAsActivePlayer >= 2) {
-                message.channel.send(
-                    `${message.member}: You've already been the Active Player twice.`
-                );
+                message.channel.send(`${message.member}: You've already been the Active Player twice.`);
                 return;
             }
             if (turnsAsActivePlayer == 0) {
@@ -974,15 +972,33 @@ function roll_for_game(message) {
             }
             message.channel.send(`${message.member}: **ACTIVE PLAYER**`);
 
+            // async function removeTempOnlineRole() {
+            //     ;
+            //     (async () => {
+            //         const client = await pool.connect()
+            //         try {
+            //             let currentTime = Date.now()
+            //             const query = await client.query(`SELECT * FROM public.online_role_tracking WHERE remove_time < ${currentTime} AND status = true`)
+            //             query.rows.forEach(row => { 
+            //                 let member = bot.guilds.cache.get(row.guild_id).member(row.author_id);
+            //                 let role_id = bot.guilds.cache.get(row.guild_id).roles.cache.find(rName => rName.id === row.temp_role_id);
+            //                 member.roles.remove(role_id).catch(console.error);
+            //                 client.query(`UPDATE public.online_role_tracking SET status = false WHERE onlineroletracking_id = ${row.onlineroletracking_id}`)
+            //                 console.log(`${row.author_username} was removed from the ${row.temp_role} role group in the ${row.guild_name} channel.`);
+            //             })
+            //         } catch (e) {
+            //             await client.query('ROLLBACK')
+            //             throw e
+            //         } finally {
+            //             client.release()
+            //         }
+            //     })().catch(err => console.log(err.stack))
+            // }
+
             // TODO: check public.game_leaflet for users in game instead of voice channel
-            message.member.voice.channel.members.forEach(function (
-                guildMember,
-                guildMemberId
-            ) {
+            message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
                 if (message.member.id == guildMemberId) {
-                    guildMember.send(
-                        `**Add a reaction to the award you choose to give.**`
-                    );
+                    guildMember.send(`**Add a reaction to the award you choose to give.**`);
                     if (turnsAsActivePlayer == 1) {
                         guildMember.send(`${titleJudge1}`);
                         guildMember.send(`${titleJudge2}`);
@@ -994,10 +1010,7 @@ function roll_for_game(message) {
                 }
             });
             //TODO: get list of players from public.game_leaflet instead of members in voice channel
-            message.member.voice.channel.members.forEach(function (
-                guildMember,
-                guildMemberId
-            ) {
+            message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
                 console.log(guildMemberId, guildMember.user.username);
                 if (message.member.id != guildMemberId) {
                     let playersDice = rollDice();
@@ -1352,6 +1365,7 @@ async function startGame(message) {
             `Commands:\n\u200b` +
             `  **!reset** - clears the table for a new game.\n\u200b` +
             `  **!score** - displays current scores.\n\u200b\ `
+            `  **!help** - full list of commands.\n\u200b`
         );
     } catch (err) {
         console.log(err.stack);
