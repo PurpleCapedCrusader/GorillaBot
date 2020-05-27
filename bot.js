@@ -432,6 +432,12 @@ bot.on("message", (message) => {
                     message.channel.send(`That command only works in direct messages.`);
                 }
             break;
+
+            case "test":
+                    console.log(bot.users.cache.get(message.author.id))
+                    console.log(bot.usermanager.cache.get("223979813856083968"))
+                    console.log(message.member)
+            break;
     }       
 });
 
