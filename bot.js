@@ -241,6 +241,10 @@ bot.on("message", (message) => {
             }
             break;
 
+        case "players":
+            //list of players in game
+            break;
+
         case "reset":
             if (message.channel.type === "dm") {
                 message.author.send(`That command doesn't work in direct messages.`);
@@ -257,6 +261,67 @@ bot.on("message", (message) => {
         case "roll":
         case "🦍":
         case "🎲":
+            if (message.channel.type === "dm") {
+                message.channel.send(rollDice());
+            } else {
+                if (message.member.voice.channel != null) {
+                    let textChannelIndex = gameRooms.textChannels.indexOf(
+                        message.channel.name
+                    );
+                    // TODO: pull player list from public.leaflet
+                    let voiceChannelIndex = gameRooms.voiceChannels.indexOf(
+                        message.member.voice.channel.name
+                    );
+                    if (
+                        gameRooms.textChannels.indexOf(message.channel.name) >= 0 &&
+                        gameRooms.textChannels.indexOf(message.channel.name) <=
+                        gameRooms.textChannels.length &&
+                        textChannelIndex === voiceChannelIndex
+                    ) {
+                        if (message.member.voice.channel.members.size >= 2) {
+                            //TODO: update to 3 upon deploy
+                            playerTurnsTaken(message)
+                                .then((results) => {
+                                    turnsTaken = results;
+                                    console.log(`inside case roll -> playerTurnsTaken() -> turnsTaken = ${turnsTaken}`);
+                                    if (turnsTaken >= 2) {
+                                        message.channel.send(
+                                            `${message.member}: You've already been the Active Player twice.`);
+                                        return;
+                                    } else if (turnsTaken < 2) {
+                                        gameIsInProgress(message).then((results) => {
+                                            gameIs = results;
+                                            console.log(`inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`);
+                                            if (gameIs == "true") {
+                                                turnIsInProgress(message).then((results) => {
+                                                    turnIs = results;
+                                                    console.log( `inside case roll -> turnIsInProgress() -> turnIs = ${turnIs}`);
+                                                    if (turnIs == true) {
+                                                        message.channel.send(`The Active Player must use a reaction emoji on the winning title or tagline before the next player can !roll.`);
+                                                    } else {
+                                                        endTurn(message).then(roll_for_game(message));
+                                                    }
+                                                });
+                                            } else {
+                                                message.channel.send(`Once all players are in the voice channel, use the **!Bands**, **!College Courses**, **!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or **!Products** command to start a game.`);
+                                            }
+                                        });
+                                    }
+                                })
+                                .catch((err) => console.error(err));
+                        } else {
+                            message.channel.send(rollDice());
+                        }
+                    } else {
+                        message.channel.send(rollDice());
+                    }
+                } else {
+                    message.channel.send(rollDice());
+                }
+            }
+            break;
+
+        case "newroll": //pulls current players from database
             if (message.channel.type === "dm") {
                 message.channel.send(rollDice());
             } else {
