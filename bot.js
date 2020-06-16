@@ -321,66 +321,66 @@ bot.on("message", (message) => {
             }
             break;
 
-        case "newroll": //pulls current players from database
-            if (message.channel.type === "dm") {
-                message.channel.send(rollDice());
-            } else {
-                if (message.member.voice.channel != null) {
-                    let textChannelIndex = gameRooms.textChannels.indexOf(
-                        message.channel.name
-                    );
-                    // TODO: pull player list from public.leaflet
-                    let voiceChannelIndex = gameRooms.voiceChannels.indexOf(
-                        message.member.voice.channel.name
-                    );
-                    if (
-                        gameRooms.textChannels.indexOf(message.channel.name) >= 0 &&
-                        gameRooms.textChannels.indexOf(message.channel.name) <=
-                        gameRooms.textChannels.length &&
-                        textChannelIndex === voiceChannelIndex
-                    ) {
-                        if (message.member.voice.channel.members.size >= 2) {
-                            //TODO: update to 3 upon deploy
-                            playerTurnsTaken(message)
-                                .then((results) => {
-                                    turnsTaken = results;
-                                    console.log(`inside case roll -> playerTurnsTaken() -> turnsTaken = ${turnsTaken}`);
-                                    if (turnsTaken >= 2) {
-                                        message.channel.send(
-                                            `${message.member}: You've already been the Active Player twice.`);
-                                        return;
-                                    } else if (turnsTaken < 2) {
-                                        gameIsInProgress(message).then((results) => {
-                                            gameIs = results;
-                                            console.log(`inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`);
-                                            if (gameIs == "true") {
-                                                turnIsInProgress(message).then((results) => {
-                                                    turnIs = results;
-                                                    console.log( `inside case roll -> turnIsInProgress() -> turnIs = ${turnIs}`);
-                                                    if (turnIs == true) {
-                                                        message.channel.send(`The Active Player must use a reaction emoji on the winning title or tagline before the next player can !roll.`);
-                                                    } else {
-                                                        endTurn(message).then(roll_for_game(message));
-                                                    }
-                                                });
-                                            } else {
-                                                message.channel.send(`Once all players are in the voice channel, use the **!Bands**, **!College Courses**, **!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or **!Products** command to start a game.`);
-                                            }
-                                        });
-                                    }
-                                })
-                                .catch((err) => console.error(err));
-                        } else {
-                            message.channel.send(rollDice());
-                        }
-                    } else {
-                        message.channel.send(rollDice());
-                    }
-                } else {
-                    message.channel.send(rollDice());
-                }
-            }
-            break;
+        // case "newroll": //pulls current players from database
+        //     if (message.channel.type === "dm") {
+        //         message.channel.send(rollDice());
+        //     } else {
+        //         if (message.member.voice.channel != null) {
+        //             let textChannelIndex = gameRooms.textChannels.indexOf(
+        //                 message.channel.name
+        //             );
+        //             // TODO: pull player list from public.leaflet
+        //             let voiceChannelIndex = gameRooms.voiceChannels.indexOf(
+        //                 message.member.voice.channel.name
+        //             );
+        //             if (
+        //                 gameRooms.textChannels.indexOf(message.channel.name) >= 0 &&
+        //                 gameRooms.textChannels.indexOf(message.channel.name) <=
+        //                 gameRooms.textChannels.length &&
+        //                 textChannelIndex === voiceChannelIndex
+        //             ) {
+        //                 if (message.member.voice.channel.members.size >= 2) {
+        //                     //TODO: update to 3 upon deploy
+        //                     playerTurnsTaken(message)
+        //                         .then((results) => {
+        //                             turnsTaken = results;
+        //                             console.log(`inside case roll -> playerTurnsTaken() -> turnsTaken = ${turnsTaken}`);
+        //                             if (turnsTaken >= 2) {
+        //                                 message.channel.send(
+        //                                     `${message.member}: You've already been the Active Player twice.`);
+        //                                 return;
+        //                             } else if (turnsTaken < 2) {
+        //                                 gameIsInProgress(message).then((results) => {
+        //                                     gameIs = results;
+        //                                     console.log(`inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`);
+        //                                     if (gameIs == "true") {
+        //                                         turnIsInProgress(message).then((results) => {
+        //                                             turnIs = results;
+        //                                             console.log( `inside case roll -> turnIsInProgress() -> turnIs = ${turnIs}`);
+        //                                             if (turnIs == true) {
+        //                                                 message.channel.send(`The Active Player must use a reaction emoji on the winning title or tagline before the next player can !roll.`);
+        //                                             } else {
+        //                                                 endTurn(message).then(roll_for_game(message));
+        //                                             }
+        //                                         });
+        //                                     } else {
+        //                                         message.channel.send(`Once all players are in the voice channel, use the **!Bands**, **!College Courses**, **!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or **!Products** command to start a game.`);
+        //                                     }
+        //                                 });
+        //                             }
+        //                         })
+        //                         .catch((err) => console.error(err));
+        //                 } else {
+        //                     message.channel.send(rollDice());
+        //                 }
+        //             } else {
+        //                 message.channel.send(rollDice());
+        //             }
+        //         } else {
+        //             message.channel.send(rollDice());
+        //         }
+        //     }
+        //     break;
 
         case "score":
         case "🍌":
@@ -1435,7 +1435,7 @@ async function startGame(message) {
             `**5**. Repeat and have fun!!!\n\u200b\n\u200b` +
             `Commands:\n\u200b` +
             `  **!reset** - clears the table for a new game.\n\u200b` +
-            `  **!score** - displays current scores.\n\u200b\ `
+            `  **!score** - displays current scores.\n\u200b` +
             `  **!help** - full list of commands.\n\u200b`
         );
     } catch (err) {
