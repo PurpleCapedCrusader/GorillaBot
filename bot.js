@@ -38,14 +38,17 @@ bot.leafletData = require("./leafletData.json");
 bot.on("voiceStateUpdate", async (oldMember, newMember) => {
     const client = await pool.connect();
     try {
-        let oldUserChannel = oldMember.channel.id;
-        let oldUserChannelSize = oldMember.channel.members.size;
-        if (oldUserChannelSize == 0) {
+        console.log(`oldMember.channel.id = ${oldMember.channel.id}`);
+        if(oldMember.channel.id == null) {
+            console.log(`oldMember.channel.id = null`);
+            return;
+        }
+        if (oldMember.channel.members.size == 0) {
             const gameId = await client.query({
                 rowMode: "array",
                 text: `SELECT game_id ` +
                     `FROM public.games ` +
-                    `WHERE voice_channel_id = ${oldUserChannel} ` +
+                    `WHERE voice_channel_id = ${oldMember.channel.id} ` +
                     `AND game_is_active = true;`,
             });
             console.log(`gameId.rows = ${gameId.rows}`);
@@ -321,66 +324,66 @@ bot.on("message", (message) => {
             }
             break;
 
-        // case "newroll": //pulls current players from database
-        //     if (message.channel.type === "dm") {
-        //         message.channel.send(rollDice());
-        //     } else {
-        //         if (message.member.voice.channel != null) {
-        //             let textChannelIndex = gameRooms.textChannels.indexOf(
-        //                 message.channel.name
-        //             );
-        //             // TODO: pull player list from public.leaflet
-        //             let voiceChannelIndex = gameRooms.voiceChannels.indexOf(
-        //                 message.member.voice.channel.name
-        //             );
-        //             if (
-        //                 gameRooms.textChannels.indexOf(message.channel.name) >= 0 &&
-        //                 gameRooms.textChannels.indexOf(message.channel.name) <=
-        //                 gameRooms.textChannels.length &&
-        //                 textChannelIndex === voiceChannelIndex
-        //             ) {
-        //                 if (message.member.voice.channel.members.size >= 2) {
-        //                     //TODO: update to 3 upon deploy
-        //                     playerTurnsTaken(message)
-        //                         .then((results) => {
-        //                             turnsTaken = results;
-        //                             console.log(`inside case roll -> playerTurnsTaken() -> turnsTaken = ${turnsTaken}`);
-        //                             if (turnsTaken >= 2) {
-        //                                 message.channel.send(
-        //                                     `${message.member}: You've already been the Active Player twice.`);
-        //                                 return;
-        //                             } else if (turnsTaken < 2) {
-        //                                 gameIsInProgress(message).then((results) => {
-        //                                     gameIs = results;
-        //                                     console.log(`inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`);
-        //                                     if (gameIs == "true") {
-        //                                         turnIsInProgress(message).then((results) => {
-        //                                             turnIs = results;
-        //                                             console.log( `inside case roll -> turnIsInProgress() -> turnIs = ${turnIs}`);
-        //                                             if (turnIs == true) {
-        //                                                 message.channel.send(`The Active Player must use a reaction emoji on the winning title or tagline before the next player can !roll.`);
-        //                                             } else {
-        //                                                 endTurn(message).then(roll_for_game(message));
-        //                                             }
-        //                                         });
-        //                                     } else {
-        //                                         message.channel.send(`Once all players are in the voice channel, use the **!Bands**, **!College Courses**, **!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or **!Products** command to start a game.`);
-        //                                     }
-        //                                 });
-        //                             }
-        //                         })
-        //                         .catch((err) => console.error(err));
-        //                 } else {
-        //                     message.channel.send(rollDice());
-        //                 }
-        //             } else {
-        //                 message.channel.send(rollDice());
-        //             }
-        //         } else {
-        //             message.channel.send(rollDice());
-        //         }
-        //     }
-        //     break;
+        case "newroll": //pulls current players from database
+            if (message.channel.type === "dm") {
+                message.channel.send(rollDice());
+            } else {
+                if (message.member.voice.channel != null) {
+                    let textChannelIndex = gameRooms.textChannels.indexOf(
+                        message.channel.name
+                    );
+                    // TODO: pull player list from public.leaflet
+                    let voiceChannelIndex = gameRooms.voiceChannels.indexOf(
+                        message.member.voice.channel.name
+                    );
+                    if (
+                        gameRooms.textChannels.indexOf(message.channel.name) >= 0 &&
+                        gameRooms.textChannels.indexOf(message.channel.name) <=
+                        gameRooms.textChannels.length &&
+                        textChannelIndex === voiceChannelIndex
+                    ) {
+                        if (message.member.voice.channel.members.size >= 2) {
+                            //TODO: update to 3 upon deploy
+                            playerTurnsTaken(message)
+                                .then((results) => {
+                                    turnsTaken = results;
+                                    console.log(`inside case roll -> playerTurnsTaken() -> turnsTaken = ${turnsTaken}`);
+                                    if (turnsTaken >= 2) {
+                                        message.channel.send(
+                                            `${message.member}: You've already been the Active Player twice.`);
+                                        return;
+                                    } else if (turnsTaken < 2) {
+                                        gameIsInProgress(message).then((results) => {
+                                            gameIs = results;
+                                            console.log(`inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`);
+                                            if (gameIs == "true") {
+                                                turnIsInProgress(message).then((results) => {
+                                                    turnIs = results;
+                                                    console.log( `inside case roll -> turnIsInProgress() -> turnIs = ${turnIs}`);
+                                                    if (turnIs == true) {
+                                                        message.channel.send(`The Active Player must use a reaction emoji on the winning title or tagline before the next player can !roll.`);
+                                                    } else {
+                                                        endTurn(message).then(new_roll_for_game(message));
+                                                    }
+                                                });
+                                            } else {
+                                                message.channel.send(`Once all players are in the voice channel, use the **!Bands**, **!College Courses**, **!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or **!Products** command to start a game.`);
+                                            }
+                                        });
+                                    }
+                                })
+                                .catch((err) => console.error(err));
+                        } else {
+                            message.channel.send(rollDice());
+                        }
+                    } else {
+                        message.channel.send(rollDice());
+                    }
+                } else {
+                    message.channel.send(rollDice());
+                }
+            }
+            break;
 
         case "score":
         case "🍌":
@@ -972,6 +975,216 @@ function rollDice() {
 }
 
 function roll_for_game(message) {
+    (async () => {
+        const client = await pool.connect();
+        try {
+            const gameLeafletData = await client.query(
+                `SELECT * ` +
+                `FROM public.game_leaflet ` +
+                `WHERE player_id = ${message.member.id} ` +
+                `AND game_is_active = true`
+            );
+            gameLeafletData.rows.forEach((row) => {
+                gameSessionId = row.game_session_id;
+                gameIsActive = row.game_is_active;
+                turnsAsActivePlayer = row.turns_as_active_player;
+                themeCategory = row.theme_category_roll;
+                titleJudge = row.title_judge_roll;
+                taglineJudge = row.tagline_judge_roll;
+            });
+            let winningTitle;
+            console.log(`turnsAsActivePlayer = ${turnsAsActivePlayer}`);
+            if (turnsAsActivePlayer >= 2) {
+                message.channel.send(`${message.member}: You've already been the Active Player twice.`);
+                return;
+            }
+            if (turnsAsActivePlayer == 0) {
+                turnsAsActivePlayer += 1;
+                await client.query(
+                    `UPDATE public.game_leaflet ` +
+                    `SET turns_as_active_player = 1 ` +
+                    `WHERE player_id = ${message.member.id} ` +
+                    `AND game_is_active = true;`
+                );
+            } else if (turnsAsActivePlayer == 1) {
+                turnsAsActivePlayer += 1;
+                await client.query(
+                    `UPDATE public.game_leaflet ` +
+                    `SET turns_as_active_player = 2 ` +
+                    `WHERE player_id = ${message.member.id} ` +
+                    `AND game_is_active = true;`
+                );
+                const roundOneWinner = await client.query({
+                    rowMode: "array",
+                    text: `SELECT title_tagline ` +
+                        `FROM public.turns ` +
+                        `WHERE active_player_id = ${message.member.id} ` +
+                        `AND game_is_active = true ` +
+                        `AND point_earned = 1 ` +
+                        `ORDER BY message_timestamp DESC LIMIT 1;`,
+                });
+                winningTitle = roundOneWinner.rows;
+            }
+            const gameTheme = await client.query({
+                rowMode: "array",
+                text: `SELECT game_theme ` +
+                    `FROM public.games ` +
+                    `WHERE category_id = ${message.member.voice.channel.parent.id} ` +
+                    `AND game_is_active = true ` +
+                    `ORDER BY message_timestamp DESC LIMIT 1;`, //TODO: make this more simple
+            });
+            let gameThemeRows = gameTheme.rows;
+            let themeCategoryText =
+                bot.leafletData[gameThemeRows]["category"][themeCategory];
+            let titleJudge1 = bot.leafletData[gameThemeRows]["judge1"][titleJudge];
+            let titleJudge2 = bot.leafletData[gameThemeRows]["judge2"][titleJudge];
+            let taglineJudge1 = bot.leafletData["round2"]["r2j1"][taglineJudge];
+            let taglineJudge2 = bot.leafletData["round2"]["r2j2"][taglineJudge];
+            message.channel.send(`${gameThemeRows}: **${themeCategoryText}**`);
+            if (turnsAsActivePlayer == 2) {
+                message.channel.send(`Winning Title: **${winningTitle}**`);
+            }
+            message.channel.send(`${message.member}: **ACTIVE PLAYER**`);
+
+            // async function removeTempOnlineRole() {
+            //     ;
+            //     (async () => {
+            //         const client = await pool.connect()
+            //         try {
+            //             let currentTime = Date.now()
+            //             const query = await client.query(`SELECT * FROM public.online_role_tracking WHERE remove_time < ${currentTime} AND status = true`)
+            //             query.rows.forEach(row => { 
+            //                 let member = bot.guilds.cache.get(row.guild_id).member(row.author_id);
+            //                 let role_id = bot.guilds.cache.get(row.guild_id).roles.cache.find(rName => rName.id === row.temp_role_id);
+            //                 member.roles.remove(role_id).catch(console.error);
+            //                 client.query(`UPDATE public.online_role_tracking SET status = false WHERE onlineroletracking_id = ${row.onlineroletracking_id}`)
+            //                 console.log(`${row.author_username} was removed from the ${row.temp_role} role group in the ${row.guild_name} channel.`);
+            //             })
+            //         } catch (e) {
+            //             await client.query('ROLLBACK')
+            //             throw e
+            //         } finally {
+            //             client.release()
+            //         }
+            //     })().catch(err => console.log(err.stack))
+            // }
+
+            // TODO: check public.game_leaflet for users in game instead of voice channel
+            message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
+                if (message.member.id == guildMemberId) {
+                    guildMember.send(`**Add a reaction to the award you choose to give.**`);
+                    if (turnsAsActivePlayer == 1) {
+                        guildMember.send(`${titleJudge1}`);
+                        guildMember.send(`${titleJudge2}`);
+                    }
+                    if (turnsAsActivePlayer == 2) {
+                        guildMember.send(`${taglineJudge1}`);
+                        guildMember.send(`${taglineJudge2}`);
+                    }
+                }
+            });
+            //TODO: get list of players from public.game_leaflet instead of members in voice channel
+            message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
+                console.log(guildMemberId, guildMember.user.username);
+                if (message.member.id != guildMemberId) {
+                    let playersDice = rollDice();
+                    guildMember.send(`${gameThemeRows}: **${themeCategoryText}**`);
+                    if (turnsAsActivePlayer == 2) {
+                        guildMember.send(`Winning Title: **${winningTitle}**`);
+                    }
+                    guildMember.send(`${playersDice}`);
+                    (async () => {
+                        const client = await pool.connect();
+                        try {
+                            const gameId = await client.query({
+                                rowMode: "array",
+                                text: `SELECT game_id ` +
+                                    `FROM public.games ` +
+                                    `WHERE category_id = ${message.member.voice.channel.parent.id} ` +
+                                    `AND game_is_active = true ` +
+                                    `ORDER BY message_timestamp DESC LIMIT 1;`,
+                            });
+                            const gameTheme = await client.query({
+                                rowMode: "array",
+                                text: `SELECT game_theme ` +
+                                    `FROM public.games ` +
+                                    `WHERE category_id = ${message.member.voice.channel.parent.id} ` +
+                                    `AND game_is_active = true ` +
+                                    `ORDER BY message_timestamp DESC LIMIT 1;`,
+                            });
+                            console.log(`gameTheme.rows = ${gameTheme.rows}`);
+                            const prepStmnt = {
+                                game_session_id: parseInt(gameId.rows),
+                                game_is_active: true,
+                                turn_is_active: true,
+                                readable_timestamp: getTimeStamp(),
+                                message_timestamp: message.createdTimestamp,
+                                category_name: message.member.voice.channel.parent.name,
+                                category_id: message.member.voice.channel.parent.id,
+                                text_channel_id: message.channel.id,
+                                voice_channel_id: message.member.voice.channel.id,
+                                message_id: message.id,
+                                game_theme: gameTheme.rows.toString(),
+                                active_player_id: message.member.id,
+                                active_player_username: message.author.username,
+                                player_id: guildMemberId,
+                                player_username: guildMember.user.username,
+                                letters_given: playersDice,
+                                title_tagline: null,
+                                title_tagline_is_submitted: false,
+                                point_earned: 0,
+                            };
+                            await client.query("BEGIN");
+                            const prepStmntKeys =
+                                `INSERT INTO public.turns(game_session_id, game_is_active, ` +
+                                `turn_is_active, readable_timestamp, message_timestamp, ` +
+                                `category_name, category_id, text_channel_id, voice_channel_id, ` +
+                                `message_id, game_theme, active_player_id, active_player_username, ` +
+                                `player_id, player_username, letters_given, title_tagline, ` +
+                                `title_tagline_is_submitted, point_earned) ` +
+                                `VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`;
+                            const prepStmntValues = [
+                                prepStmnt.game_session_id,
+                                prepStmnt.game_is_active,
+                                prepStmnt.turn_is_active,
+                                prepStmnt.readable_timestamp,
+                                prepStmnt.message_timestamp,
+                                prepStmnt.category_name,
+                                prepStmnt.category_id,
+                                prepStmnt.text_channel_id,
+                                prepStmnt.voice_channel_id,
+                                prepStmnt.message_id,
+                                prepStmnt.game_theme,
+                                prepStmnt.active_player_id,
+                                prepStmnt.active_player_username,
+                                prepStmnt.player_id,
+                                prepStmnt.player_username,
+                                prepStmnt.letters_given,
+                                prepStmnt.title_tagline,
+                                prepStmnt.title_tagline_is_submitted,
+                                prepStmnt.point_earned,
+                            ];
+                            await client.query(prepStmntKeys, prepStmntValues);
+                            await client.query("COMMIT");
+                        } catch (e) {
+                            await client.query("ROLLBACK");
+                            throw e;
+                        } finally {
+                            client.release();
+                        }
+                    })().catch((err) => console.log(err.stack));
+                }
+            });
+        } catch (e) {
+            await client.query("ROLLBACK");
+            throw e;
+        } finally {
+            client.release();
+        }
+    })().catch((err) => console.log(err.stack));
+}
+
+function new_roll_for_game(message) {
     (async () => {
         const client = await pool.connect();
         try {
