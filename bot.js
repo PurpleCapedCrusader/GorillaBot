@@ -1047,12 +1047,14 @@ function roll_for_game(message) {
             message.channel.send(`${message.member}: **ACTIVE PLAYER**`);
 
             // TODO: check public.game_leaflet for users in game instead of voice channel
-            // const query = await client.query(`SELECT * FROM public.game_leaflet WHERE remove_time < ${currentTime} AND status = true`) //left off here - pull users from leaflet active game
-            //     let member = bot.guilds.cache.get(row.guild_id).member(row.author_id);
-            //     let role_id = bot.guilds.cache.get(row.guild_id).roles.cache.find(rName => rName.id === row.temp_role_id);
-            //     member.roles.remove(role_id).catch(console.error);
-            //     client.query(`UPDATE public.online_role_tracking SET status = false WHERE onlineroletracking_id = ${row.onlineroletracking_id}`)
-            //     console.log(`${row.author_username} was removed from the ${row.temp_role} role group in the ${row.guild_name} channel.`);
+            const playersFromDatabase = await client.query(
+                `SELECT * ` +
+                `FROM public.game_leaflet ` +
+                `WHERE voice_channel_id = ${message.member.voice.channel.id} ` +
+                `AND game_is_active = true`)
+            let member = bot.guilds.cache.get(row.guild_id).member(row.author_id);
+            let role_id = bot.guilds.cache.get(row.guild_id).roles.cache.find(rName => rName.id === row.temp_role_id);
+            console.log(`${row.author_username} was removed from the ${row.temp_role} role group in the ${row.guild_name} channel.`);
 
             message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
                 if (message.member.id == guildMemberId) {
