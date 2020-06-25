@@ -733,16 +733,10 @@ bot.on("messageReactionRemove", async (reaction, user) => {
 async function datamuse(message) {
     try {
         let params = message.content.substring(PREFIX.length).split(/ +/g);
-        console.log(`${params[0]}`);
-        console.log(`${params[1]}`);
-        console.log(`${params[2]}`);
-        //     //TODO: use Datamuse https://api.datamuse.com/words?ml=MOVIES&sp=LETTER*&max=100
-        //     //TODO: replace THEME with a random word that is related to the category or theme
+        console.log(`datamuse search - ${message.author.username}: ${params}`);
         if (!params.length) {
             return message.channel.send('You need to supply a search term!');
         }
-        console.log(`${params[1]}`);
-        console.log(`${params[2]}`);
         const list = await fetch(`http://api.datamuse.com/words?ml=${params[1]}&sp=${params[2]}*`).then(response => response.json());
         if (!list.length) {
             return message.channel.send(`No results found for **${params.join(' ')}**.`);
@@ -759,7 +753,6 @@ async function datamuse(message) {
         console.log(e.stack);
         throw e;
     }
-
 }
 
 function clean(text) {
@@ -1047,15 +1040,6 @@ function roll_for_game(message) {
             message.channel.send(`${message.member}: **ACTIVE PLAYER**`);
 
             // TODO: check public.game_leaflet for users in game instead of voice channel
-            const playersFromDatabase = await client.query(
-                `SELECT * ` +
-                `FROM public.game_leaflet ` +
-                `WHERE voice_channel_id = ${message.member.voice.channel.id} ` +
-                `AND game_is_active = true`)
-            let member = bot.guilds.cache.get(row.guild_id).member(row.author_id);
-            let role_id = bot.guilds.cache.get(row.guild_id).roles.cache.find(rName => rName.id === row.temp_role_id);
-            console.log(`${row.author_username} was removed from the ${row.temp_role} role group in the ${row.guild_name} channel.`);
-
             message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
                 if (message.member.id == guildMemberId) {
                     guildMember.send(`**Add a reaction to the award you choose to give.**`);
@@ -1242,30 +1226,22 @@ function new_roll_for_game(message) {
             }
             message.channel.send(`${message.member}: **ACTIVE PLAYER**`);
 
-            // async function removeTempOnlineRole() {
-            //     ;
-            //     (async () => {
-            //         const client = await pool.connect()
-            //         try {
-            //             let currentTime = Date.now()
-            //             const query = await client.query(`SELECT * FROM public.online_role_tracking WHERE remove_time < ${currentTime} AND status = true`)
-            //             query.rows.forEach(row => { 
-            //                 let member = bot.guilds.cache.get(row.guild_id).member(row.author_id);
-            //                 let role_id = bot.guilds.cache.get(row.guild_id).roles.cache.find(rName => rName.id === row.temp_role_id);
-            //                 member.roles.remove(role_id).catch(console.error);
-            //                 client.query(`UPDATE public.online_role_tracking SET status = false WHERE onlineroletracking_id = ${row.onlineroletracking_id}`)
-            //                 console.log(`${row.author_username} was removed from the ${row.temp_role} role group in the ${row.guild_name} channel.`);
-            //             })
-            //         } catch (e) {
-            //             await client.query('ROLLBACK')
-            //             throw e
-            //         } finally {
-            //             client.release()
-            //         }
-            //     })().catch(err => console.log(err.stack))
-            // }
-
             // TODO: check public.game_leaflet for users in game instead of voice channel
+            const playersFromDatabase = await client.query(
+                `SELECT * ` +
+                `FROM public.game_leaflet ` +
+                `WHERE voice_channel_id = ${message.member.voice.channel.id} ` +
+                `AND game_is_active = true`)
+            playersFromDatabase.rows.forEach((row) => {
+                playersInGame = row.player_id;
+                guildId = row.guild_id; //this is in games not leaflet
+
+            console.log(`playersInGame1 = ${playersInGame}`);
+            let member = bot.guilds.cache.get(row.guild_id).member(row.author_id);
+            console.log(`member = ${member}`);
+            });
+            // let role_id = bot.guilds.cache.get(row.guild_id).roles.cache.find(rName => rName.id === row.temp_role_id);
+
             message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
                 if (message.member.id == guildMemberId) {
                     guildMember.send(`**Add a reaction to the award you choose to give.**`);
