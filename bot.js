@@ -1024,7 +1024,7 @@ function roll_for_game(message) {
                     `FROM public.games ` +
                     `WHERE category_id = ${message.member.voice.channel.parent.id} ` +
                     `AND game_is_active = true ` +
-                    `ORDER BY message_timestamp DESC LIMIT 1;`, //TODO: make this more simple
+                    `ORDER BY message_timestamp DESC LIMIT 1;`,
             });
             let gameThemeRows = gameTheme.rows;
             let themeCategoryText =
@@ -1039,7 +1039,6 @@ function roll_for_game(message) {
             }
             message.channel.send(`${message.member}: **ACTIVE PLAYER**`);
 
-            // TODO: check public.game_leaflet for users in game instead of voice channel
             message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
                 if (message.member.id == guildMemberId) {
                     guildMember.send(`**Add a reaction to the award you choose to give.**`);
@@ -1053,7 +1052,7 @@ function roll_for_game(message) {
                     }
                 }
             });
-            //TODO: get list of players from public.game_leaflet instead of members in voice channel
+
             message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
                 console.log(guildMemberId, guildMember.user.username);
                 if (message.member.id != guildMemberId) {
@@ -1227,6 +1226,20 @@ function new_roll_for_game(message) {
             message.channel.send(`${message.member}: **ACTIVE PLAYER**`);
 
             // TODO: check public.game_leaflet for users in game instead of voice channel
+           
+           
+
+            
+           
+           
+           
+            const guildIdFromDatabase = await client.query({
+                rowMode: "array",
+                text: `SELECT guild_id ` +
+                `FROM public.games ` +
+                `WHERE voice_channel_id = ${message.member.voice.channel.id} ` +
+                `AND game_is_active = true ` +
+                `ORDER BY message_timestamp DESC LIMIT 1;`});
             const playersFromDatabase = await client.query(
                 `SELECT * ` +
                 `FROM public.game_leaflet ` +
@@ -1234,14 +1247,27 @@ function new_roll_for_game(message) {
                 `AND game_is_active = true`)
             playersFromDatabase.rows.forEach((row) => {
                 playersInGame = row.player_id;
-                guildId = row.guild_id; //this is in games not leaflet
+                guildId = guildIdFromDatabase.rows; //this is in games not leaflet
+                console.log(`guildId = ${guildId}`);
+                console.log(`playersInGame = ${playersInGame}`);
+                console.log(`MESSAGE.MEMBER = ${message.member}`);
 
-            console.log(`playersInGame1 = ${playersInGame}`);
-            let member = bot.guilds.cache.get(row.guild_id).member(row.author_id);
-            console.log(`member = ${member}`);
+                // let member = bot.guilds.cache.get(row.guild_id).member(row.author_id);
+
+                let guild = bot.guilds.cache.get(guildId);
+                console.log(`guild = ${guild}`);
+                let member = bot.guilds.cache.get(guildId).member(playersInGame);
+                console.log(`member = ${member}`);
             });
             // let role_id = bot.guilds.cache.get(row.guild_id).roles.cache.find(rName => rName.id === row.temp_role_id);
 
+            
+            
+            
+            
+            
+            
+            
             message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
                 if (message.member.id == guildMemberId) {
                     guildMember.send(`**Add a reaction to the award you choose to give.**`);
