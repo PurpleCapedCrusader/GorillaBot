@@ -1174,19 +1174,25 @@ async function fromDatabase(message) {
     playersFromDatabase.rows.forEach((row) => {
         playersInGame = row.player_id;
         guildId = guildIdFromDatabase.rows; //this is in games not leaflet
+        
         console.log(`guildId from database = ${guildId}`);
         console.log(`playersInGame = ${playersInGame}`);
         console.log(`MESSAGE.MEMBER = ${message.member}`);
         console.log(`message.guild = ${message.guild}`);
         console.log(`message.guild.id = ${message.guild.id}`);
+        
+        let list = message.member.voice.channel.members;
+        console.log(`list = ${JSON.stringify(list)}`);
+        
+        console.log(`bot.guilds = ${JSON.stringify(bot.guilds.cache.get(guildId))}`);
 
         // let member = bot.guilds.cache.get(row.guild_id).member(row.author_id);
 
         let server = bot.guilds.cache.get(guildId);
         // console.log(`guild = ${guild}`);
         console.log(`server = ${server}`);
-        let member = bot.guild.members.fetch(playersInGame);
-        console.log(`member = ${member}`);
+        // let member = bot.message.guilds.members.cache.gameTheme(playersInGame);
+        // console.log(`member = ${member}`);
     });
 };
 
