@@ -1157,7 +1157,7 @@ function roll_for_game(message) {
 
 
 async function fromDatabase(message) {
-    console.log(message);
+    // console.log(message);
     const client = await pool.connect(); 
     const guildIdFromDatabase = await client.query({
         rowMode: "array",
@@ -1176,7 +1176,7 @@ async function fromDatabase(message) {
         guildId = guildIdFromDatabase.rows; //this is in games not leaflet
         
         console.log(`message.guild.available = ${message.guild.available}`);
-        // console.log(`playersFromDatabase = ${JSON.stringify(playersFromDatabase)}`);
+        console.log(`playersFromDatabase = ${JSON.stringify(playersFromDatabase)}`);
         console.log(`guildId from database = ${guildId}`);
         console.log(`playersInGame = ${playersInGame}`);
         console.log(`MESSAGE.MEMBER = ${message.member}`);
@@ -1188,12 +1188,12 @@ async function fromDatabase(message) {
         
         // console.log(`bot.guilds.cache = ${JSON.stringify(bot.guilds.cache)}`);
         
-        console.log(`bot.users = ${JSON.stringify(bot.users.cache.get(playerInGame))}`); //playerInGame needs quotes
+        console.log(`bot.users = ${JSON.stringify(bot.users.cache.get(playersInGame))}`); //playerInGame needs quotes
 
-        // let member = bot.guilds.cache.get(row.guild_id).member(row.author_id);
-        let server = bot.guilds.find(guild => guild.id === `"${guildId}"`);
+        // let member = bot.guilds.cache.get(row.guild_id).member(row.author_id); 
+        let server = bot.guilds.cache.find(guild => guild.id == guildId);
         // console.log(`guild = ${guild}`);
-        console.log(`server = ${server}`);
+        console.log(`server = ${JSON.stringify(server)}`);
         // let member = bot.message.guilds.members.cache.gameTheme(playersInGame);
         // console.log(`member = ${member}`);
     });
