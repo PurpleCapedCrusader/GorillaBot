@@ -1177,6 +1177,7 @@ async function fromDatabase(message) {
         
         console.log(`message.guild.available = ${message.guild.available}`);
         console.log(`playersFromDatabase = ${JSON.stringify(playersFromDatabase)}`);
+        console.log(`playersFromVoiceChannel = ${JSON.stringify(message.member.voice.channel.members)}`);
         console.log(`guildId from database = ${guildId}`);
         console.log(`playersInGame = ${playersInGame}`);
         console.log(`MESSAGE.MEMBER = ${message.member}`);
@@ -1193,7 +1194,7 @@ async function fromDatabase(message) {
         // let member = bot.guilds.cache.get(row.guild_id).member(row.author_id); 
         let server = bot.guilds.cache.find(guild => guild.id == guildId);
         // console.log(`guild = ${guild}`);
-        console.log(`server = ${JSON.stringify(server)}`);
+        console.log(`server = ${JSON.stringify(server.id)}`);
         // let member = bot.message.guilds.members.cache.gameTheme(playersInGame);
         // console.log(`member = ${member}`);
     });
