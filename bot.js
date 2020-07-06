@@ -1176,7 +1176,7 @@ async function fromDatabase(message) {
         guildId = guildIdFromDatabase.rows; //this is in games not leaflet
         
         console.log(`message.guild.available = ${message.guild.available}`);
-        console.log(`playersFromDatabase = ${JSON.stringify(playersFromDatabase)}`);
+        // console.log(`playersFromDatabase = ${JSON.stringify(playersFromDatabase)}`);
         console.log(`playersFromVoiceChannel = ${JSON.stringify(message.member.voice.channel.members)}`);
         console.log(`guildId from database = ${guildId}`);
         console.log(`playersInGame = ${playersInGame}`);
@@ -1197,6 +1197,8 @@ async function fromDatabase(message) {
         console.log(`server = ${JSON.stringify(server.id)}`);
         // let member = bot.message.guilds.members.cache.gameTheme(playersInGame);
         // console.log(`member = ${member}`);
+
+        
     });
 };
 
