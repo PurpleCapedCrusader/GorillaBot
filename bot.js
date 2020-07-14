@@ -27,7 +27,7 @@ bot.on("ready", () => {
 });
 
 // error catch-all
-bot.on("error", (e) => console.error(`${getTimeStamp()} :: ${e}`));
+bot.on("error", (e) => console.error(`${getTimeStamp()} :: ${e}`)); //TODO: DM me with errors
 bot.on("warn", (e) => console.warn(`${getTimeStamp()} :: ${e}`));
 bot.on("debug", (e) => console.info(`${getTimeStamp()} :: ${e}`));
 
@@ -38,7 +38,7 @@ bot.leafletData = require("./leafletData.json");
 bot.on("voiceStateUpdate", async (oldMember, newMember) => { //TODO: fix error when join voice channel from no voice channel
     const client = await pool.connect();
     try {
-        console.log(`oldMember.channel.id = ${oldMember.channel.id}`);
+        console.log(`oldMember.channel = ${oldMember.channel}`);
         if(oldMember.channel.id == null) {
             console.log(`oldMember.channel.id = null`);
             return;
@@ -162,6 +162,10 @@ bot.on("message", (message) => {
 
         // case "change":
         //     // TODO: update current turn with a new title or tagline submission
+        // break;
+
+        // case "resend":
+        //     // TODO: resend latest info(roll or awards) to DM of message.author
         // break;
         
         case 'help':
@@ -1309,7 +1313,7 @@ function new_roll_for_game(message) {
             
             
             let playersFromDatabaseArray = [];
-            const client = await pool.connect(); 
+            // const client = await pool.connect(); 
             const guildIdFromDatabase = await client.query({
                 rowMode: "array",
                 text: `SELECT guild_id ` +
@@ -1336,7 +1340,9 @@ function new_roll_for_game(message) {
                 
                 // console.log(`bot.users = ${JSON.stringify(bot.users.cache.get(playersInGame))}`); //playerInGame needs quotes
                 playersFromDatabaseArray.push(bot.users.cache.get(playersInGame));
+                const guildMemberObject = bot.guild.member(message.author);
                 console.log(`bot.users = ${JSON.stringify(playersFromDatabaseArray)}`)
+                console.log(`guildMemberObject = ${JSON.stringify(guildMemberObject)}`)
                 // let server = bot.guilds.cache.find(guild => guild.id == guildId);
                 // console.log(`server = ${JSON.stringify(server.id)}`);
                 
@@ -1361,7 +1367,7 @@ function new_roll_for_game(message) {
             });
             //TODO: get list of players from public.game_leaflet instead of members in voice channel
             playersFromDatabaseArray.forEach(function (guildMember, guildMemberId) {
-                console.log(guildMemberId, guildMember.user.username);
+                // console.log(guildMemberId, guildMember.user.username);
                 if (message.member.id != guildMemberId) {
                     let playersDice = rollDice();
                     guildMember.send(`${gameThemeRows}: **${themeCategoryText}**`);
