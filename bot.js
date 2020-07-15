@@ -1331,6 +1331,7 @@ function new_roll_for_game(message) {
                 guildId = guildIdFromDatabase.rows; //this is in games not leaflet
                 
                 console.log(`message.guild.available = ${message.guild.available}`);
+                console.log(`message.guild = ${message.guild}`);
                 console.log(`playersFromVoiceChannel = ${JSON.stringify(message.member.voice.channel.members)}`);
                 console.log(`guildId from database = ${guildId}`);
                 console.log(`playersInGame = ${playersInGame}`);
@@ -1340,9 +1341,12 @@ function new_roll_for_game(message) {
                 
                 // console.log(`bot.users = ${JSON.stringify(bot.users.cache.get(playersInGame))}`); //playerInGame needs quotes
                 playersFromDatabaseArray.push(bot.users.cache.get(playersInGame));
-                const guildMemberObject = bot.guild.member(message.author);
+                let guild = Client.guilds.cache.get(guildId);
+                console.log(`GUILD = ${JSON.stringify(guild)}`)
+                const guildMemberObject = bot.guild.users.cache.get(message.author);
                 console.log(`bot.users = ${JSON.stringify(playersFromDatabaseArray)}`)
                 console.log(`guildMemberObject = ${JSON.stringify(guildMemberObject)}`)
+
                 // let server = bot.guilds.cache.find(guild => guild.id == guildId);
                 // console.log(`server = ${JSON.stringify(server.id)}`);
                 
