@@ -1341,7 +1341,7 @@ function new_roll_for_game(message) {
                 
                 // console.log(`bot.users = ${JSON.stringify(bot.users.cache.get(playersInGame))}`); //playerInGame needs quotes
                 playersFromDatabaseArray.push(bot.users.cache.get(playersInGame));
-                let guild = Client.guilds.cache.get(guildId);
+                let guild = bot.guilds.cache.get(guildId);
                 console.log(`GUILD = ${JSON.stringify(guild)}`)
                 const guildMemberObject = bot.guild.users.cache.get(message.author);
                 console.log(`bot.users = ${JSON.stringify(playersFromDatabaseArray)}`)
