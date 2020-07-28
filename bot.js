@@ -14,6 +14,7 @@ const PREFIX = config.prefix;
 const {
     Pool
 } = require("pg");
+const { string } = require("check-types");
 const pool = new Pool(dbCreds);
 
 bot.on("ready", () => {
@@ -1156,50 +1157,42 @@ function roll_for_game(message) {
 }
 
 
-
-
-
-
-async function fromDatabase(message) {
-    // console.log(message);
-    let playersFromDatabaseArray = [];
-    const client = await pool.connect(); 
-    const guildIdFromDatabase = await client.query({
-        rowMode: "array",
-        text: `SELECT guild_id ` +
-        `FROM public.games ` +
-        `WHERE voice_channel_id = ${message.member.voice.channel.id} ` +
-        `AND game_is_active = true ` +
-        `ORDER BY message_timestamp DESC LIMIT 1;`});
-    const playersFromDatabase = await client.query(
-        `SELECT * ` +
-        `FROM public.game_leaflet ` +
-        `WHERE voice_channel_id = ${message.member.voice.channel.id} ` +
-        `AND game_is_active = true`)
-    playersFromDatabase.rows.forEach((row) => {
-        playersInGame = row.player_id;
-        guildId = guildIdFromDatabase.rows; //this is in games not leaflet
+// async function fromDatabase(message) {
+//     // console.log(message);
+//     let playersFromDatabaseArray = [];
+//     const client = await pool.connect(); 
+//     const guildIdFromDatabase = await client.query({
+//         rowMode: "array",
+//         text: `SELECT guild_id ` +
+//         `FROM public.games ` +
+//         `WHERE voice_channel_id = ${message.member.voice.channel.id} ` +
+//         `AND game_is_active = true ` +
+//         `ORDER BY message_timestamp DESC LIMIT 1;`});
+//     const playersFromDatabase = await client.query(
+//         `SELECT * ` +
+//         `FROM public.game_leaflet ` +
+//         `WHERE voice_channel_id = ${message.member.voice.channel.id} ` +
+//         `AND game_is_active = true`)
+//     playersFromDatabase.rows.forEach((row) => {
+//         playersInGame = row.player_id;
+//         guildId = guildIdFromDatabase.rows; //this is in games not leaflet
         
-        console.log(`message.guild.available = ${message.guild.available}`);
-        console.log(`playersFromVoiceChannel = ${JSON.stringify(message.member.voice.channel.members)}`);
-        console.log(`guildId from database = ${guildId}`);
-        console.log(`playersInGame = ${playersInGame}`);
-        console.log(`MESSAGE.MEMBER = ${message.member}`);
-        console.log(`message.guild = ${message.guild}`);
-        console.log(`message.guild.id = ${message.guild.id}`);
+//         console.log(`message.guild.available = ${message.guild.available}`);
+//         console.log(`playersFromVoiceChannel = ${JSON.stringify(message.member.voice.channel.members)}`);
+//         console.log(`guildId from database = ${guildId}`);
+//         console.log(`playersInGame = ${playersInGame}`);
+//         console.log(`MESSAGE.MEMBER = ${message.member}`);
+//         console.log(`message.guild = ${message.guild}`);
+//         console.log(`message.guild.id = ${message.guild.id}`);
         
-        // console.log(`bot.users = ${JSON.stringify(bot.users.cache.get(playersInGame))}`); //playerInGame needs quotes
-        playersFromDatabaseArray.push(bot.users.cache.get(playersInGame));
-        console.log(`bot.users = ${JSON.stringify(playersFromDatabaseArray)}`)
-        // let server = bot.guilds.cache.find(guild => guild.id == guildId);
-        // console.log(`server = ${JSON.stringify(server.id)}`);
+//         // console.log(`bot.users = ${JSON.stringify(bot.users.cache.get(playersInGame))}`); //playerInGame needs quotes
+//         playersFromDatabaseArray.push(bot.users.cache.get(playersInGame));
+//         console.log(`bot.users = ${JSON.stringify(playersFromDatabaseArray)}`)
+//         // let server = bot.guilds.cache.find(guild => guild.id == guildId);
+//         // console.log(`server = ${JSON.stringify(server.id)}`);
         
-    });
-};
-
-
-
-
+//     });
+// };
 
 
 function new_roll_for_game(message) {
@@ -1275,13 +1268,9 @@ function new_roll_for_game(message) {
             message.channel.send(`${message.member}: **ACTIVE PLAYER**`);
 
             // TODO: check public.game_leaflet for users in game instead of voice channel
-           
-           
 
-            
-           
-           
-           
+
+
             // const guildIdFromDatabase = await client.query({
             //     rowMode: "array",
             //     text: `SELECT guild_id ` +
@@ -1313,7 +1302,6 @@ function new_roll_for_game(message) {
             
             
             let playersFromDatabaseArray = [];
-            // const client = await pool.connect(); 
             const guildIdFromDatabase = await client.query({
                 rowMode: "array",
                 text: `SELECT guild_id ` +
@@ -1328,37 +1316,38 @@ function new_roll_for_game(message) {
                 `AND game_is_active = true`)
             playersFromDatabase.rows.forEach((row) => {
                 playersInGame = row.player_id;
-                guildId = ('"'+guildIdFromDatabase.rows+'"'); //this is in games not leaflet
+                guildId = (guildIdFromDatabase.rows); //this is in games not leaflet
                 
-                console.log(`message.guild.available = ${message.guild.available}`);
-                console.log(`message.guild = ${message.guild}`);
-                console.log(`playersFromVoiceChannel = ${JSON.stringify(message.member.voice.channel.members)}`);
-                console.log(`guildId from database = ${guildId}`);
+                // console.log(`message.guild.available = ${message.guild.available}`);
+                // console.log(`message.guild = ${message.guild}`);
+                // console.log(`playersFromVoiceChannel = ${JSON.stringify(message.member.voice.channel.members)}`);
+                // console.log(`guildId from database = ${guildId}`);
                 console.log(`playersInGame = ${playersInGame}`);
-                console.log(`MESSAGE.MEMBER = ${message.member}`);
-                console.log(`message.guild = ${message.guild}`);
-                console.log(`message.guild.id = ${message.guild.id}`);
+                // console.log(`MESSAGE.MEMBER = ${message.member}`);
+                // console.log(`message.guild = ${message.guild}`);
+                // console.log(`message.guild.id = ${message.guild.id}`);
                 
                 // console.log(`bot.users = ${JSON.stringify(bot.users.cache.get(playersInGame))}`); //playerInGame needs quotes
-                playersFromDatabaseArray.push(bot.users.cache.get(playersInGame));
-                // let guild = bot.guilds.cache.get("395558493752393728");
-                let guild = bot.guilds.cache.get('"' + str.valueOf(guildId) + '"');
-                console.log(`GUILD = ${JSON.stringify(guild)}`)
-                console.log(`bot.users = ${JSON.stringify(playersFromDatabaseArray)}`)
-                const guildMemberObject = bot.guild.users.cache.get(message.author);
-                console.log(`guildMemberObject = ${JSON.stringify(guildMemberObject)}`)
-
-                // let server = bot.guilds.cache.find(guild => guild.id == guildId);
-                // console.log(`server = ${JSON.stringify(server.id)}`);
-                
+                // playersFromDatabaseArray.push(bot.users.cache.get(playersInGame));
+                playersFromDatabaseArray.push(message.guild.member(playersInGame));
+                // console.log(`message.guild.member(playersInGame) = ${message.guild.member(playersInGame)}`)
+                // let thisguild = bot.guilds.cache.get(String(guildId));
+                // console.log(`thisGuild = ${JSON.stringify(thisguild)}`)
+                console.log(`playersFromDatabaseArray = ${JSON.stringify(playersFromDatabaseArray)}`)
+                // let guildMemberObject = bot.users.cache.get(String(playersInGame));
+                // console.log(`guildMemberObject = ${JSON.stringify(guildMemberObject)}`)
+                // let member = bot.guilds.cache.get(guildId).member(playersInGame);                
             });
             
-            
-            
-            
+
+            // message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
             playersFromDatabaseArray.forEach(function (guildMember, guildMemberId) {
+                console.log(`JSON.stringify(guildMember) = ${JSON.stringify(guildMember)}`);
                 console.log(`guildMember = ${guildMember}`);
-                if (message.member.id == guildMemberId) {
+                console.log(`guildMember.id = ${guildMember.id}`);
+                console.log(`gmessage.member.id = ${message.member.id}`);
+                console.log(`guildMember.userid = ${guildMember.userid}`);
+                if (message.member.id == guildMember.id) {
                     guildMember.send(`**Add a reaction to the award you choose to give.**`);
                     if (turnsAsActivePlayer == 1) {
                         guildMember.send(`${titleJudge1}`);
@@ -1373,7 +1362,7 @@ function new_roll_for_game(message) {
             //TODO: get list of players from public.game_leaflet instead of members in voice channel
             playersFromDatabaseArray.forEach(function (guildMember, guildMemberId) {
                 // console.log(guildMemberId, guildMember.user.username);
-                if (message.member.id != guildMemberId) {
+                if (message.member.id != guildMember.id) {
                     let playersDice = rollDice();
                     guildMember.send(`${gameThemeRows}: **${themeCategoryText}**`);
                     if (turnsAsActivePlayer == 2) {
@@ -1400,6 +1389,9 @@ function new_roll_for_game(message) {
                                     `ORDER BY message_timestamp DESC LIMIT 1;`,
                             });
                             console.log(`gameTheme.rows = ${gameTheme.rows}`);
+
+                            //TODO: make sure this next section isn't affected by pulling players from database
+
                             const prepStmnt = {
                                 game_session_id: parseInt(gameId.rows),
                                 game_is_active: true,
@@ -1414,7 +1406,7 @@ function new_roll_for_game(message) {
                                 game_theme: gameTheme.rows.toString(),
                                 active_player_id: message.member.id,
                                 active_player_username: message.author.username,
-                                player_id: guildMemberId,
+                                player_id: guildMember.id,
                                 player_username: guildMember.user.username,
                                 letters_given: playersDice,
                                 title_tagline: null,
