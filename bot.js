@@ -1328,7 +1328,7 @@ function new_roll_for_game(message) {
                 `AND game_is_active = true`)
             playersFromDatabase.rows.forEach((row) => {
                 playersInGame = row.player_id;
-                guildId = guildIdFromDatabase.rows; //this is in games not leaflet
+                guildId = ('"'+guildIdFromDatabase.rows+'"'); //this is in games not leaflet
                 
                 console.log(`message.guild.available = ${message.guild.available}`);
                 console.log(`message.guild = ${message.guild}`);
@@ -1341,10 +1341,11 @@ function new_roll_for_game(message) {
                 
                 // console.log(`bot.users = ${JSON.stringify(bot.users.cache.get(playersInGame))}`); //playerInGame needs quotes
                 playersFromDatabaseArray.push(bot.users.cache.get(playersInGame));
-                let guild = bot.guilds.cache.get(guildId);
+                // let guild = bot.guilds.cache.get("395558493752393728");
+                let guild = bot.guilds.cache.get('"' + str.valueOf(guildId) + '"');
                 console.log(`GUILD = ${JSON.stringify(guild)}`)
-                const guildMemberObject = bot.guild.users.cache.get(message.author);
                 console.log(`bot.users = ${JSON.stringify(playersFromDatabaseArray)}`)
+                const guildMemberObject = bot.guild.users.cache.get(message.author);
                 console.log(`guildMemberObject = ${JSON.stringify(guildMemberObject)}`)
 
                 // let server = bot.guilds.cache.find(guild => guild.id == guildId);
