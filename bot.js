@@ -16,7 +16,6 @@ const {
 } = require("pg");
 const { string } = require("check-types");
 const pool = new Pool(dbCreds);
-
 bot.on("ready", () => {
     console.log(
         `${getTimeStamp()} :: GorillaBot is ready to serve on ${
@@ -27,10 +26,13 @@ bot.on("ready", () => {
     databaseCheck.createDatabaseTablesIfNotExist;
 });
 
+const admin = bot.users.cache.get(config.admin);
+console.log(`admin = ${admin}`);
+
 // error catch-all
-bot.on("error", (e) => console.error(`${getTimeStamp()} :: ${e}`)); //TODO: DM me with errors
-bot.on("warn", (e) => console.warn(`${getTimeStamp()} :: ${e}`));
-bot.on("debug", (e) => console.info(`${getTimeStamp()} :: ${e}`));
+bot.on("error", (e) => console.error(`ERROR: ${getTimeStamp()} :: ${e}`));
+bot.on("warn", (e) => console.warn(`WARN: ${getTimeStamp()} :: ${e}`));
+bot.on("debug", (e) => console.info(`DEBUG: ${getTimeStamp()} :: ${e}`));
 
 // Link to game data
 bot.diceData = require("./diceData.json");
@@ -39,9 +41,8 @@ bot.leafletData = require("./leafletData.json");
 bot.on("voiceStateUpdate", async (oldMember, newMember) => { //TODO: fix error when join voice channel from no voice channel
     const client = await pool.connect();
     try {
-        console.log(`oldMember.channel = ${oldMember.channel}`);
-        if(oldMember.channel.id == null) {
-            console.log(`oldMember.channel.id = null`);
+        if(oldMember.channel == null) {
+            console.log(`oldMember.channel = null`);
             return;
         }
         if (oldMember.channel.members.size == 0) {
@@ -65,6 +66,7 @@ bot.on("voiceStateUpdate", async (oldMember, newMember) => { //TODO: fix error w
         }
     } catch (err) {
         console.log(err.stack);
+        dmError(err);
         throw err;
     }
 });
@@ -230,6 +232,7 @@ bot.on("message", (message) => {
                 });
             } catch (err) {
                 message.channel.send(`\`ERROR\` \`\`\`xl\n${clean(err)}\n\`\`\``);
+                dmError(err);
             }
             break;
 
@@ -317,6 +320,7 @@ bot.on("message", (message) => {
                                     }
                                 })
                                 .catch((err) => console.error(err));
+                                dmError(err);
                         } else {
                             message.channel.send(rollDice());
                         }
@@ -378,6 +382,7 @@ bot.on("message", (message) => {
                                     }
                                 })
                                 .catch((err) => console.error(err));
+                                dmError(err);
                         } else {
                             message.channel.send(rollDice());
                         }
@@ -413,6 +418,7 @@ bot.on("message", (message) => {
                             return;
                         }
                     } catch (e) {
+                        dmError(e);
                         throw e;
                     } finally {
                         client.release();
@@ -685,6 +691,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
         }
     } catch (err) {
         console.log(err.stack);
+        dmError(err);
         await client.query("ROLLBACK");
         throw err;
     } finally {
@@ -700,6 +707,7 @@ bot.on("messageReactionRemove", async (reaction, user) => {
             await reaction.fetch();
         } catch (error) {
             console.log("Something went wrong when fetching the message: ", error);
+            dmError(err);
             // Return as `reaction.message.author` may be undefined/null
             return;
         }
@@ -726,6 +734,7 @@ bot.on("messageReactionRemove", async (reaction, user) => {
         }
     } catch (err) {
         console.log(err.stack);
+        dmError(err);
         await client.query("ROLLBACK");
         throw err;
     } finally {
@@ -754,6 +763,7 @@ async function datamuse(message) {
         }
     } catch (e) {
         console.log(e.stack);
+        dmError(err);
         throw e;
     }
 }
@@ -770,6 +780,10 @@ function clean(text) {
     }
 }
 
+function dmError(err) {
+    bot.users.cache.get(config.adminID).send(`ERROR: ${getTimeStamp()} :: ${err.stack}`);
+}
+
 function emoji(id) {
     return bot.emojis.cache.get(id).toString();
 }
@@ -782,6 +796,7 @@ async function endTurn(message) {
             SET turn_is_active = false \n
             WHERE text_channel_id = ${message.channel.id};`);
     } catch (e) {
+        dmError(err);
         await client.query("ROLLBACK");
         throw e;
     } finally {
@@ -805,6 +820,7 @@ async function getGameId(message) {
             return gameId.rows;
         }
     } catch (e) {
+        dmError(err);
         throw e;
     } finally {
         client.release();
@@ -876,6 +892,7 @@ async function playerInActiveGame(message) {
             return "true";
         }
     } catch (e) {
+        dmError(err);
         throw e;
     } finally {
         client.release();
@@ -895,6 +912,7 @@ async function playerTurnsTaken(message) {
         });
         return numberOfTurns.rows;
     } catch (e) {
+        dmError(err);
         throw e;
     } finally {
         client.release();
@@ -928,6 +946,7 @@ async function resetTable(gameId) {
         });
     } catch (err) {
         console.log(err.stack);
+        dmError(err);
         await client.query("ROLLBACK");
         throw err;
     } finally {
@@ -1139,6 +1158,7 @@ function roll_for_game(message) {
                             await client.query(prepStmntKeys, prepStmntValues);
                             await client.query("COMMIT");
                         } catch (e) {
+                            dmError(err);
                             await client.query("ROLLBACK");
                             throw e;
                         } finally {
@@ -1148,6 +1168,7 @@ function roll_for_game(message) {
                 }
             });
         } catch (e) {
+            dmError(err);
             await client.query("ROLLBACK");
             throw e;
         } finally {
@@ -1446,6 +1467,7 @@ function new_roll_for_game(message) {
                             await client.query(prepStmntKeys, prepStmntValues);
                             await client.query("COMMIT");
                         } catch (e) {
+                            dmError(e);
                             await client.query("ROLLBACK");
                             throw e;
                         } finally {
@@ -1455,6 +1477,7 @@ function new_roll_for_game(message) {
                 }
             });
         } catch (e) {
+            dmError(e);
             await client.query("ROLLBACK");
             throw e;
         } finally {
@@ -1581,6 +1604,7 @@ async function sendToTextChannel(gameSessionID) {
         }
     } catch (err) {
         console.log(err.stack);
+        dmError(err);
         await client.query("ROLLBACK");
         throw err;
     } finally {
@@ -1722,6 +1746,7 @@ async function startGame(message) {
         );
     } catch (err) {
         console.log(err.stack);
+        dmError(err);
         await client.query("ROLLBACK");
         throw err;
     } finally {
@@ -1791,6 +1816,7 @@ async function titleTaglineFromPlayer(message) {
         await sendToTextChannel(gameSessionID.rows);
     } catch (err) {
         console.log(err.stack);
+        dmError(err);
         await client.query("ROLLBACK");
         throw err;
     } finally {
@@ -1841,6 +1867,7 @@ async function turnIsInProgress(message) {
         }
     } catch (err) {
         console.log(err.stack);
+        dmError(err);
         throw err;
     } finally {
         client.release();
@@ -2020,6 +2047,7 @@ async function messageArchive(message) {
         await client.query("COMMIT");
     } catch (err) {
         console.log(err.stack);
+        dmError(err);
         await client.query("ROLLBACK");
         throw err;
     } finally {
@@ -2053,6 +2081,7 @@ async function dmArchive(message) {
         await client.query("COMMIT");
     } catch (err) {
         console.log(err.stack);
+        dmError(err);
         await client.query("ROLLBACK");
         throw err;
     } finally {
