@@ -26,9 +26,6 @@ bot.on("ready", () => {
     databaseCheck.createDatabaseTablesIfNotExist;
 });
 
-const admin = bot.users.cache.get(config.admin);
-console.log(`admin = ${admin}`);
-
 // error catch-all
 bot.on("error", (e) => console.error(`ERROR: ${getTimeStamp()} :: ${e}`));
 bot.on("warn", (e) => console.warn(`WARN: ${getTimeStamp()} :: ${e}`));
@@ -320,7 +317,6 @@ bot.on("message", (message) => {
                                     }
                                 })
                                 .catch((err) => console.error(err));
-                                dmError(err);
                         } else {
                             message.channel.send(rollDice());
                         }
@@ -382,7 +378,6 @@ bot.on("message", (message) => {
                                     }
                                 })
                                 .catch((err) => console.error(err));
-                                dmError(err);
                         } else {
                             message.channel.send(rollDice());
                         }
