@@ -26,6 +26,12 @@ bot.on("ready", () => {
     databaseCheck.createDatabaseTablesIfNotExist;
 });
 
+//TODO: Additional features ideas:
+    // Restart bot if fatal error
+    // Upon boot, stop games with no players in voice channels
+    // Display total standings for all players of all games
+    // 
+
 // error catch-all
 bot.on("error", (e) => console.error(`ERROR: ${getTimeStamp()} :: ${e}`));
 bot.on("warn", (e) => console.warn(`WARN: ${getTimeStamp()} :: ${e}`));
@@ -40,6 +46,7 @@ bot.on("voiceStateUpdate", async (oldMember, newMember) => { //TODO: fix error w
     try {
         if(oldMember.channel == null) {
             console.log(`oldMember.channel = null`);
+            // console.log(`newMember.channel = ${newMember}`);
             return;
         }
         if (oldMember.channel.members.size == 0) {
@@ -452,7 +459,7 @@ bot.on("message", (message) => {
                             gameIsInProgress(message)
                                 .then((results) => {
                                     gameIs = results;
-                                    console.log(`inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}` );
+                                    console.log(`inside case !roll -> gameIsInProgress() -> gameIs = ${gameIs}` );
                                     if (gameIs == "true") {
                                         message.channel.send(
                                             `This table is in use. Please choose ` +
