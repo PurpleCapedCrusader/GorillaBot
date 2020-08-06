@@ -323,7 +323,10 @@ bot.on("message", (message) => {
                                         });
                                     }
                                 })
-                                .catch((err) => console.error(err));
+                                .catch((err) => {
+                                    dmError(err);
+                                    console.error(err.stack);
+                                });
                         } else {
                             message.channel.send(rollDice());
                         }
@@ -384,7 +387,10 @@ bot.on("message", (message) => {
                                         });
                                     }
                                 })
-                                .catch((err) => console.error(err));
+                                .catch((err) => {
+                                    dmError(err);
+                                    console.error(err);
+                                });
                         } else {
                             message.channel.send(rollDice());
                         }
@@ -419,13 +425,16 @@ bot.on("message", (message) => {
                             message.channel.send(`There is no score yet.`);
                             return;
                         }
-                    } catch (e) {
-                        dmError(e);
-                        throw e;
+                    } catch (err) {
+                        dmError(err);
+                        throw err;
                     } finally {
                         client.release();
                     }
-                })().catch((err) => console.log(err.stack));
+                })().catch((err) => {
+                    dmError(err);
+                    console.error(err.stack);
+                });
             }
             break;
 
@@ -451,10 +460,10 @@ bot.on("message", (message) => {
                         if (message.member.voice.channel.members.size >= 2) { //TODO: update to 3 upon deploy
                             console.log(`GAME STARTED at the ${message.channel.parent.name}`);
                             // guildMember(toString(config.adminID)).send(`GAME STARTED at the ${message.channel.parent.name}`);
-                            
+                            adminNotify(`GAME STARTED at the ${message.channel.parent.name} at ${getTimeStamp()}`);
                             
                             // bot.guild.member(`"${config.adminID}"`).user.send("Test");
-                            
+                            // bot.users.cache.get(`"${config.adminID}"`).send("Test");
                             
                             // message.member.voice.channel.parent.id}`);
                             // message.member.voice.channel.parent.children.forEach(function (channel_id) {
@@ -481,10 +490,16 @@ bot.on("message", (message) => {
                                                     startGame(message);
                                                 }
                                             })
-                                            .catch((err) => console.error(err));
+                                            .catch((err) => {
+                                                dmError(err);
+                                                console.error(err);
+                                            });
                                     }
                                 })
-                                .catch((err) => console.error(err));
+                                .catch((err) => {
+                                    dmError(err);
+                                    console.error(err);
+                                });
                         } else {
                             message.channel.send(
                                 `To start a game, there must be at least 3 players using ` +
@@ -531,8 +546,9 @@ bot.on("messageReactionAdd", async (reaction, user) => {
         console.log("messageReactionAdd Partial");
         try {
             await reaction.fetch();
-        } catch (error) {
-            console.log("Something went wrong when fetching the message: ", error);
+        } catch (err) {
+            console.log("Something went wrong when fetching the message: ", err);
+            dmError(err);
             // Return as `reaction.message.author` may be undefined/null
             return;
         }
@@ -711,8 +727,8 @@ bot.on("messageReactionRemove", async (reaction, user) => {
         // If the message this reaction belongs to was removed the fetching might result in an API error, which we need to handle
         try {
             await reaction.fetch();
-        } catch (error) {
-            console.log("Something went wrong when fetching the message: ", error);
+        } catch (err) {
+            console.log("Something went wrong when fetching the message: ", err);
             dmError(err);
             // Return as `reaction.message.author` may be undefined/null
             return;
@@ -767,10 +783,10 @@ async function datamuse(message) {
                     return;
                 }
         }
-    } catch (e) {
-        console.log(e.stack);
+    } catch (err) {
+        console.log(err.stack);
         dmError(err);
-        throw e;
+        throw err;
     }
 }
 
@@ -787,8 +803,17 @@ function clean(text) {
 }
 
 function dmError(err) {
-    bot.users.cache.get(config.adminID).send(`ERROR: ${getTimeStamp()} :: ${err.stack}`);
-}
+    // bot.users.cache.get(config.adminID).send(`ERROR: ${getTimeStamp()} :: ${err.stack}`);
+    let adminUser = bot.users.cache.get(`${config.adminID}`);
+    adminUser.send(`ERROR: ${getTimeStamp()} :: ${err.stack}`);
+};
+
+function adminNotify(msg) {
+    //Admin user object for DM notifications
+    let adminUser = bot.users.cache.get(`${config.adminID}`);
+    console.log(`adminUser = ${adminUser}`);
+    adminUser.send(msg);
+};
 
 function emoji(id) {
     return bot.emojis.cache.get(id).toString();
@@ -801,10 +826,10 @@ async function endTurn(message) {
             `UPDATE public.turns \n
             SET turn_is_active = false \n
             WHERE text_channel_id = ${message.channel.id};`);
-    } catch (e) {
+    } catch (err) {
         dmError(err);
         await client.query("ROLLBACK");
-        throw e;
+        throw err;
     } finally {
         client.release();
     }
@@ -825,9 +850,9 @@ async function getGameId(message) {
         } else {
             return gameId.rows;
         }
-    } catch (e) {
+    } catch (err) {
         dmError(err);
-        throw e;
+        throw err;
     } finally {
         client.release();
     }
@@ -897,9 +922,9 @@ async function playerInActiveGame(message) {
             }
             return "true";
         }
-    } catch (e) {
+    } catch (err) {
         dmError(err);
-        throw e;
+        throw err;
     } finally {
         client.release();
     }
@@ -917,9 +942,9 @@ async function playerTurnsTaken(message) {
                 `AND game_is_active = true;`,
         });
         return numberOfTurns.rows;
-    } catch (e) {
+    } catch (err) {
         dmError(err);
-        throw e;
+        throw err;
     } finally {
         client.release();
     }
@@ -1163,24 +1188,30 @@ function roll_for_game(message) {
                             ];
                             await client.query(prepStmntKeys, prepStmntValues);
                             await client.query("COMMIT");
-                        } catch (e) {
+                        } catch (err) {
                             dmError(err);
                             await client.query("ROLLBACK");
-                            throw e;
+                            throw err;
                         } finally {
                             client.release();
                         }
-                    })().catch((err) => console.log(err.stack));
+                    })().catch((err) => {
+                        dmError(err);
+                        console.error(err);
+                    });
                 }
             });
-        } catch (e) {
+        } catch (err) {
             dmError(err);
             await client.query("ROLLBACK");
-            throw e;
+            throw err;
         } finally {
             client.release();
         }
-    })().catch((err) => console.log(err.stack));
+    })().catch((err) => {
+        dmError(err);
+        console.error(err.stack);
+    });
 }
 
 
@@ -1472,24 +1503,30 @@ function new_roll_for_game(message) {
                             ];
                             await client.query(prepStmntKeys, prepStmntValues);
                             await client.query("COMMIT");
-                        } catch (e) {
-                            dmError(e);
+                        } catch (err) {
+                            dmError(err);
                             await client.query("ROLLBACK");
-                            throw e;
+                            throw err;
                         } finally {
                             client.release();
                         }
-                    })().catch((err) => console.log(err.stack));
+                    })().catch((err) => {
+                        dmError(err);
+                        console.error(err.stack);
+                    });
                 }
             });
-        } catch (e) {
-            dmError(e);
+        } catch (err) {
+            dmError(err);
             await client.query("ROLLBACK");
-            throw e;
+            throw err;
         } finally {
             client.release();
         }
-    })().catch((err) => console.log(err.stack));
+    })().catch((err) => {
+        dmError(err);
+        console.error(err.stack);
+    });
 }
 
 function score(gameId) {
@@ -1527,7 +1564,10 @@ function score(gameId) {
             });
         });
         // gameChannel.send(`\n\u200b\n\u200b`);
-    })().catch((err) => console.log(err.stack));
+    })().catch((err) => {
+        dmError(err);
+        console.error(err.stack);
+    });
 }
 
 async function sendToTextChannel(gameSessionID) {
@@ -1589,7 +1629,10 @@ async function sendToTextChannel(gameSessionID) {
                         console.log(`textChannel = ${textChannel}`);
                         textChannel.send(`Award: **${awardChoice}**`);
                     })
-                    .catch((err) => console.error(err));
+                    .catch((err) => {
+                        dmError(err);
+                        console.error(err);
+                    });
                 const allTaglines = await client.query(
                     `SELECT * ` +
                     `FROM public.turns ` +
@@ -1604,7 +1647,10 @@ async function sendToTextChannel(gameSessionID) {
                             console.log(`gameChannel = ${gameChannel}`);
                             gameChannel.send(`${row.letters_given}: ${row.title_tagline}`);
                         })
-                        .catch((err) => console.error(err));
+                        .catch((err) => {
+                            dmError(err);
+                            console.error(err);
+                        });
                 });
             }
         }
@@ -1733,7 +1779,10 @@ async function startGame(message) {
                 ];
                 await client.query(insertGameLeafletText, insertGameLeafletValues);
                 await client.query("COMMIT");
-            })().catch((err) => console.log(err.stack));
+            })().catch((err) => {
+                dmError(err);
+                console.error(err.stack);
+            });
             i += 1;
         });
         message.channel.send(`**Starting Gorilla Marketing**`);
@@ -1940,7 +1989,10 @@ async function updateStatus() {
                 type: 'PLAYING'
             })
             .then(presence => console.log(`Playing ${presence.activities[0].name}`))
-            .catch(console.error);
+            .catch((err) => {
+                dmError(err);
+                console.error(err);
+            });
     } else if (watchPlay[0] == 2 || watchPlay[0] == 3) {
         var statusArray = [
             "King Kong",
@@ -1978,7 +2030,10 @@ async function updateStatus() {
                 type: 'WATCHING'
             })
             .then(presence => console.log(`Watching ${presence.activities[0].name}`))
-            .catch(console.error);
+            .catch((err) => {
+                dmError(err);
+                console.error(err);
+            });
     } else if (watchPlay[0] == 4) {
         var statusArray = [
             "Monkey, by George Michael",
@@ -2010,7 +2065,10 @@ async function updateStatus() {
                 type: 'LISTENING'
             })
             .then(presence => console.log(`Listening to ${presence.activities[0].name}`))
-            .catch(console.error);
+            .catch((err) => {
+                dmError(err);
+                console.error(err);
+            });
     }
 }
 
