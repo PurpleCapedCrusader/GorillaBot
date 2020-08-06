@@ -449,12 +449,17 @@ bot.on("message", (message) => {
                         textChannelIndex === voiceChannelIndex
                     ) {
                         if (message.member.voice.channel.members.size >= 2) { //TODO: update to 3 upon deploy
-                            console.log(`Game started at the ${message.member.voice.channel.parent.name,
-                                message.member.voice.channel.parent.id})`
-                            );
+                            console.log(`GAME STARTED at the ${message.channel.parent.name}`);
+                            // guildMember(toString(config.adminID)).send(`GAME STARTED at the ${message.channel.parent.name}`);
+                            
+                            
+                            // bot.guild.member(`"${config.adminID}"`).user.send("Test");
+                            
+                            
+                            // message.member.voice.channel.parent.id}`);
                             // message.member.voice.channel.parent.children.forEach(function (channel_id) {
                             //     console.log(channel_id.name, channel_id.id);
-                            });
+                            // });
                             gameIsInProgress(message)
                                 .then((results) => {
                                     gameIs = results;
