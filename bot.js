@@ -308,7 +308,7 @@ bot.on("message", (message) => {
         }
         break;
 
-      case "roll": //pulls current players from database
+      case "roll": //TODO: make voice independant
       case "🦍":
       case "🎲":
         if (message.channel.type === "dm") {
@@ -421,7 +421,7 @@ bot.on("message", (message) => {
         }
         break;
 
-      case "movies":
+      case "movies": //TODO: remove voice dependency
       case "bands":
       case "products":
       case "companies":
@@ -435,7 +435,7 @@ bot.on("message", (message) => {
             let textChannelIndex = gameRooms.textChannels.indexOf(
               message.channel.name
             );
-            let voiceChannelIndex = gameRooms.voiceChannels.indexOf(
+            let voiceChannelIndex = gameRooms.voiceChannels.indexOf( 
               message.member.voice.channel.name
             );
             if (
@@ -863,11 +863,11 @@ async function gameIsInProgress(message) {
         rowMode: "array",
         text: `SELECT game_is_active ` +
             `FROM public.games ` +
-            `WHERE category_id = ${message.member.voice.channel.parent.id} ` +
+            `WHERE text_channel_id = ${message.channel.id} ` +
             `ORDER BY message_timestamp DESC LIMIT 1`,
     });
     await client.release();
-    console.log(`gameIsInProgres result.rows = ${result.rows}`);
+    console.log(`NO VOICE - gameIsInProgres result.rows = ${result.rows}`);
     if (result.rows.length === 0) {
         return false;
     } else {
@@ -875,12 +875,30 @@ async function gameIsInProgress(message) {
     }
 }
 
+// async function gameIsInProgress(message) {
+//     const client = await pool.connect();
+//     const result = await client.query({
+//         rowMode: "array",
+//         text: `SELECT game_is_active ` +
+//             `FROM public.games ` +
+//             `WHERE text_channel_id = ${message.channel.id} ` +
+//             `ORDER BY message_timestamp DESC LIMIT 1`,
+//     });
+//     await client.release();
+//     console.log(`gameIsInProgres result.rows = ${result.rows}`);
+//     if (result.rows.length === 0) {
+//         return false;
+//     } else {
+//         return result.rows;
+//     }
+// }
+
 function getTimeStamp() {
     let now = new Date();
     return "[" + now.toLocaleString() + "]";
 }
 
-async function playerInActiveGame(message) {
+async function playerInActiveGame(message) {//TODO: remove voice dependency
     const client = await pool.connect();
     try {
         const playersInActiveGames = await client.query(
@@ -1070,14 +1088,22 @@ function roll_for_game(message) {
                 });
                 winningTitle = roundOneWinner.rows;
             }
-            const gameTheme = await client.query({
+            const gameTheme = await client.query({//TODO: remove voice dependency - UPDATE UNTESTED
                 rowMode: "array",
                 text: `SELECT game_theme ` +
                     `FROM public.games ` +
-                    `WHERE category_id = ${message.member.voice.channel.parent.id} ` +
+                    `WHERE text_channel_id = ${message.channel.id} ` +
                     `AND game_is_active = true ` +
-                    `ORDER BY message_timestamp DESC LIMIT 1;`, //TODO: make this more simple
+                    `ORDER BY message_timestamp DESC LIMIT 1;`,
             });
+            // const gameTheme = await client.query({
+            //     rowMode: "array",
+            //     text: `SELECT game_theme ` +
+            //         `FROM public.games ` +
+            //         `WHERE category_id = ${message.member.voice.channel.parent.id} ` +
+            //         `AND game_is_active = true ` +
+            //         `ORDER BY message_timestamp DESC LIMIT 1;`, //TODO: make this more simple
+            // });
             let gameThemeRows = gameTheme.rows;
             let themeCategoryText =
                 bot.leafletData[gameThemeRows]["category"][themeCategory];
@@ -1125,7 +1151,7 @@ function roll_for_game(message) {
 
             
             
-            let playersFromDatabaseArray = [];
+            let playersFromDatabaseArray = [];//TODO: remove voice dependency - maybe use message.channel.id & text_channel_id
             const guildIdFromDatabase = await client.query({
                 rowMode: "array",
                 text: `SELECT guild_id ` +
@@ -1133,7 +1159,7 @@ function roll_for_game(message) {
                 `WHERE voice_channel_id = ${message.member.voice.channel.id} ` +
                 `AND game_is_active = true ` +
                 `ORDER BY message_timestamp DESC LIMIT 1;`});
-            const playersFromDatabase = await client.query(
+            const playersFromDatabase = await client.query( 
                 `SELECT * ` +
                 `FROM public.game_leaflet ` +
                 `WHERE voice_channel_id = ${message.member.voice.channel.id} ` +
@@ -1193,7 +1219,7 @@ function roll_for_game(message) {
                         guildMember.send(`Winning Title: **${winningTitle}**`);
                     }
                     guildMember.send(`${playersDice}`);
-                    (async () => {
+                    (async () => {//TODO: remove voice dependency
                         const client = await pool.connect();
                         try {
                             const gameId = await client.query({
@@ -1616,6 +1642,7 @@ async function titleTaglineFromPlayer(message) {
                 `WHERE title_tagline = $$${titleTagline}$$ ` +
                 `AND turn_is_active = true LIMIT 1;`,
         });
+        
         await client.query(
             `UPDATE public.turns ` +
             `SET dice_and_tagline = $$${lettersGiven.rows}: ${titleTagline}$$ ` +
@@ -1645,7 +1672,7 @@ async function titleTaglineFromPlayer(message) {
     }
 }
 
-async function turnIsInProgress(message) {
+async function turnIsInProgress(message) {//TODO: remove voice dependency
     const client = await pool.connect();
     try {
         const gameId = await client.query({
