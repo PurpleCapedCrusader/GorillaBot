@@ -258,9 +258,14 @@ bot.on("message", (message) => {
         }
         break;
 
-      // case "remove":
-      //     // TODO: !remove @username - removes player from game
-      // break;
+      case "remove":
+          // TODO: !remove @username - removes player from game
+        if (message.channel.type === "dm") {
+          message.author.send(`That command doesn't work in direct messages.`);
+        } else {
+            console.log(`args[1] = ${args[1]}`);
+        }
+      break;
 
       case "play":
       case "start":
