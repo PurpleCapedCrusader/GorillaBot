@@ -228,10 +228,6 @@ bot.on("message", (message) => {
         message.channel.send(embed).catch(console.error);
         break;
 
-      case "lodash":
-        playerInActiveGame(message);
-        break;
-
       case "emojis":
         const emojiList = message.guild.emojis.cache
           .map((e, x) => x + " = " + e + " | " + e.name)
@@ -257,15 +253,6 @@ bot.on("message", (message) => {
           dmError(err);
         }
         break;
-
-      case "remove":
-          // TODO: !remove @username - removes player from game
-        if (message.channel.type === "dm") {
-          message.author.send(`That command doesn't work in direct messages.`);
-        } else {
-            console.log(`args[1] = ${args[1]}`);
-        }
-      break;
 
       case "play":
       case "start":
@@ -297,6 +284,16 @@ bot.on("message", (message) => {
           console.log(err.stack);
           dmError(err);
           throw err;
+        }
+        break;
+
+      case "remove":
+        // TODO: !remove @username - removes player from game
+        if (message.channel.type === "dm") {
+          message.author.send(`That command doesn't work in direct messages.`);
+        } else {
+          let args = message.content.substring(PREFIX.length).split(/ +/g);
+          console.log(`Request to remove ${args[1]}`);
         }
         break;
 
@@ -440,7 +437,7 @@ bot.on("message", (message) => {
             let textChannelIndex = gameRooms.textChannels.indexOf(
               message.channel.name
             );
-            let voiceChannelIndex = gameRooms.voiceChannels.indexOf( 
+            let voiceChannelIndex = gameRooms.voiceChannels.indexOf(
               message.member.voice.channel.name
             );
             if (
@@ -451,9 +448,8 @@ bot.on("message", (message) => {
             ) {
               if (message.member.voice.channel.members.size >= 2) {
                 //TODO: update to 3 upon deploy
-                
+
                 // guildMember(toString(config.adminID)).send(`GAME STARTED at the ${message.channel.parent.name}`);
-                
 
                 // bot.guild.member(`"${config.adminID}"`).user.send("Test");
                 // bot.users.cache.get(`"${config.adminID}"`).send("Test");
@@ -484,13 +480,13 @@ bot.on("message", (message) => {
                           } else if (playerInGame == "false") {
                             startGame(message);
                             adminNotify(
-                                `GAME STARTED at the ${
-                                  message.channel.parent.name
-                                } at ${getTimeStamp()}`
-                              );
-                              console.log(
-                                `GAME STARTED at the ${message.channel.parent.name}`
-                              );
+                              `GAME STARTED at the ${
+                                message.channel.parent.name
+                              } at ${getTimeStamp()}`
+                            );
+                            console.log(
+                              `GAME STARTED at the ${message.channel.parent.name}`
+                            );
                           }
                         })
                         .catch((err) => {
@@ -536,7 +532,7 @@ bot.on("message", (message) => {
         }
         break;
 
-      case "test":
+      case "t":
         fromDatabase(message);
         break;
     }       
