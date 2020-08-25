@@ -254,22 +254,30 @@ bot.on("message", (message) => {
         }
         break;
 
-      case "play":
-      case "start":
-      case "begin":
-        if (message.channel.type === "dm") {
-          message.author.send(`That command doesn't work in direct messages.`);
-        } else {
-          message.channel.send(
-            `Use the **!Bands**, **!College Courses**, **!Companies**, ` +
-              `**!Food Trucks**, **!Movies**, **!Organizations**, or ` +
-              `**!Products** command to start a game.`
+      case "join":
+        gameIsInProgress(message).then((results) => {
+          gameIs = results;
+          console.log(
+            `inside case !play -> gameIsInProgress() -> gameIs = ${gameIs}`
           );
-        }
+          if (gameIs == "true") {
+            getGameId(message).then((results) => {
+                gameId = results;
+              });
+
+          } else {
+            message.channel.send(
+                `First, use the **!Bands**, **!College Courses**, **!Companies**, ` +
+                `**!Food Trucks**, **!Movies**, **!Organizations**, or ` +
+                `**!Products** command to start a game.\n\u200b \n\u200b` + 
+                `Then each player can use **!join** to join the game.`
+            );
+          }
+        });
         break;
 
       case "players":
-        //list of players in game
+        //list of players in gamezzzz
         break;
 
       case "reboot": // TODO: NOT WORKING CORRECTLY
