@@ -36,6 +36,23 @@ async function createDatabaseTablesIfNotExist() {
             ALTER TABLE public.games
                 OWNER to ${config.connUser};`)
 
+            await client.query(`CREATE TABLE IF NOT EXISTS public.players
+            (
+                player_pk SERIAL NOT NULL,
+                game_id int,
+                readable_timestamp character varying(30) COLLATE pg_catalog."default",
+                text_channel_id bigint,
+                author_id bigint,
+                author_username character varying(32) COLLATE pg_catalog."default",
+                CONSTRAINT player_pk_pkey PRIMARY KEY (player_pk)
+            )
+            WITH (
+                OIDS = FALSE
+            )
+            TABLESPACE pg_default;
+            ALTER TABLE public.players
+                OWNER to ${config.connUser};`)
+
             await client.query(`CREATE TABLE IF NOT EXISTS public.turns
             (
                 turns_id SERIAL NOT NULL,
@@ -132,7 +149,8 @@ async function createDatabaseTablesIfNotExist() {
             TABLESPACE pg_default;            
             ALTER TABLE public.message_archive
                 OWNER to ${config.connUser};`)
-                
+
+
         } catch (e) {
             await client.query('ROLLBACK')
             throw e
