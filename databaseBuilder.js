@@ -40,7 +40,10 @@ async function createDatabaseTablesIfNotExist() {
             (
                 player_pk SERIAL NOT NULL,
                 game_id int,
+                playing boolean NOT NULL,
+                queued boolean NOT NULL,
                 readable_timestamp character varying(30) COLLATE pg_catalog."default",
+                message_timestamp bigint,
                 text_channel_id bigint,
                 author_id bigint,
                 author_username character varying(32) COLLATE pg_catalog."default",

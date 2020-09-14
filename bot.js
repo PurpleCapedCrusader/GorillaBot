@@ -254,7 +254,7 @@ bot.on("message", (message) => {
         }
         break;
 
-      case "join":
+      case "play":
         gameIsInProgress(message).then((results) => {
           gameIs = results;
           console.log(
@@ -264,7 +264,7 @@ bot.on("message", (message) => {
             getGameId(message).then((results) => {
                 gameId = results;
               });
-
+            play(message);
           } else {
             message.channel.send(
                 `First, use the **!Bands**, **!College Courses**, **!Companies**, ` +
@@ -487,6 +487,7 @@ bot.on("message", (message) => {
                             return;
                           } else if (playerInGame == "false") {
                             startGame(message);
+                            play(message);
                             adminNotify(
                               `GAME STARTED at the ${
                                 message.channel.parent.name
@@ -905,6 +906,62 @@ async function gameIsInProgress(message) {
 function getTimeStamp() {
     let now = new Date();
     return "[" + now.toLocaleString() + "]";
+}
+
+function play(message) {
+    (async () => {//TODO: remove voice dependency
+        const client = await pool.connect();
+        try {
+            const gameId = await client.query({
+                rowMode: "array",
+                text: `SELECT game_id ` +
+                    `FROM public.games ` +
+                    `WHERE text_channel_id = ${message.channel.id} ` +
+                    `AND game_is_active = true ` +
+                    `ORDER BY message_timestamp DESC LIMIT 1;`,
+            });
+
+            const prepStmnt = {
+                game_id: parseInt(gameId.rows),
+                playing: false,
+                queued: true,
+                readable_timestamp: getTimeStamp(),
+                message_timestamp: message.createdTimestamp,
+                text_channel_id: message.channel.id,
+                author_id: message.author.id,
+                author_username: message.author.username,
+            };
+            await client.query("BEGIN");
+            const prepStmntKeys =
+                `INSERT INTO public.players(game_id, ` +
+                `playing, queued, ` +
+                `readable_timestamp, message_timestamp, ` +
+                `text_channel_id, author_id, author_username) ` +
+                `VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
+            const prepStmntValues = [
+                prepStmnt.game_id,
+                prepStmnt.playing,
+                prepStmnt.queued,
+                prepStmnt.readable_timestamp,
+                prepStmnt.message_timestamp,
+                prepStmnt.text_channel_id,
+                prepStmnt.author_id,
+                prepStmnt.author_username,
+            ];
+            await client.query(prepStmntKeys, prepStmntValues);
+            await client.query("COMMIT");
+        } catch (err) {
+            dmError(err);
+            await client.query("ROLLBACK");
+            throw err;
+        } finally {
+            client.release();
+        }
+    })().catch((err) => {
+        dmError(err);
+        console.error(err.stack);
+    });
+
 }
 
 async function playerInActiveGame(message) {//TODO: remove voice dependency
