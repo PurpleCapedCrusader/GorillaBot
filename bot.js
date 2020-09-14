@@ -277,7 +277,7 @@ bot.on("message", (message) => {
         break;
 
       case "players":
-        //list of players in gamezzzz
+        //list of players in game
         break;
 
       case "reboot": // TODO: NOT WORKING CORRECTLY
