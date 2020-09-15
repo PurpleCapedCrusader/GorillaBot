@@ -912,24 +912,54 @@ function play(message) {
     (async () => {//TODO: remove voice dependency
         const client = await pool.connect();
         try {
+            // check for players already playing
+            // allow players to join again
+
             const gameId = await client.query({
-                rowMode: "array",
-                text: `SELECT game_id ` +
-                    `FROM public.games ` +
-                    `WHERE text_channel_id = ${message.channel.id} ` +
-                    `AND game_is_active = true ` +
-                    `ORDER BY message_timestamp DESC LIMIT 1;`,
+              rowMode: "array",
+              text:
+                `SELECT game_id ` +
+                `FROM public.games ` +
+                `WHERE text_channel_id = ${message.channel.id} ` +
+                `AND game_is_active = true ` +
+                `ORDER BY message_timestamp DESC LIMIT 1;`
             });
 
+            console.log(`parseInt(gameId.rows) = ${parseInt(gameId.rows)}`);
+            console.log(`author_id = ${message.author.id}`);
+
+            const playerIsPlaying = await client.query(
+              `SELECT * ` +
+                `FROM public.players ` +
+                `WHERE author_id = ${message.author.id} ` +
+                `AND game_id = ${parseInt(gameId.rows)} `
+            );
+
+            console.log(`playerIsPlaying.rows = ${playerIsPlaying.rows}`);
+
+            if (playerIsPlaying.rows.length > 0) {
+              console.log(`playerIsPlaying != null`);
+              playerIsPlaying.rows.forEach((row) => {
+                playerCurrentlyPlaying = row.playing;
+                playerCurrentlyQueued = row.queued;
+              });
+
+              console.log(`playerCurrentlyPlaying = ${playerCurrentlyPlaying}`);
+              console.log(`playerCurrentlyQueued = ${playerCurrentlyQueued}`);
+              return;
+            }
+
+            //TODO: play() is allowing players to add themselves more than once - fix it.
+
             const prepStmnt = {
-                game_id: parseInt(gameId.rows),
-                playing: false,
-                queued: true,
-                readable_timestamp: getTimeStamp(),
-                message_timestamp: message.createdTimestamp,
-                text_channel_id: message.channel.id,
-                author_id: message.author.id,
-                author_username: message.author.username,
+              game_id: parseInt(gameId.rows),
+              playing: false,
+              queued: true,
+              readable_timestamp: getTimeStamp(),
+              message_timestamp: message.createdTimestamp,
+              text_channel_id: message.channel.id,
+              author_id: message.author.id,
+              author_username: message.author.username,
             };
             await client.query("BEGIN");
             const prepStmntKeys =
