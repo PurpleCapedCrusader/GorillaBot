@@ -13,6 +13,7 @@ const bot = new Discord.Client();
 const PREFIX = config.prefix;
 const { Pool } = require("pg");
 const { string } = require("check-types");
+const { get } = require("lodash");
 const pool = new Pool(dbCreds);
 bot.on("ready", () => {
 	console.log(
@@ -1170,7 +1171,15 @@ async function leafletUpdate(message) {
 		let titleJudgeRoll = shuffle(Array.from(Array(27).keys()));
 		let taglineJudgeRoll = shuffle(Array.from(Array(27).keys()));
         let i = 0;
+
 // TODO: replace voice.channel with players table
+
+        var playersInActiveGamesArray = [];
+        playersInActiveGames.rows.forEach((row) => {
+            playersInActiveGamesArray.push(row.player_id);
+        });
+        let adminUser = bot.users.cache.get(`${config.adminID}`);
+
 		message.member.voice.channel.members.forEach(function (guildmember) {
 			(async () => {
 				const prepGameLeaflet = {
@@ -1389,7 +1398,8 @@ async function queuedPlayerUpdate(message) {
 	try {
 		await getGameId(message).then((results) => {
 			gameId = results;
-		});
+        });
+        
 		await client.query(
 			`UPDATE public.players ` +
 				`SET playing = true, ` +
