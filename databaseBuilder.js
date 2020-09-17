@@ -25,6 +25,9 @@ async function createDatabaseTablesIfNotExist() {
                 voice_channel_id bigint,
                 message_id bigint,
                 game_theme character varying(32) COLLATE pg_catalog."default",
+                theme_category_roll_array integer[],
+			    title_judge_roll_array integer[],
+			    tagline_judge_roll_array integer[],
                 author_id bigint,
                 author_username character varying(32) COLLATE pg_catalog."default",
                 CONSTRAINT game_id_pkey PRIMARY KEY (game_id)
