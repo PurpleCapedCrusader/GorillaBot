@@ -1,8 +1,6 @@
 const config = require("./config.json");
 var dbCreds = require('./dbCreds.js');
-const {
-    Pool
-} = require('pg');
+const { Pool } = require('pg');
 const pool = new Pool(dbCreds);
 
 async function createDatabaseTablesIfNotExist() {
@@ -39,25 +37,25 @@ async function createDatabaseTablesIfNotExist() {
             ALTER TABLE public.games
                 OWNER to ${config.connUser};`)
 
-            await client.query(`CREATE TABLE IF NOT EXISTS public.players
-            (
-                player_pk SERIAL NOT NULL,
-                game_id int,
-                playing boolean NOT NULL,
-                queued boolean NOT NULL,
-                readable_timestamp character varying(30) COLLATE pg_catalog."default",
-                message_timestamp bigint,
-                text_channel_id bigint,
-                author_id bigint,
-                author_username character varying(32) COLLATE pg_catalog."default",
-                CONSTRAINT player_pk_pkey PRIMARY KEY (player_pk)
-            )
-            WITH (
-                OIDS = FALSE
-            )
-            TABLESPACE pg_default;
-            ALTER TABLE public.players
-                OWNER to ${config.connUser};`)
+            // await client.query(`CREATE TABLE IF NOT EXISTS public.players
+            // (
+            //     player_pk SERIAL NOT NULL,
+            //     game_id int,
+            //     playing boolean NOT NULL,
+            //     queued boolean NOT NULL,
+            //     readable_timestamp character varying(30) COLLATE pg_catalog."default",
+            //     message_timestamp bigint,
+            //     text_channel_id bigint,
+            //     author_id bigint,
+            //     author_username character varying(32) COLLATE pg_catalog."default",
+            //     CONSTRAINT player_pk_pkey PRIMARY KEY (player_pk)
+            // )
+            // WITH (
+            //     OIDS = FALSE
+            // )
+            // TABLESPACE pg_default;
+            // ALTER TABLE public.players
+            //     OWNER to ${config.connUser};`)
 
             await client.query(`CREATE TABLE IF NOT EXISTS public.turns
             (
@@ -97,6 +95,8 @@ async function createDatabaseTablesIfNotExist() {
                 game_session_id int,
                 game_is_active boolean,
                 player_id bigint,
+                playing boolean NOT NULL,
+                queued boolean NOT NULL,
                 turns_as_active_player int,
                 theme_category_roll int,
                 title_judge_roll int,

@@ -14,6 +14,7 @@ const PREFIX = config.prefix;
 const { Pool } = require("pg");
 const { string } = require("check-types");
 const { get } = require("lodash");
+const { stringify } = require("querystring");
 const pool = new Pool(dbCreds);
 bot.on("ready", () => {
 	console.log(
@@ -1168,170 +1169,6 @@ async function leave(message) {
 	}
 }
 
-// TODO: OH WHAT A MESS I'VE MADE...........................................................
-
-async function leafletUpdate(message) {
-	console.log(`start leafletUpdate()`);
-	const client = await pool.connect();
-	try {
-		await getGameId(message).then((results) => {
-			gameId = results;
-		});
-		let themeCategoryRollArray = [];
-		let titleJudgeRollArray = [];
-		let taglineJudgeRollArray = [];
-		console.log(`leafletUpdate() > parseInt(gameId) = ${parseInt(gameId)}`);
-		const themeAndJudgeArrays = await client.query(
-			`SELECT ` +
-				`theme_category_roll_array, ` +
-				`title_judge_roll_array, ` +
-				`tagline_judge_roll_array ` +
-				`FROM public.games ` +
-				`WHERE game_id = ${gameId} ` +
-				`AND game_is_active = true;`
-		);
-		themeAndJudgeArrays.rows.forEach((row) => {
-			themeCategoryRollArray = row.theme_category_roll_array;
-			titleJudgeRollArray = row.title_judge_roll_array;
-			taglineJudgeRollArray = row.tagline_judge_roll_array;
-		});
-		// if (gameLeafletData.rows.length == 0) {
-		// 	bot.channels.fetch(`${row.text_channel_id}`).then((results) => {
-		let i = 0;
-		// TODO: replace voice.channel with players table
-
-		// var playersInActiveGamesArray = [];
-		// playersInActiveGames.rows.forEach((row) => {
-		//     playersInActiveGamesArray.push(row.player_id);
-		// });
-		// let adminUser = bot.users.cache.get(`${config.adminID}`);
-		const playersInQueue = await client.query(
-			`SELECT * ` +
-				`FROM public.players ` +
-				`WHERE game_id = ${gameId} ` +
-				`AND queued = true;`
-		);
-		// async () => {
-		// const client = await pool.connect();
-		// 		try {
-		playersInQueue.rows.forEach(async (row) => {
-			console.log(
-				`leafletUpdate() playersInQueue.rows.forEach(async (row ${i})`
-			);
-			playerPlaying = row.playing;
-			playerQueued = row.queued;
-			authorId = row.author_id;
-			authorUsername = row.author_username;
-			console.log(`playerQueue = ${playerQueued}`);
-			console.log(`authorId = ${authorId}`);
-
-			// if (await playerQueued == "true") {
-				// async () => {
-					console.log(`playerQueued ======= true`);
-					// const client = await pool.connect();
-					// try {
-						// if (await playerQueued == "true") {
-						console.log(`1`);
-						const prepGameLeaflet = {
-							game_session_id: parseInt(gameId),
-							game_is_active: true,
-							player_id: authorId,
-							turns_as_active_player: 0,
-							theme_category_roll: themeCategoryRollArray[i],
-							title_judge_roll: titleJudgeRollArray[i],
-							title_judge_choice: null,
-							tagline_judge_roll: taglineJudgeRollArray[i],
-							tagline_judge_choice: null,
-							total_points: 0,
-							category_id: message.member.voice.channel.parent.id,
-							text_channel_id: message.channel.id,
-							voice_channel_id: message.member.voice.channel.id,
-						};
-						await client.query("BEGIN");
-						console.log(`2`);
-						const insertGameLeafletText =
-							`INSERT INTO public.game_leaflet(game_session_id, game_is_active, player_id, ` +
-							`turns_as_active_player, theme_category_roll, title_judge_roll, ` +
-							`title_judge_choice, tagline_judge_roll, tagline_judge_choice, ` +
-							`total_points, category_id, text_channel_id, voice_channel_id) ` +
-							`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`;
-						const insertGameLeafletValues = [
-							prepGameLeaflet.game_session_id,
-							prepGameLeaflet.game_is_active,
-							prepGameLeaflet.player_id,
-							prepGameLeaflet.turns_as_active_player,
-							prepGameLeaflet.theme_category_roll,
-							prepGameLeaflet.title_judge_roll,
-							prepGameLeaflet.title_judge_choice,
-							prepGameLeaflet.tagline_judge_roll,
-							prepGameLeaflet.tagline_judge_choice,
-							prepGameLeaflet.total_points,
-							prepGameLeaflet.category_id,
-							prepGameLeaflet.text_channel_id,
-							prepGameLeaflet.voice_channel_id,
-						];
-						console.log(`3`);
-						await client.query(
-							insertGameLeafletText,
-							insertGameLeafletValues
-						);
-						console.log(`4`);
-						await client.query("COMMIT");
-						console.log(`leafletUpdate COMMIT`);
-						i += 1;
-						console.log(
-							`playerQueued == "true" > i += 1; > return;`
-						);
-						
-					// } else if (await playerQueued == "false") {
-					// 	i += 1;
-					// 	console.log(`playerQueued == "false" > i += 1; > return;`);
-					// 	// return;
-					// }
-					// } catch (err) {
-					// 	console.log(err.stack);
-					// 	dmError(err);
-					// 	await client.query("ROLLBACK");
-					// 	throw err;
-					// }
-					// i += 1;
-					// console.log(`playerQueued == "true" > i += 1; > return;`);
-					// return;
-				// };
-		// 	} else if (await playerQueued == "false") {
-		// 		i += 1;
-		// 		console.log(`playerQueued == "false" > i += 1; > return;`);
-		// 		// return;
-		// 	}
-		
-		// });
-		// } catch (err) {
-		// 	console.log(err.stack);
-		// 	dmError(err);
-		// 	await client.query("ROLLBACK");
-		// 	throw err;
-		// }
-		// });
-		// )()
-		// .catch((err) => {
-		// 	dmError(err);
-		// 	console.error(err.stack);
-		// });
-		// }
-			});
-	} catch (err) {
-		console.log(err.stack);
-		dmError(err);
-		await client.query("ROLLBACK");
-		throw err;
-	} finally {
-		client.release();
-	}
-	console.log(`end leafletUpdate()`);
-}
-
-// ................................................................................................
-
 async function play(message) {
 	const client = await pool.connect();
 	try {
@@ -1340,60 +1177,105 @@ async function play(message) {
 		await getGameId(message).then((results) => {
 			gameId = results;
 		});
-		console.log(`play() > parseInt(gameId) = ${gameId}`);
-		console.log(`play() > author_id = ${message.author.id}`);
 		const playerIsPlaying = await client.query(
 			`SELECT * ` +
-				`FROM public.players ` +
-				`WHERE author_id = ${message.author.id} ` +
-				`AND game_id = ${gameId} `
+				`FROM public.game_leaflet ` +
+				`WHERE player_id = ${message.author.id} ` +
+				`AND game_session_id = ${gameId} `
 		);
-		console.log(`play() > playerIsPlaying.rows = ${playerIsPlaying.rows}`);
 		if (playerIsPlaying.rows.length > 0) {
 			console.log(`playerIsPlaying != null`);
 			playerIsPlaying.rows.forEach((row) => {
-				playerCurrentlyPlaying = row.playing;
-				playerCurrentlyQueued = row.queued;
+				playerPlaying = row.playing;
+				playerQueued = row.queued;
 			});
-			console.log(
-				`play() > playerCurrentlyPlaying = ${playerCurrentlyPlaying}`
-			);
-			console.log(
-				`play() > playerCurrentlyQueued = ${playerCurrentlyQueued}`
-			);
-			return;
+			if (playerPlaying == "true") {
+				message.channel.send(
+					`${message.member}, don't get your bananas in a bunch. You're already in the game.`
+				);
+			} else {
+				// player can rejoin the game
+				await client.query(
+					`UPDATE public.game_leaflet ` +
+						`SET playing = false, ` +
+						`queued = true, ` +
+						`WHERE player_id = ${message.member.id} ` +
+						`AND game_session_id = ${gameId} `
+				);
+				return;
+			}
 		} else {
-			const prepStmnt = {
-				game_id: parseInt(gameId),
+			const playerCount = await client.query(
+				`SELECT game_leaflet_id ` +
+					`FROM public.game_leaflet ` +
+					`WHERE game_session_id = ${gameId} `
+			);
+			console.log(`playerCount = ${JSON.stringify(playerCount)}`);
+			console.log(`playerCount.rowCount = ${playerCount.rowCount}`);
+			let themeCategoryRollArray = [];
+			let titleJudgeRollArray = [];
+			let taglineJudgeRollArray = [];
+			console.log(
+				`leafletUpdate() > parseInt(gameId) = ${parseInt(gameId)}`
+			);
+			const themeAndJudgeArrays = await client.query(
+				`SELECT ` +
+					`theme_category_roll_array, ` +
+					`title_judge_roll_array, ` +
+					`tagline_judge_roll_array ` +
+					`FROM public.games ` +
+					`WHERE game_id = ${gameId} ` +
+					`AND game_is_active = true;`
+			);
+			themeAndJudgeArrays.rows.forEach((row) => {
+				themeCategoryRollArray = row.theme_category_roll_array;
+				titleJudgeRollArray = row.title_judge_roll_array;
+				taglineJudgeRollArray = row.tagline_judge_roll_array;
+			});
+			const prepGameLeaflet = {
+				game_session_id: parseInt(gameId),
+				game_is_active: true,
+				player_id: message.author.id,
 				playing: false,
 				queued: true,
-				readable_timestamp: getTimeStamp(),
-				message_timestamp: message.createdTimestamp,
+				turns_as_active_player: 0,
+				theme_category_roll: themeCategoryRollArray[playerCount.rowCount],
+				title_judge_roll: titleJudgeRollArray[playerCount.rowCount],
+				title_judge_choice: null,
+				tagline_judge_roll: taglineJudgeRollArray[playerCount.rowCount],
+				tagline_judge_choice: null,
+				total_points: 0,
+				category_id: message.member.voice.channel.parent.id,
 				text_channel_id: message.channel.id,
-				author_id: message.author.id,
-				author_username: message.author.username,
+				voice_channel_id: message.member.voice.channel.id,
 			};
 			await client.query("BEGIN");
-			const prepStmntKeys =
-				`INSERT INTO public.players(game_id, ` +
-				`playing, queued, ` +
-				`readable_timestamp, message_timestamp, ` +
-				`text_channel_id, author_id, author_username) ` +
-				`VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
-			const prepStmntValues = [
-				prepStmnt.game_id,
-				prepStmnt.playing,
-				prepStmnt.queued,
-				prepStmnt.readable_timestamp,
-				prepStmnt.message_timestamp,
-				prepStmnt.text_channel_id,
-				prepStmnt.author_id,
-				prepStmnt.author_username,
+			const insertGameLeafletText =
+				`INSERT INTO public.game_leaflet(game_session_id, game_is_active, player_id, ` +
+				`playing, queued, turns_as_active_player, theme_category_roll, title_judge_roll, ` +
+				`title_judge_choice, tagline_judge_roll, tagline_judge_choice, ` +
+				`total_points, category_id, text_channel_id, voice_channel_id) ` +
+				`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`;
+			const insertGameLeafletValues = [
+				prepGameLeaflet.game_session_id,
+				prepGameLeaflet.game_is_active,
+				prepGameLeaflet.player_id,
+				prepGameLeaflet.playing,
+				prepGameLeaflet.queued,
+				prepGameLeaflet.turns_as_active_player,
+				prepGameLeaflet.theme_category_roll,
+				prepGameLeaflet.title_judge_roll,
+				prepGameLeaflet.title_judge_choice,
+				prepGameLeaflet.tagline_judge_roll,
+				prepGameLeaflet.tagline_judge_choice,
+				prepGameLeaflet.total_points,
+				prepGameLeaflet.category_id,
+				prepGameLeaflet.text_channel_id,
+				prepGameLeaflet.voice_channel_id,
 			];
-			await client.query(prepStmntKeys, prepStmntValues);
+			await client.query(insertGameLeafletText, insertGameLeafletValues);
 			await client.query("COMMIT");
 		}
-		// TODO: play() is allowing players to add themselves more than once - fix it.
 	} catch (err) {
 		dmError(err);
 		await client.query("ROLLBACK");
@@ -1491,30 +1373,18 @@ async function playerTurnsTaken(message) {
 }
 
 async function queuedPlayerUpdate(message) {
-	console.log(`start queuedPlayerUpdate()`);
 	const client = await pool.connect();
 	try {
 		await getGameId(message).then((results) => {
 			gameId = results;
 		});
-		// await leafletUpdate(message).then(() => {
-		// console.log(`queuedPlayerUpdate() inside .then leafletUpdate()`);
 		client.query(
-			`UPDATE public.players ` +
+			`UPDATE public.game_leaflet ` +
 				`SET playing = true, ` +
 				`queued = false ` +
-				`WHERE game_id = ${gameId} ` +
+				`WHERE game_session_id = ${gameId} ` +
 				`AND queued = true`
 		);
-		// });
-		// console.log(`queuedPlayerUpdate() after leafletUpdate()`);
-		// await client.query(
-		// 	`UPDATE public.players ` +
-		// 		`SET playing = true, ` +
-		// 		`queued = false ` +
-		// 		`WHERE game_id = ${gameId} ` +
-		// 		`AND queued = true`
-		// );
 	} catch (err) {
 		await client.query("ROLLBACK");
 		dmError(err);
@@ -1522,7 +1392,6 @@ async function queuedPlayerUpdate(message) {
 	} finally {
 		client.release();
 	}
-	console.log(`end queuedPlayerUpdate()`);
 }
 
 async function resetTable(gameId) {
@@ -1628,13 +1497,7 @@ function roll_for_game(message) {
 	(async () => {
 		const client = await pool.connect();
 		try {
-			console.log(`call leafletUpdate()`);
-			await leafletUpdate(message);
-			console.log(`return from leafletUpdate()`);
-			console.log(`call queuedPlayerUpdate()`);
 			await queuedPlayerUpdate(message);
-			console.log(`return from queuedPlayerUpdate()`);
-			console.log(`message.member.id = ${message.member.id}`);
 			// TODO: if author not in game, send message: "Before you can !roll, you must use the !play command to join the game"
 
 			// await getGameId(message).then((results) => {
