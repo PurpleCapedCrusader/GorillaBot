@@ -1177,10 +1177,11 @@ async function play(message) {
 		await getGameId(message).then((results) => {
 			gameId = results;
 		});
+		console.log(`play > gameId = ${gameId} `);
 		const playerIsPlaying = await client.query(
 			`SELECT * ` +
 				`FROM public.game_leaflet ` +
-				`WHERE player_id = ${message.author.id} ` +
+				`WHERE player_id = ${message.member.id} ` +
 				`AND game_session_id = ${gameId} `
 		);
 		if (playerIsPlaying.rows.length > 0) {
@@ -1245,9 +1246,9 @@ async function play(message) {
 				tagline_judge_roll: taglineJudgeRollArray[playerCount.rowCount],
 				tagline_judge_choice: null,
 				total_points: 0,
-				category_id: message.member.voice.channel.parent.id,
+				category_id: message.channel.parent.id,
 				text_channel_id: message.channel.id,
-				voice_channel_id: message.member.voice.channel.id,
+				voice_channel_id: 699378709764767796, //message.member.voice.channel.id,
 			};
 			await client.query("BEGIN");
 			const insertGameLeafletText =
@@ -1289,57 +1290,54 @@ async function playerInActiveGame(message) {
 	// TODO: remove voice dependency
 	const client = await pool.connect();
 	try {
-		const playersInActiveGames = await client.query(
-			`SELECT player_id ` +
+		const playersInActiveGames = await client.query({
+		rowMode: "array",
+		text:
+			`SELECT game_session_id ` +
 				`FROM public.game_leaflet ` +
-				`WHERE game_is_active = true;`
-		);
-		var playersInActiveGamesArray = [];
-		playersInActiveGames.rows.forEach((row) => {
-			playersInActiveGamesArray.push(row.player_id);
+				`WHERE player_id = ${message.member.id} ` +
+				`AND game_is_active = true;`
 		});
-		var playersInThisChannel = [];
-		message.member.voice.channel.members.forEach(function (guildmember) {
-			playersInThisChannel.push(guildmember.id);
-		});
-		var intersection = _.intersection(
-			playersInThisChannel,
-			playersInActiveGamesArray
-		);
+
+		// const playersInActiveGames = await client.query(
+		// 	`SELECT game_session_id ` +
+		// 		`FROM public.game_leaflet ` +
+		// 		`WHERE player_id = ${message.member.id} ` +
+		// 		`AND game_is_active = true;`
+		// );
+		// var playersInActiveGamesArray = [];
+		// playersInActiveGames.rows.forEach((row) => {
+		// 	playersInActiveGamesArray.push(row.player_id);
+		// });
+		// var playersInThisChannel = [];
+		// message.member.voice.channel.members.forEach(function (guildmember) {
+		// 	playersInThisChannel.push(guildmember.id);
+		// });
+		// var intersection = _.intersection(
+		// 	playersInThisChannel,
+		// 	playersInActiveGamesArray
+		// );
+		// console.log(
+		// 	`${intersection.length} Players trying to join 2 games at the same time = ${intersection}`
+		// );
 		console.log(
-			`${intersection.length} Players trying to join 2 games at the same time = ${intersection}`
+			`playersInActiveGames.rows.length = ${playersInActiveGames.rows.length}`
 		);
-		if (intersection.length === 0) {
+		if (playersInActiveGames.rows.length === 0) {
 			return "false";
 		} else {
-			if (intersection.length === 1) {
+			const categoryName = await client.query({
+				rowMode: "array",
+				text:
+					`SELECT category_name ` +
+						`FROM public.games ` +
+						`WHERE game_id = ${categoryName.rows} ` +
+						`AND game_is_active = true;`
+				});
 				message.channel.send(
-					`<@${intersection}> is currently in another game.`
+					`<@${message.member.id}>, you're currently in another game at the ` + 
+					`${categoryName.rows}. You can only play 1 game at a time.`
 				);
-			}
-			if (intersection.length === 2) {
-				message.channel.send(
-					`<@${intersection[0]}> and <@${intersection[1]}> are currently in other games.`
-				);
-			}
-			if (intersection.length > 2) {
-				var playerList = "";
-				for (var i = 0; i <= intersection.length; i++) {
-					if (i < intersection.length - 1) {
-						playerList = playerList.concat(
-							`<@${intersection[i]}>, `
-						);
-					}
-					if (i == intersection.length - 1) {
-						playerList = playerList.concat(
-							` and <@${intersection[i]}>`
-						);
-					}
-				}
-				message.channel.send(
-					`${playerList} are currently in other games.`
-				);
-			}
 			return "true";
 		}
 	} catch (err) {
@@ -1350,6 +1348,72 @@ async function playerInActiveGame(message) {
 		client.release();
 	}
 }
+
+// async function playerInActiveGame(message) {
+// 	// TODO: remove voice dependency
+// 	const client = await pool.connect();
+// 	try {
+// 		const playersInActiveGames = await client.query(
+// 			`SELECT player_id ` +
+// 				`FROM public.game_leaflet ` +
+// 				`WHERE game_is_active = true;`
+// 		);
+// 		var playersInActiveGamesArray = [];
+// 		playersInActiveGames.rows.forEach((row) => {
+// 			playersInActiveGamesArray.push(row.player_id);
+// 		});
+// 		var playersInThisChannel = [];
+// 		message.member.voice.channel.members.forEach(function (guildmember) {
+// 			playersInThisChannel.push(guildmember.id);
+// 		});
+// 		var intersection = _.intersection(
+// 			playersInThisChannel,
+// 			playersInActiveGamesArray
+// 		);
+// 		console.log(
+// 			`${intersection.length} Players trying to join 2 games at the same time = ${intersection}`
+// 		);
+// 		if (intersection.length === 0) {
+// 			return "false";
+// 		} else {
+// 			if (intersection.length === 1) {
+// 				message.channel.send(
+// 					`<@${intersection}> is currently in another game.`
+// 				);
+// 			}
+// 			if (intersection.length === 2) {
+// 				message.channel.send(
+// 					`<@${intersection[0]}> and <@${intersection[1]}> are currently in other games.`
+// 				);
+// 			}
+// 			if (intersection.length > 2) {
+// 				var playerList = "";
+// 				for (var i = 0; i <= intersection.length; i++) {
+// 					if (i < intersection.length - 1) {
+// 						playerList = playerList.concat(
+// 							`<@${intersection[i]}>, `
+// 						);
+// 					}
+// 					if (i == intersection.length - 1) {
+// 						playerList = playerList.concat(
+// 							` and <@${intersection[i]}>`
+// 						);
+// 					}
+// 				}
+// 				message.channel.send(
+// 					`${playerList} are currently in other games.`
+// 				);
+// 			}
+// 			return "true";
+// 		}
+// 	} catch (err) {
+// 		dmError(err);
+// 		await client.query("ROLLBACK");
+// 		throw err;
+// 	} finally {
+// 		client.release();
+// 	}
+// }
 
 async function playerTurnsTaken(message) {
 	const client = await pool.connect();
@@ -1410,6 +1474,13 @@ async function resetTable(gameId) {
 				`SET game_is_active = false ` +
 				`WHERE game_id = ${gameId}`
 		);
+		// client.query(
+		// 	`UPDATE public.turns ` +
+		// 		`SET game_is_active = false, ` +
+		// 		`game_is_active = false, ` +
+		// 		`title_tagline_is_submitted = true `
+		// 		`WHERE game_session_id = ${gameId}`
+		// );
 		client.query(
 			`UPDATE public.turns ` +
 				`SET game_is_active = false ` +
@@ -1425,13 +1496,20 @@ async function resetTable(gameId) {
 				`SET title_tagline_is_submitted = true ` +
 				`WHERE game_session_id = ${gameId}`
 		);
+		// client.query(
+		// 	`UPDATE public.game_leaflet ` +
+		// 		`SET game_is_active = false, ` +
+		// 		`playing = false, ` +
+		// 		`queued = false ` +
+		// 		`WHERE game_session_id = ${gameId}`
+		// );
 		client.query(
 			`UPDATE public.game_leaflet ` +
 				`SET game_is_active = false ` +
 				`WHERE game_session_id = ${gameId}`
 		);
 		client.query(
-			`UPDATE public.players ` +
+			`UPDATE public.game_leaflet ` +
 				`SET playing = false, ` +
 				`queued = false ` +
 				`WHERE game_id = ${gameId}`
@@ -1655,14 +1733,14 @@ function roll_for_game(message) {
 				text:
 					`SELECT guild_id ` +
 					`FROM public.games ` +
-					`WHERE voice_channel_id = ${message.member.voice.channel.id} ` +
+					`WHERE text_channel_id = ${message.channel.id} ` +
 					`AND game_is_active = true ` +
 					`ORDER BY message_timestamp DESC LIMIT 1;`,
 			});
 			const playersFromDatabase = await client.query(
 				`SELECT * ` +
 					`FROM public.game_leaflet ` +
-					`WHERE voice_channel_id = ${message.member.voice.channel.id} ` +
+					`WHERE text_channel_id = ${message.channel.id} ` +
 					`AND game_is_active = true`
 			);
 			playersFromDatabase.rows.forEach((row) => {
@@ -1743,30 +1821,35 @@ function roll_for_game(message) {
 						// TODO: remove voice dependency
 						const client = await pool.connect();
 						try {
-							const gameId = await client.query({
-								rowMode: "array",
-								text:
-									`SELECT game_id ` +
-									`FROM public.games ` +
-									`WHERE category_id = ${message.member.voice.channel.parent.id} ` +
-									`AND game_is_active = true ` +
-									`ORDER BY message_timestamp DESC LIMIT 1;`,
+							await getGameId(message).then((results) => {
+								gameId = results;
 							});
+							// const gameId = await client.query({
+							// 	rowMode: "array",
+							// 	text:
+							// 		`SELECT game_id ` +
+							// 		`FROM public.games ` +
+							// 		`WHERE category_id = ${message.member.voice.channel.parent.id} ` +
+							// 		`AND game_is_active = true ` +
+							// 		`ORDER BY message_timestamp DESC LIMIT 1;`,
+							// });
 							const gameTheme = await client.query({
 								rowMode: "array",
 								text:
 									`SELECT game_theme ` +
 									`FROM public.games ` +
-									`WHERE category_id = ${message.member.voice.channel.parent.id} ` +
+									`WHERE text_channel_id = ${message.channel.id} ` +
 									`AND game_is_active = true ` +
 									`ORDER BY message_timestamp DESC LIMIT 1;`,
 							});
+							console.log(`gameId = ${gameId}`);
 							console.log(`gameTheme.rows = ${gameTheme.rows}`);
+							console.log(`NO VOICE UP TILL HERE`);
 
 							// TODO: make sure this next section isn't affected by pulling players from database
 
 							const prepStmnt = {
-								game_session_id: parseInt(gameId.rows),
+								game_session_id: parseInt(gameId),
 								game_is_active: true,
 								turn_is_active: true,
 								readable_timestamp: getTimeStamp(),
@@ -2017,10 +2100,10 @@ async function startGame(message) {
 			message_timestamp: message.createdTimestamp,
 			guild_name: message.guild.name,
 			guild_id: message.guild.id,
-			category_name: message.member.voice.channel.parent.name,
-			category_id: message.member.voice.channel.parent.id,
+			category_name: "Ape Table", //message.member.voice.channel.parent.name,
+			category_id: message.channel.parent.id,
 			text_channel_id: message.channel.id,
-			voice_channel_id: message.member.voice.channel.id,
+			voice_channel_id: 699378709764767796, //message.member.voice.channel.id,
 			message_id: message.id,
 			game_theme: theme,
 			theme_category_roll_array: shuffle(Array.from(Array(27).keys())),
