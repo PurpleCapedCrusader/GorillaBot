@@ -1270,32 +1270,37 @@ async function play(message) {
 				`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`;
 			const insertGameLeafletValues = [
 				prepGameLeaflet.game_session_id,
-				prepGameLeaflet.game_is_active,
-				prepGameLeaflet.player_id,
-				prepGameLeaflet.playing,
-				prepGameLeaflet.queued,
-				prepGameLeaflet.turns_as_active_player,
-				prepGameLeaflet.theme_category_roll,
-				prepGameLeaflet.title_judge_roll,
-				prepGameLeaflet.title_judge_choice,
-				prepGameLeaflet.tagline_judge_roll,
-				prepGameLeaflet.tagline_judge_choice,
-				prepGameLeaflet.total_points,
-				prepGameLeaflet.category_id,
-				prepGameLeaflet.text_channel_id,
-				prepGameLeaflet.voice_channel_id,
-			];
-			await client.query(insertGameLeafletText, insertGameLeafletValues);
-			await client.query("COMMIT");
-		}
-	} catch (err) {
-		dmError(err);
-		await client.query("ROLLBACK");
-		throw err;
-	} finally {
-		client.release();
-	}
-}
+					prepGameLeaflet.game_is_active,
+					prepGameLeaflet.player_id,
+					prepGameLeaflet.playing,
+					prepGameLeaflet.queued,
+					prepGameLeaflet.turns_as_active_player,
+					prepGameLeaflet.theme_category_roll,
+					prepGameLeaflet.title_judge_roll,
+					prepGameLeaflet.title_judge_choice,
+					prepGameLeaflet.tagline_judge_roll,
+					prepGameLeaflet.tagline_judge_choice,
+					prepGameLeaflet.total_points,
+					prepGameLeaflet.category_id,
+					prepGameLeaflet.text_channel_id,
+					prepGameLeaflet.voice_channel_id, ];
+				await client.query(insertGameLeafletText, insertGameLeafletValues);
+				await client.query("COMMIT");
+				message.delete()
+					.then(message.channel.send(
+						`<@${message.member.id}> has taken a seat at the table`
+					))
+					.catch(console.error);
+				}
+				}
+				catch (err) {
+					dmError(err);
+					await client.query("ROLLBACK");
+					throw err;
+				} finally {
+					client.release();
+				}
+				}
 
 async function playerInActiveGame(message) {
 	const client = await pool.connect();
@@ -2097,7 +2102,7 @@ async function startGame(message) {
 			message_timestamp: message.createdTimestamp,
 			guild_name: message.guild.name,
 			guild_id: message.guild.id,
-			category_name: "Ape Table", //message.member.voice.channel.parent.name,
+			category_name: message.channel.parent.name,
 			category_id: message.channel.parent.id,
 			text_channel_id: message.channel.id,
 			voice_channel_id: 699378709764767796, //message.member.voice.channel.id,
