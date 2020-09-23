@@ -11,18 +11,10 @@ const fetch = require("node-fetch");
 // const express = require("express");
 const bot = new Discord.Client();
 const PREFIX = config.prefix;
-const {
-	Pool
-} = require("pg");
-const {
-	string
-} = require("check-types");
-const {
-	get
-} = require("lodash");
-const {
-	stringify
-} = require("querystring");
+const {Pool} = require("pg");
+const {string} = require("check-types");
+const {get} = require("lodash");
+const {stringify} = require("querystring");
 const pool = new Pool(dbCreds);
 bot.on("ready", () => {
 	console.log(
@@ -340,6 +332,7 @@ bot.on("message", (message) => {
 			break;
 
 		case "reset":
+			// TODO: Stop other users from reseting a game they're not playing in.
 			if (message.channel.type === "dm") {
 				message.author.send(
 					`That command doesn't work in direct messages.`
@@ -347,7 +340,7 @@ bot.on("message", (message) => {
 			} else {
 				getGameId(message).then((results) => {
 					gameId = results;
-					if (gameId != false) {
+					if (gameId > 0) {
 						resetTable(gameId);
 					}
 				});
@@ -366,18 +359,18 @@ bot.on("message", (message) => {
 				playerInActiveGame(message).then((results) => {
 						playerInGame = results
 					});
-				if (gameId == false) {
+				if (gameId == 0) {
 					message.channel.send(rollDice());
 					return;
-				} else if (gameId != false || playerInGame == 0) {
+				} else if (gameId > 0 && playerInGame == 0) {
 					message.channel.send(
 						`${message.member}, use the !play comand to join the game before using !roll.`
 					);
-				} else if (gameId != false || playerInGame != 0 || gameId != playerInGame) {
+				} else if (gameId > 0 && playerInGame != 0 && gameId != playerInGame) {
 					message.channel.send(
 						`${message.member}, your game is at a different table.`
 					);
-				} else if (gameId != false || playerInGame != 0 || gameId == playerInGame) {
+				} else if (gameId != false && playerInGame != 0 && gameId == playerInGame) {
 					
 					// TODO: pull player list from public.leaflet
 					// let voiceChannelIndex = gameRooms.voiceChannels.indexOf(
@@ -595,12 +588,12 @@ bot.on("message", (message) => {
 					gameRooms.textChannels.indexOf(message.channel.name) >= 0 &&
 					gameRooms.textChannels.indexOf(message.channel.name) <=
 					gameRooms.textChannels.length
-				) {
+				){
 					gameIsInProgress(message)
 						.then((results) => {
 							gameIs = results;
 							console.log(
-								`inside case !roll -> gameIsInProgress() -> gameIs = ${gameIs}`
+								`theme choice -> gameIsInProgress() -> gameIs = ${gameIs}`
 							);
 							if (gameIs == "true") {
 								message.channel.send(
@@ -615,9 +608,10 @@ bot.on("message", (message) => {
 										console.log(
 											`playerInGame = ${playerInGame}`
 										);
-										if (playerInGame == "true") {
+										if (playerInGame > 0) {
+											playerInAnotherGame(message);
 											return;
-										} else if (playerInGame == "false") {
+										} else if (playerInGame == 0) {
 											startGame(message).then(() => {
 												play(message);
 											});
@@ -1133,7 +1127,7 @@ async function getGameId(message) {
 				`ORDER BY message_timestamp DESC LIMIT 1;`,
 		});
 		if (gameId.rows.length === 0) {
-			return false;
+			return 0;
 		} else {
 			return gameId.rows;
 		}
@@ -1314,22 +1308,12 @@ async function playerInActiveGame(message) {
 				`AND game_is_active = true;`
 		});
 		console.log(
-			`playersInActiveGames.rows.length = ${playersInActiveGames.rows.length}`
+			`playersInActiveGames() = ${playersInActiveGames.rows}`
 		);
 		if (playersInActiveGames.rows.length === 0) {
 			return 0;
-		} else if (playersInActiveGames.rows.length === 1) {
-			const playerGameId = await client.query({
-				rowMode: "array",
-				text: `SELECT game_id ` +
-					`FROM public.games ` +
-					`WHERE player_id = ${messege.member.id} ` +
-					`AND game_is_active = true;`
-			});
-			console.log(
-				`playersInActiveGames playerGameId = ${playerGameId}`
-			);
-			return playerGameId;
+		} else {
+			return playersInActiveGames.rows;
 		}
 	} catch (err) {
 		dmError(err);
@@ -1341,22 +1325,28 @@ async function playerInActiveGame(message) {
 }
 
 async function playerInAnotherGame(message) {
+	console.log(`inside playerInAnotherGame()`);
 	const client = await pool.connect();
 	try {
-		await getGameId(message).then((results) => {
-			gameId = results;
-		});
-		const categoryName = await client.query({
+		const playersInActiveGames = await client.query({
 			rowMode: "array",
-			text: `SELECT category_name ` +
-				`FROM public.games ` +
-				`WHERE game_id = ${gameId} ` +
+			text: `SELECT game_session_id ` +
+				`FROM public.game_leaflet ` +
+				`WHERE player_id = ${message.member.id} ` +
 				`AND game_is_active = true;`
 		});
-		console.log(`categoryName.rows = ${categoryName.rows}`);
+		console.log(`playersInActiveGames.rows = ${playersInActiveGames.rows}`);
+		const textChannelId = await client.query({
+			rowMode: "array",
+			text: `SELECT text_channel_id ` +
+				`FROM public.games ` +
+				`WHERE game_id = ${playersInActiveGames.rows} ` +
+				`AND game_is_active = true;`
+		});
+		console.log(`textChannelId.rows = ${textChannelId.rows}`);
 		message.channel.send(
-			`<@${message.member.id}>, you're currently in another game at the ` +
-			`${categoryName.rows}. You can only play 1 game at a time.`
+			`<@${message.member.id}>, you're already playing a game in the ` +
+			`<#${textChannelId.rows}> channel. You can only play 1 game at a time.`
 		);
 		return;
 	} catch (err) {
