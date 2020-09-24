@@ -283,16 +283,16 @@ bot.on("message", (message) => {
 					`inside case !play -> gameIsInProgress() -> gameIs = ${gameIs}`
 				);
 				if (gameIs == "true") {
-					getGameId(message).then((results) => {
-						gameId = results;
-					});
+					// getGameId(message).then((results) => {
+					// 	gameId = results;
+					// });
 					play(message);
 				} else {
 					message.channel.send(
 						`First, one player uses the **!Bands**, **!College Courses**, ` +
 						`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
 						`**!Products** command to create and join the game. \n\u200b \n\u200b` +
-						`Then the rest of the players use the **!play** command to join the game too.`
+						`Then the rest of the players use the **!play** command to join the game too.\n\u200b \n\u200b`
 					);
 				}
 			});
@@ -354,11 +354,14 @@ bot.on("message", (message) => {
 				message.channel.send(rollDice());
 			} else {
 				getGameId(message).then((results) => {
-					gameId = results;
+					gameId = parseInt(results);
+					console.log(`1 !roll gameId = ${gameId}`);
 				});
-				playerInActiveGame(message).then((results) => {
-						playerInGame = results
+				console.log(`2 !roll gameId = ${gameId}`);
+				playerInActiveGame(message).then((results) => { //game_session_id from game_leaflet
+						playerInGame = parseInt(results)
 					});
+					console.log(`!roll playerInActiveGame = ${playerInGame}`);
 				if (gameId == 0) {
 					message.channel.send(rollDice());
 					return;
@@ -366,11 +369,11 @@ bot.on("message", (message) => {
 					message.channel.send(
 						`${message.member}, use the !play comand to join the game before using !roll.`
 					);
-				} else if (gameId > 0 && playerInGame != 0 && gameId != playerInGame) {
+				} else if (gameId > 0 && playerInGame > 0 && gameId != playerInGame) {
 					message.channel.send(
 						`${message.member}, your game is at a different table.`
 					);
-				} else if (gameId != false && playerInGame != 0 && gameId == playerInGame) {
+				} else if (gameId > 0 && playerInGame > 0 && gameId == playerInGame) {
 					
 					// TODO: pull player list from public.leaflet
 					// let voiceChannelIndex = gameRooms.voiceChannels.indexOf(
@@ -383,7 +386,10 @@ bot.on("message", (message) => {
 					// 	gameRooms.textChannels.length &&
 					// 	textChannelIndex === voiceChannelIndex
 					// ) {
-						if (message.member.voice.channel.members.size >= 2) {
+						playersInGame(message).then((results) => {
+							playersInGame = results;
+						});
+						if (playersInGame >= 2) {
 							// TODO: update to 3 upon deploy
 							playerTurnsTaken(message)
 								.then((results) => {
@@ -1103,7 +1109,7 @@ async function gameIsInProgress(message) {
 				`ORDER BY message_timestamp DESC LIMIT 1`,
 		});
 		await client.release();
-		console.log(`NO VOICE - gameIsInProgres result.rows = ${result.rows}`);
+		console.log(`gameIsInProgres() game_is_active = ${result.rows}`);
 		if (result.rows.length === 0) {
 			return false;
 		} else {
@@ -1127,8 +1133,10 @@ async function getGameId(message) {
 				`ORDER BY message_timestamp DESC LIMIT 1;`,
 		});
 		if (gameId.rows.length === 0) {
+			console.log(`should be 0 = ${gameId.rows}`);
 			return 0;
 		} else {
+			console.log(`should be a # = ${gameId.rows}`);
 			return gameId.rows;
 		}
 	} catch (err) {
@@ -1180,14 +1188,18 @@ async function play(message) {
 		await getGameId(message).then((results) => {
 			gameId = results;
 		});
-		console.log(`play > gameId = ${gameId} `);
+		console.log(`play() > gameId = ${gameId} `);
 		const playerIsPlaying = await client.query(
 			`SELECT * ` +
-			`FROM public.game_leaflet ` +
-			`WHERE player_id = ${message.member.id} ` +
-			`AND game_session_id = ${gameId} `
+				`FROM public.game_leaflet ` +
+				`WHERE player_id = ${message.member.id} ` +
+				`AND game_session_id = ${gameId} `
 		);
-		console.log(`playerIsPlaying.rows.length = ${playerIsPlaying.rows.length}`);
+		console.log(
+			`playerIsPlaying.rows.length = ${playerIsPlaying.rows.length}`
+		);console.log(
+			`playerIsPlaying.rows = ${JSON.stringify(playerIsPlaying.rows)}`
+		);
 		if (playerIsPlaying.rows.length > 0) {
 			console.log(`playerIsPlaying != null`);
 			playerIsPlaying.rows.forEach((row) => {
@@ -1210,17 +1222,17 @@ async function play(message) {
 				// player can rejoin the game
 				await client.query(
 					`UPDATE public.game_leaflet ` +
-					`SET playing = false, ` +
-					`queued = true ` +
-					`WHERE game_leaflet_id = ${gameLeafletId} `
+						`SET playing = false, ` +
+						`queued = true ` +
+						`WHERE game_leaflet_id = ${gameLeafletId} `
 				);
 				return;
 			}
 		} else {
 			const playerCount = await client.query(
 				`SELECT game_leaflet_id ` +
-				`FROM public.game_leaflet ` +
-				`WHERE game_session_id = ${gameId} `
+					`FROM public.game_leaflet ` +
+					`WHERE game_session_id = ${gameId} `
 			);
 			console.log(`playerCount = ${JSON.stringify(playerCount)}`);
 			console.log(`playerCount.rowCount = ${playerCount.rowCount}`);
@@ -1232,12 +1244,12 @@ async function play(message) {
 			);
 			const themeAndJudgeArrays = await client.query(
 				`SELECT ` +
-				`theme_category_roll_array, ` +
-				`title_judge_roll_array, ` +
-				`tagline_judge_roll_array ` +
-				`FROM public.games ` +
-				`WHERE game_id = ${gameId} ` +
-				`AND game_is_active = true;`
+					`theme_category_roll_array, ` +
+					`title_judge_roll_array, ` +
+					`tagline_judge_roll_array ` +
+					`FROM public.games ` +
+					`WHERE game_id = ${gameId} ` +
+					`AND game_is_active = true;`
 			);
 			themeAndJudgeArrays.rows.forEach((row) => {
 				themeCategoryRollArray = row.theme_category_roll_array;
@@ -1251,7 +1263,8 @@ async function play(message) {
 				playing: false,
 				queued: true,
 				turns_as_active_player: 0,
-				theme_category_roll: themeCategoryRollArray[playerCount.rowCount],
+				theme_category_roll:
+				themeCategoryRollArray[playerCount.rowCount],
 				title_judge_roll: titleJudgeRollArray[playerCount.rowCount],
 				title_judge_choice: null,
 				tagline_judge_roll: taglineJudgeRollArray[playerCount.rowCount],
@@ -1270,37 +1283,61 @@ async function play(message) {
 				`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`;
 			const insertGameLeafletValues = [
 				prepGameLeaflet.game_session_id,
-					prepGameLeaflet.game_is_active,
-					prepGameLeaflet.player_id,
-					prepGameLeaflet.playing,
-					prepGameLeaflet.queued,
-					prepGameLeaflet.turns_as_active_player,
-					prepGameLeaflet.theme_category_roll,
-					prepGameLeaflet.title_judge_roll,
-					prepGameLeaflet.title_judge_choice,
-					prepGameLeaflet.tagline_judge_roll,
-					prepGameLeaflet.tagline_judge_choice,
-					prepGameLeaflet.total_points,
-					prepGameLeaflet.category_id,
-					prepGameLeaflet.text_channel_id,
-					prepGameLeaflet.voice_channel_id, ];
-				await client.query(insertGameLeafletText, insertGameLeafletValues);
-				await client.query("COMMIT");
-				message.delete()
-					.then(message.channel.send(
+				prepGameLeaflet.game_is_active,
+				prepGameLeaflet.player_id,
+				prepGameLeaflet.playing,
+				prepGameLeaflet.queued,
+				prepGameLeaflet.turns_as_active_player,
+				prepGameLeaflet.theme_category_roll,
+				prepGameLeaflet.title_judge_roll,
+				prepGameLeaflet.title_judge_choice,
+				prepGameLeaflet.tagline_judge_roll,
+				prepGameLeaflet.tagline_judge_choice,
+				prepGameLeaflet.total_points,
+				prepGameLeaflet.category_id,
+				prepGameLeaflet.text_channel_id,
+				prepGameLeaflet.voice_channel_id,
+			];
+			await client.query(insertGameLeafletText, insertGameLeafletValues);
+			await client.query("COMMIT");
+			message
+				.delete()
+				.then(
+					message.channel.send(
 						`<@${message.member.id}> has taken a seat at the table`
-					))
-					.catch(console.error);
-				}
-				}
-				catch (err) {
-					dmError(err);
-					await client.query("ROLLBACK");
-					throw err;
-				} finally {
-					client.release();
-				}
-				}
+					)
+				)
+				.catch(console.error);
+		}
+	} catch (err) {
+		dmError(err);
+		await client.query("ROLLBACK");
+		throw err;
+	} finally {
+		client.release();
+	}
+}
+
+async function playersInGame(message) {
+	const client = await pool.connect();
+	try {
+		const playersInGame = await client.query(
+			`SELECT game_leaflet_id ` +
+				`FROM public.game_leaflet ` +
+				`WHERE game_session_id = ${gameId} `
+		);
+		if (playersInGame.rows.length === 0) {
+			return 0;
+		} else {
+			return playersInGame.rows;
+		}
+	} catch (err) {
+		dmError(err);
+		throw err;
+	} finally {
+		client.release();
+	}
+}
 
 async function playerInActiveGame(message) {
 	const client = await pool.connect();
@@ -1313,7 +1350,7 @@ async function playerInActiveGame(message) {
 				`AND game_is_active = true;`
 		});
 		console.log(
-			`playersInActiveGames() = ${playersInActiveGames.rows}`
+			`playersInActiveGames() game_session_id = ${playersInActiveGames.rows}`
 		);
 		if (playersInActiveGames.rows.length === 0) {
 			return 0;
@@ -1676,7 +1713,6 @@ function roll_for_game(message) {
 				winningTitle = roundOneWinner.rows;
 			}
 			const gameTheme = await client.query({
-				// TODO: remove voice dependency - UPDATE UNTESTED
 				rowMode: "array",
 				text: `SELECT game_theme ` +
 					`FROM public.games ` +
@@ -1684,14 +1720,6 @@ function roll_for_game(message) {
 					`AND game_is_active = true ` +
 					`ORDER BY message_timestamp DESC LIMIT 1;`,
 			});
-			// const gameTheme = await client.query({
-			//     rowMode: "array",
-			//     text: `SELECT game_theme ` +
-			//         `FROM public.games ` +
-			//         `WHERE category_id = ${message.member.voice.channel.parent.id} ` +
-			//         `AND game_is_active = true ` +
-			//         `ORDER BY message_timestamp DESC LIMIT 1;`, // TODO: make this more simple
-			// });
 			let gameThemeRows = gameTheme.rows;
 			let themeCategoryText =
 				bot.leafletData[gameThemeRows]["category"][themeCategory];
@@ -1737,7 +1765,7 @@ function roll_for_game(message) {
 			// });
 			// let role_id = bot.guilds.cache.get(row.guild_id).roles.cache.find(rName => rName.id === row.temp_role_id);
 
-			let playersFromDatabaseArray = []; // TODO: remove voice dependency - maybe use message.channel.id & text_channel_id
+			let playersFromDatabaseArray = [];
 			const guildIdFromDatabase = await client.query({
 				rowMode: "array",
 				text: `SELECT guild_id ` +
@@ -1754,8 +1782,7 @@ function roll_for_game(message) {
 			);
 			playersFromDatabase.rows.forEach((row) => {
 				playersInGame = row.player_id;
-				guildId = guildIdFromDatabase.rows; //this is in games not leaflet
-
+				guildId = guildIdFromDatabase.rows;
 				// console.log(`message.guild.available = ${message.guild.available}`);
 				// console.log(`message.guild = ${message.guild}`);
 				// console.log(`playersFromVoiceChannel = ${JSON.stringify(message.member.voice.channel.members)}`);
@@ -1764,26 +1791,15 @@ function roll_for_game(message) {
 				// console.log(`MESSAGE.MEMBER = ${message.member}`);
 				// console.log(`message.guild = ${message.guild}`);
 				// console.log(`message.guild.id = ${message.guild.id}`);
-
-				// console.log(`bot.users = ${JSON.stringify(bot.users.cache.get(playersInGame))}`); //playerInGame needs quotes
-				// playersFromDatabaseArray.push(bot.users.cache.get(playersInGame));
 				playersFromDatabaseArray.push(
 					message.guild.member(playersInGame)
 				);
-				// console.log(`message.guild.member(playersInGame) = ${message.guild.member(playersInGame)}`)
-				// let thisguild = bot.guilds.cache.get(String(guildId));
-				// console.log(`thisGuild = ${JSON.stringify(thisguild)}`)
 				console.log(
 					`playersFromDatabaseArray = ${JSON.stringify(
 						playersFromDatabaseArray
 					)}`
 				);
-				// let guildMemberObject = bot.users.cache.get(String(playersInGame));
-				// console.log(`guildMemberObject = ${JSON.stringify(guildMemberObject)}`)
-				// let member = bot.guilds.cache.get(guildId).member(playersInGame);
 			});
-
-			// message.member.voice.channel.members.forEach(function (guildMember, guildMemberId) {
 			playersFromDatabaseArray.forEach(function (
 				guildMember,
 				guildMemberId
@@ -1811,12 +1827,10 @@ function roll_for_game(message) {
 					}
 				}
 			});
-			// TODO: get list of players from public.game_leaflet instead of members in voice channel
 			playersFromDatabaseArray.forEach(function (
 				guildMember,
 				guildMemberId
 			) {
-				// console.log(guildMemberId, guildMember.user.username);
 				if (message.member.id != guildMember.id) {
 					let playersDice = rollDice();
 					guildMember.send(
@@ -1827,21 +1841,11 @@ function roll_for_game(message) {
 					}
 					guildMember.send(`${playersDice}`);
 					(async () => {
-						// TODO: remove voice dependency
 						const client = await pool.connect();
 						try {
 							await getGameId(message).then((results) => {
 								gameId = results;
 							});
-							// const gameId = await client.query({
-							// 	rowMode: "array",
-							// 	text:
-							// 		`SELECT game_id ` +
-							// 		`FROM public.games ` +
-							// 		`WHERE category_id = ${message.member.voice.channel.parent.id} ` +
-							// 		`AND game_is_active = true ` +
-							// 		`ORDER BY message_timestamp DESC LIMIT 1;`,
-							// });
 							const gameTheme = await client.query({
 								rowMode: "array",
 								text: `SELECT game_theme ` +
@@ -1862,10 +1866,10 @@ function roll_for_game(message) {
 								turn_is_active: true,
 								readable_timestamp: getTimeStamp(),
 								message_timestamp: message.createdTimestamp,
-								category_name: message.member.voice.channel.parent.name,
-								category_id: message.member.voice.channel.parent.id,
+								category_name: message.channel.parent.name,
+								category_id: message.channel.parent.id,
 								text_channel_id: message.channel.id,
-								voice_channel_id: message.member.voice.channel.id,
+								voice_channel_id:12345,
 								message_id: message.id,
 								game_theme: gameTheme.rows.toString(),
 								active_player_id: message.member.id,
