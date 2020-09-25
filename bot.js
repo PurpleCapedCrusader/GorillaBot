@@ -42,40 +42,6 @@ bot.on("debug", (e) => console.info(`DEBUG: ${getTimeStamp()} :: ${e}`));
 bot.diceData = require("./diceData.json");
 bot.leafletData = require("./leafletData.json");
 
-// bot.on("voiceStateUpdate", async (oldMember, newMember) => { // TODO: fix error when join voice channel from no voice channel
-//     const client = await pool.connect();
-//     try {
-//         if(oldMember.channel == null) {
-//             console.log(`oldMember.channel = null`);
-//             // console.log(`newMember.channel = ${newMember}`);
-//             return;
-//         }
-//         if (oldMember.channel.members.size == 0) {
-//             const gameId = await client.query({
-//                 rowMode: "array",
-//                 text: `SELECT game_id ` +
-//                     `FROM public.games ` +
-//                     `WHERE voice_channel_id = ${oldMember.channel.id} ` +
-//                     `AND game_is_active = true;`,
-//             });
-//             console.log(`gameId.rows = ${gameId.rows}`);
-//             if (gameId.rows.length === 0) {
-//                 console.log(`0 gameId.rows = ${gameId.rows}`);
-//                 return;
-//             } else if (gameId.rows.length === 1) {
-//                 console.log(`1 gameId.rows = ${gameId.rows}`);
-//                 resetTable(gameId.rows);
-//             } else {
-//                 return;
-//             }
-//         }
-//     } catch (err) {
-//         console.log(err.stack);
-//         dmError(err);
-//         throw err;
-//     }
-// });
-
 bot.on("guildMemberAdd", (member) => {
 	const embed1 = new Discord.MessageEmbed()
 		.setColor("0xff0000")
@@ -207,43 +173,43 @@ bot.on("message", (message) => {
 				.addField(
 					`**START GAME**`,
 					`Choose a player to be the first Active Player.\n\u200b` +
-					`**Active Player**: In the text channel of your table, type **!Bands**, **!College Courses**, ` +
-					`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
-					`**!Products** to choose the theme and start the game.\n\u200b`
+						`**Active Player**: In the text channel of your table, type **!Bands**, **!College Courses**, ` +
+						`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
+						`**!Products** to choose the theme and start the game.\n\u200b`
 				)
 				.addField(
 					`**ROLL**`,
 					`**Active Player**: use the **!roll** command to start the turn.\n\u200b` +
-					`GorillaBot will DM all players.\n\u200b`
+						`GorillaBot will DM all players.\n\u200b`
 				)
 				.addField(
 					`**WRITE**`,
 					`**All Players**: Open your DM from GorillaBot\n\u200b` +
-					`**Active Player**: Add a reaction emoji to the award you want to give.\n\u200b` +
-					`**All Other Players**: Respond with the Title (round 1) or Tagline (round 2) you create based on the acronym formed by your dice.\n\u200b` +
-					`**All players**: Return to the text channel at your table.\n\u200b`
+						`**Active Player**: Add a reaction emoji to the award you want to give.\n\u200b` +
+						`**All Other Players**: Respond with the Title (round 1) or Tagline (round 2) you create based on the acronym formed by your dice.\n\u200b` +
+						`**All players**: Return to the text channel at your table.\n\u200b`
 				)
 				.addField(
 					`**AWARD**`,
 					`**Active Player**: Use a reaction emoji to award your favorite title or tagline with a banana (point).\n\u200b` +
-					`Choose a player, who hasn't been the Active Player this round, to be the new Active Player\n\u200b` +
-					`Repeat from the **ROLL** phase and have fun!!!\n\u200b`
+						`Choose a player, who hasn't been the Active Player this round, to be the new Active Player\n\u200b` +
+						`Repeat from the **ROLL** phase and have fun!!!\n\u200b`
 				)
 				.addField(
 					`**GAME OVER**`,
 					`The game ends once all players have completed two turns as the Active Player.\n\u200b` +
-					`The score is displayed and the table is reset for the next game.\n\u200b`
+						`The score is displayed and the table is reset for the next game.\n\u200b`
 				)
 				.addField(
 					`**WORD HELP**`,
 					`While in the GorillaBot DM channel, enter "!word", a single word, and a single letter.\n\u200b` +
-					`**!word gorilla m** will return up to 25 words that start with the letter "M" and that are related to the word "Gorilla".\n\u200b`
+						`**!word gorilla m** will return up to 25 words that start with the letter "M" and that are related to the word "Gorilla".\n\u200b`
 				)
 				.addField(
 					`**COMMANDS**`,
 					`**!roll** - When used while not in a game, GorillaBot will send a single dice roll to the same channel.\n\u200b` +
-					`**!score** - displays current score.\n\u200b` +
-					`**!reset** - clears the table for a new game.\n\u200b`
+						`**!score** - displays current score.\n\u200b` +
+						`**!reset** - clears the table for a new game.\n\u200b`
 				);
 			message.channel.send(embed).catch(console.error);
 			break;
@@ -277,25 +243,44 @@ bot.on("message", (message) => {
 			break;
 
 		case "play":
-			gameIsInProgress(message).then((results) => {
-				gameIs = results;
-				console.log(
-					`inside case !play -> gameIsInProgress() -> gameIs = ${gameIs}`
+			if (message.channel.type === "dm") {
+				message.channel.send(
+					`The **!play** command only works at a game table once a game has started.`
 				);
-				if (gameIs == "true") {
-					// getGameId(message).then((results) => {
-					// 	gameId = results;
-					// });
-					play(message);
-				} else {
-					message.channel.send(
-						`First, one player uses the **!Bands**, **!College Courses**, ` +
-						`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
-						`**!Products** command to create and join the game. \n\u200b \n\u200b` +
-						`Then the rest of the players use the **!play** command to join the game too.\n\u200b \n\u200b`
-					);
-				}
-			});
+			} else {
+				// TODO: move the following checks to the play() function
+			gameIsInProgress(message).then((results) => {
+					gameIs = results;
+					playerInActiveGame(message).then((results) => {
+							playerIsAlreadyPlaying = results;
+							if (playerIsAlreadyPlaying == 0) {
+								if (gameIs == "true") {
+									play(message);
+								} else {
+									message.channel.send(
+										`First, one player uses the **!Bands**, **!College Courses**, ` +
+											`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
+											`**!Products** command to create and join the game. \n\u200b \n\u200b` +
+											`Then the rest of the players use the **!play** command to join the game too.\n\u200b \n\u200b`
+									);
+								}
+							} else if (playerIsAlreadyPlaying > 0) {
+								// TODO: bot should know the difference between "you're alrady playing this game" and "you're already in a game at a different table"
+								message.channel.send(
+									`${message.member}, you're already in a game at a different table.`
+								);
+							}
+						})
+						.catch((err) => {
+							dmError(err);
+							console.error(err);
+						});
+				})
+				.catch((err) => {
+					dmError(err);
+					console.error(err);
+				});
+			}
 			break;
 
 		case "players":
@@ -347,199 +332,137 @@ bot.on("message", (message) => {
 			}
 			break;
 
-		case "roll": // TODO: make voice independant
+		case "roll":
 		case "🦍":
 		case "🎲":
 			if (message.channel.type === "dm") {
 				message.channel.send(rollDice());
 			} else {
-				getGameId(message).then((results) => {
-					gameId = parseInt(results);
-					console.log(`1 !roll gameId = ${gameId}`);
-				});
-				console.log(`2 !roll gameId = ${gameId}`);
-				playerInActiveGame(message).then((results) => { //game_session_id from game_leaflet
-						playerInGame = parseInt(results)
-					});
-					console.log(`!roll playerInActiveGame = ${playerInGame}`);
-				if (gameId == 0) {
-					message.channel.send(rollDice());
-					return;
-				} else if (gameId > 0 && playerInGame == 0) {
-					message.channel.send(
-						`${message.member}, use the !play comand to join the game before using !roll.`
-					);
-				} else if (gameId > 0 && playerInGame > 0 && gameId != playerInGame) {
-					message.channel.send(
-						`${message.member}, your game is at a different table.`
-					);
-				} else if (gameId > 0 && playerInGame > 0 && gameId == playerInGame) {
-					
-					// TODO: pull player list from public.leaflet
-					// let voiceChannelIndex = gameRooms.voiceChannels.indexOf(
-					// 	message.member.voice.channel.name
-					// );
-					// if (
-					// 	gameRooms.textChannels.indexOf(message.channel.name) >=
-					// 	0 &&
-					// 	gameRooms.textChannels.indexOf(message.channel.name) <=
-					// 	gameRooms.textChannels.length &&
-					// 	textChannelIndex === voiceChannelIndex
-					// ) {
-						playersInGame(message).then((results) => {
-							playersInGame = results;
-						});
-						if (playersInGame >= 2) {
-							// TODO: update to 3 upon deploy
-							playerTurnsTaken(message)
-								.then((results) => {
-									turnsTaken = results;
-									console.log(
-										`inside case roll -> playerTurnsTaken() -> turnsTaken = ${turnsTaken}`
+				getGameId(message)
+					.then((results) => {
+						channelGameId = parseInt(results);
+						playerInActiveGame(message)
+							.then((results) => {
+								playerGameId = parseInt(results);
+								console.log(
+									`!roll: getGameId returned ${channelGameId} & playerInActiveGame returned ${playerGameId}`
+								);
+								if (channelGameId == 0) {
+									message.channel.send(rollDice());
+									return;
+								} else if (
+									channelGameId > 0 &&
+									playerGameId == 0
+								) {
+									message.channel.send(
+										`${message.member}, use the !play comand to join the game before using !roll.`
 									);
-									if (turnsTaken >= 2) {
-										message.channel.send(
-											`${message.member}: You've already been the Active Player twice.`
-										);
-										return;
-									} else if (turnsTaken < 2) {
-										gameIsInProgress(message).then(
-											(results) => {
-												gameIs = results;
-												console.log(
-													`inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`
-												);
-												if (gameIs == "true") {
-													turnIsInProgress(
-														message
-													).then((results) => {
-														turnIs = results;
+								} else if (
+									channelGameId > 0 &&
+									playerGameId > 0 &&
+									channelGameId != playerGameId
+								) {
+									message.channel.send(
+										`${message.member}, your game is at a different table.`
+									);
+								} else if (
+									channelGameId > 0 &&
+									playerGameId > 0 &&
+									channelGameId == playerGameId
+								) {
+									activePlayerCount(channelGameId).then(
+										(results) => {
+											playerCount = results;
+											// });
+											if (playerCount >= 2) {
+												// TODO: update to 3 upon deploy
+												playerTurnsTaken(message)
+													.then((results) => {
+														turnsTaken = results;
 														console.log(
-															`inside case roll -> turnIsInProgress() -> turnIs = ${turnIs}`
+															`inside case roll -> playerTurnsTaken() -> turnsTaken = ${turnsTaken}`
 														);
-														if (turnIs == true) {
+														if (turnsTaken >= 2) {
 															message.channel.send(
-																`The Active Player must use a reaction emoji on the winning title or tagline before the next player can !roll.`
+																`${message.member}: You've already been the Active Player twice.`
 															);
-														} else {
-															endTurn(
+															return;
+														} else if (
+															turnsTaken < 2
+														) {
+															gameIsInProgress(
 																message
 															).then(
-																roll_for_game(
-																	message
-																)
+																(results) => {
+																	gameIs = results;
+																	console.log(
+																		`inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`
+																	);
+																	if (
+																		gameIs ==
+																		"true"
+																	) {
+																		turnIsInProgress(
+																			message
+																		).then(
+																			(
+																				results
+																			) => {
+																				turnIs = results;
+																				console.log(
+																					`inside case roll -> turnIsInProgress() -> turnIs = ${turnIs}`
+																				);
+																				if (
+																					turnIs ==
+																					true
+																				) {
+																					message.channel.send(
+																						`The Active Player must use a reaction emoji on the winning title or tagline before the next player can !roll.`
+																					);
+																				} else {
+																					endTurn(
+																						message
+																					).then(
+																						roll_for_game(
+																							message
+																						)
+																					);
+																				}
+																			}
+																		);
+																	} else {
+																		message.channel.send(
+																			`Once all players are in the voice channel, use the **!Bands**, **!College Courses**, **!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or **!Products** command to start a game.`
+																		);
+																	}
+																}
 															);
 														}
+													})
+													.catch((err) => {
+														dmError(err);
+														console.error(err);
 													});
-												} else {
-													message.channel.send(
-														`Once all players are in the voice channel, use the **!Bands**, **!College Courses**, **!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or **!Products** command to start a game.`
-													);
-												}
+											} else {
+												message.channel.send(rollDice());
 											}
-										);
-									}
-								})
-								.catch((err) => {
-									dmError(err);
-									console.error(err);
-								});
-						} else {
-							message.channel.send(rollDice());
-						}
-					} else {
-						message.channel.send(rollDice());
-					}
-				}
+										}
+									);
+								} else {
+									message.channel.send(rollDice());
+								}
+							})
+							.catch((err) => {
+								dmError(err);
+								console.error(err);
+							});
+					})
+					.catch((err) => {
+						dmError(err);
+						console.error(err);
+					});
+			}
 			break;
-
-			// case "roll": // TODO: make voice independant
-			// case "🦍":
-			// case "🎲":
-			//     if (message.channel.type === "dm") {
-			//         message.channel.send(rollDice());
-			//     } else {
-			//         if (message.member.voice.channel != null) {
-			//             let textChannelIndex = gameRooms.textChannels.indexOf(
-			//                 message.channel.name
-			//             );
-			//             // TODO: pull player list from public.leaflet
-			//             let voiceChannelIndex = gameRooms.voiceChannels.indexOf(
-			//                 message.member.voice.channel.name
-			//             );
-			//             if (
-			//                 gameRooms.textChannels.indexOf(message.channel.name) >=
-			//                     0 &&
-			//                 gameRooms.textChannels.indexOf(message.channel.name) <=
-			//                     gameRooms.textChannels.length &&
-			//                 textChannelIndex === voiceChannelIndex
-			//             ) {
-			//                 if (message.member.voice.channel.members.size >= 2) {
-			//                     // TODO: update to 3 upon deploy
-			//                     playerTurnsTaken(message)
-			//                         .then((results) => {
-			//                             turnsTaken = results;
-			//                             console.log(
-			//                                 `inside case roll -> playerTurnsTaken() -> turnsTaken = ${turnsTaken}`
-			//                             );
-			//                             if (turnsTaken >= 2) {
-			//                                 message.channel.send(
-			//                                     `${message.member}: You've already been the Active Player twice.`
-			//                                 );
-			//                                 return;
-			//                             } else if (turnsTaken < 2) {
-			//                                 gameIsInProgress(message).then(
-			//                                     (results) => {
-			//                                         gameIs = results;
-			//                                         console.log(
-			//                                             `inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`
-			//                                         );
-			//                                         if (gameIs == "true") {
-			//                                             turnIsInProgress(
-			//                                                 message
-			//                                             ).then((results) => {
-			//                                                 turnIs = results;
-			//                                                 console.log(
-			//                                                     `inside case roll -> turnIsInProgress() -> turnIs = ${turnIs}`
-			//                                                 );
-			//                                                 if (turnIs == true) {
-			//                                                     message.channel.send(
-			//                                                         `The Active Player must use a reaction emoji on the winning title or tagline before the next player can !roll.`
-			//                                                     );
-			//                                                 } else {
-			//                                                     endTurn(
-			//                                                         message
-			//                                                     ).then(
-			//                                                         roll_for_game(
-			//                                                             message
-			//                                                         )
-			//                                                     );
-			//                                                 }
-			//                                             });
-			//                                         } else {
-			//                                             message.channel.send(
-			//                                                 `Once all players are in the voice channel, use the **!Bands**, **!College Courses**, **!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or **!Products** command to start a game.`
-			//                                             );
-			//                                         }
-			//                                     }
-			//                                 );
-			//                             }
-			//                         })
-			//                         .catch((err) => {
-			//                             dmError(err);
-			//                             console.error(err);
-			//                         });
-			//                 } else {
-			//                     message.channel.send(rollDice());
-			//                 }
-			//             } else {
-			//                 message.channel.send(rollDice());
-			//             }
-			//         } else {
-			//             message.channel.send(rollDice());
-			//         }
-			//     }
-			//     break;
 
 		case "score":
 		case "🍌":
@@ -553,7 +476,8 @@ bot.on("message", (message) => {
 					try {
 						const gameSessionId = await client.query({
 							rowMode: "array",
-							text: `SELECT game_session_id ` +
+							text:
+								`SELECT game_session_id ` +
 								`FROM public.turns ` +
 								`WHERE text_channel_id = ${message.channel.id} ` +
 								`AND turn_is_active = true ` +
@@ -578,7 +502,7 @@ bot.on("message", (message) => {
 			}
 			break;
 
-		case "movies": // TODO: remove voice dependency
+		case "movies":
 		case "bands":
 		case "products":
 		case "companies":
@@ -593,8 +517,8 @@ bot.on("message", (message) => {
 				if (
 					gameRooms.textChannels.indexOf(message.channel.name) >= 0 &&
 					gameRooms.textChannels.indexOf(message.channel.name) <=
-					gameRooms.textChannels.length
-				){
+						gameRooms.textChannels.length
+				) {
 					gameIsInProgress(message)
 						.then((results) => {
 							gameIs = results;
@@ -604,8 +528,8 @@ bot.on("message", (message) => {
 							if (gameIs == "true") {
 								message.channel.send(
 									`This table is in use. Please choose ` +
-									`a different table or use the **!reset** ` +
-									`command to close the current game.`
+										`a different table or use the **!reset** ` +
+										`command to close the current game.`
 								);
 							} else {
 								playerInActiveGame(message)
@@ -648,112 +572,6 @@ bot.on("message", (message) => {
 				}
 			}
 			break;
-
-			// case "movies": // TODO: remove voice dependency
-			// case "bands":
-			// case "products":
-			// case "companies":
-			// case "food":
-			// case "college":
-			// case "organizations":
-			//     if (message.channel.type === "dm") {
-			//         message.author.send(
-			//             `That command doesn't work in direct messages.`
-			//         );
-			//     } else {
-			//         if (message.member.voice.channel != null) {
-			//             let textChannelIndex = gameRooms.textChannels.indexOf(
-			//                 message.channel.name
-			//             );
-			//             let voiceChannelIndex = gameRooms.voiceChannels.indexOf(
-			//                 message.member.voice.channel.name
-			//             );
-			//             if (
-			//                 gameRooms.textChannels.indexOf(message.channel.name) >=
-			//                     0 &&
-			//                 gameRooms.textChannels.indexOf(message.channel.name) <=
-			//                     gameRooms.textChannels.length &&
-			//                 textChannelIndex === voiceChannelIndex
-			//             ) {
-			//                 if (message.member.voice.channel.members.size >= 2) {
-			//                     // TODO: update to 3 upon deploy
-			//                     gameIsInProgress(message)
-			//                         .then((results) => {
-			//                             gameIs = results;
-			//                             console.log(
-			//                                 `inside case !roll -> gameIsInProgress() -> gameIs = ${gameIs}`
-			//                             );
-			//                             if (gameIs == "true") {
-			//                                 message.channel.send(
-			//                                     `This table is in use. Please choose ` +
-			//                                         `a different table or use the **!reset** ` +
-			//                                         `command to close the current game.`
-			//                                 );
-			//                             } else {
-			//                                 playerInActiveGame(message)
-			//                                     .then((results) => {
-			//                                         playerInGame = results;
-			//                                         console.log(
-			//                                             `playerInGame = ${playerInGame}`
-			//                                         );
-			//                                         if (playerInGame == "true") {
-			//                                             return;
-			//                                         } else if (
-			//                                             playerInGame == "false"
-			//                                         ) {
-			//                                             // startGame(message);
-			//                                             // play((message) => startGame(message));
-			//                                             startGame(message).then(
-			//                                                 () => {
-			//                                                     play(message);
-			//                                                 }
-			//                                             );
-			//                                             adminNotify(
-			//                                                 `GAME STARTED at the ${
-			//                                                     message.channel
-			//                                                         .parent.name
-			//                                                 } at ${getTimeStamp()}`
-			//                                             );
-			//                                             console.log(
-			//                                                 `GAME STARTED at the ${message.channel.parent.name}`
-			//                                             );
-			//                                         }
-			//                                     })
-			//                                     .catch((err) => {
-			//                                         dmError(err);
-			//                                         console.error(err);
-			//                                     });
-			//                             }
-			//                         })
-			//                         .catch((err) => {
-			//                             dmError(err);
-			//                             console.error(err);
-			//                         });
-			//                 } else {
-			//                     message.channel.send(
-			//                         `To start a game, there must be at least 3 players using ` +
-			//                             `the text and voice channels from the same game room.`
-			//                     );
-			//                     console.log(`START FAILED: Not enough players`);
-			//                 }
-			//             } else {
-			//                 message.channel.send(
-			//                     `To start a game, there must be at least 3 players using the ` +
-			//                         `text and voice channels from the same game room.`
-			//                 );
-			//                 console.log(
-			//                     `START FAILED: Not using a game room text channel`
-			//                 );
-			//             }
-			//         } else {
-			//             message.channel.send(
-			//                 `To start a game, there must be at least 3 players using the text ` +
-			//                     `and voice channels from the same game room.`
-			//             );
-			//             console.log(`START FAILED: Not in a voice channel`);
-			//         }
-			//     }
-			//     break;
 
 		case "word":
 		case "words":
@@ -1065,7 +883,6 @@ function clean(text) {
 }
 
 function dmError(err) {
-	// bot.users.cache.get(config.adminID).send(`ERROR: ${getTimeStamp()} :: ${err.stack}`);
 	let adminUser = bot.users.cache.get(`${config.adminID}`);
 	adminUser.send(`ERROR: ${getTimeStamp()} :: ${err.stack}`);
 }
@@ -1318,18 +1135,18 @@ async function play(message) {
 	}
 }
 
-async function playersInGame(message) {
+async function activePlayerCount(channelGameId) {
 	const client = await pool.connect();
 	try {
-		const playersInGame = await client.query(
+		const playersPlaying = await client.query(
 			`SELECT game_leaflet_id ` +
 				`FROM public.game_leaflet ` +
-				`WHERE game_session_id = ${gameId} `
+				`WHERE game_session_id = ${channelGameId} `
 		);
-		if (playersInGame.rows.length === 0) {
+		if (playersPlaying.rows.length === 0) {
 			return 0;
 		} else {
-			return playersInGame.rows;
+			return playersPlaying.rows.length;
 		}
 	} catch (err) {
 		dmError(err);
@@ -1359,7 +1176,6 @@ async function playerInActiveGame(message) {
 		}
 	} catch (err) {
 		dmError(err);
-		await client.query("ROLLBACK");
 		throw err;
 	} finally {
 		client.release();
@@ -1393,78 +1209,11 @@ async function playerInAnotherGame(message) {
 		return;
 	} catch (err) {
 		dmError(err);
-		await client.query("ROLLBACK");
 		throw err;
 	} finally {
 		client.release();
 	}
 }
-
-// async function playerInActiveGame(message) {
-// 	// TODO: remove voice dependency
-// 	const client = await pool.connect();
-// 	try {
-// 		const playersInActiveGames = await client.query(
-// 			`SELECT player_id ` +
-// 				`FROM public.game_leaflet ` +
-// 				`WHERE game_is_active = true;`
-// 		);
-// 		var playersInActiveGamesArray = [];
-// 		playersInActiveGames.rows.forEach((row) => {
-// 			playersInActiveGamesArray.push(row.player_id);
-// 		});
-// 		var playersInThisChannel = [];
-// 		message.member.voice.channel.members.forEach(function (guildmember) {
-// 			playersInThisChannel.push(guildmember.id);
-// 		});
-// 		var intersection = _.intersection(
-// 			playersInThisChannel,
-// 			playersInActiveGamesArray
-// 		);
-// 		console.log(
-// 			`${intersection.length} Players trying to join 2 games at the same time = ${intersection}`
-// 		);
-// 		if (intersection.length === 0) {
-// 			return "false";
-// 		} else {
-// 			if (intersection.length === 1) {
-// 				message.channel.send(
-// 					`<@${intersection}> is currently in another game.`
-// 				);
-// 			}
-// 			if (intersection.length === 2) {
-// 				message.channel.send(
-// 					`<@${intersection[0]}> and <@${intersection[1]}> are currently in other games.`
-// 				);
-// 			}
-// 			if (intersection.length > 2) {
-// 				var playerList = "";
-// 				for (var i = 0; i <= intersection.length; i++) {
-// 					if (i < intersection.length - 1) {
-// 						playerList = playerList.concat(
-// 							`<@${intersection[i]}>, `
-// 						);
-// 					}
-// 					if (i == intersection.length - 1) {
-// 						playerList = playerList.concat(
-// 							` and <@${intersection[i]}>`
-// 						);
-// 					}
-// 				}
-// 				message.channel.send(
-// 					`${playerList} are currently in other games.`
-// 				);
-// 			}
-// 			return "true";
-// 		}
-// 	} catch (err) {
-// 		dmError(err);
-// 		await client.query("ROLLBACK");
-// 		throw err;
-// 	} finally {
-// 		client.release();
-// 	}
-// }
 
 async function playerTurnsTaken(message) {
 	const client = await pool.connect();
@@ -1526,7 +1275,7 @@ async function resetTable(gameId) {
 		// client.query(
 		// 	`UPDATE public.turns ` +
 		// 	`SET game_is_active = false, ` +
-		// 	`game_is_active = false, ` +
+		// 	`turn_is_active = false, ` +
 		// 	`title_tagline_is_submitted = true `
 		// 	`WHERE game_session_id = ${gameId}`
 		// );
@@ -1735,36 +1484,6 @@ function roll_for_game(message) {
 			}
 			message.channel.send(`${message.member}: **ACTIVE PLAYER**`);
 
-			// TODO: check public.game_leaflet for users in game instead of voice channel
-
-			// const guildIdFromDatabase = await client.query({
-			//     rowMode: "array",
-			//     text: `SELECT guild_id ` +
-			//     `FROM public.games ` +
-			//     `WHERE voice_channel_id = ${message.member.voice.channel.id} ` +
-			//     `AND game_is_active = true ` +
-			//     `ORDER BY message_timestamp DESC LIMIT 1;`});
-			// const playersFromDatabase = await client.query(
-			//     `SELECT * ` +
-			//     `FROM public.game_leaflet ` +
-			//     `WHERE voice_channel_id = ${message.member.voice.channel.id} ` +
-			//     `AND game_is_active = true`)
-			// playersFromDatabase.rows.forEach((row) => {
-			//     playersInGame = row.player_id;
-			//     guildId = guildIdFromDatabase.rows; //this is in games not leaflet
-			//     console.log(`guildId = ${guildId}`);
-			//     console.log(`playersInGame = ${playersInGame}`);
-			//     console.log(`MESSAGE.MEMBER = ${message.member}`);
-
-			//     // let member = bot.guilds.cache.get(row.guild_id).member(row.author_id);
-
-			//     let guild = bot.guilds.cache.get(guildId);
-			//     console.log(`guild = ${guild}`);
-			//     let member = bot.guilds.cache.get(guildId).member(playersInGame);
-			//     console.log(`member = ${member}`);
-			// });
-			// let role_id = bot.guilds.cache.get(row.guild_id).roles.cache.find(rName => rName.id === row.temp_role_id);
-
 			let playersFromDatabaseArray = [];
 			const guildIdFromDatabase = await client.query({
 				rowMode: "array",
@@ -1946,7 +1665,7 @@ function score(gameId) {
 			`SELECT * ` +
 			`FROM public.game_leaflet ` +
 			`WHERE game_session_id = ${gameId};`
-		); // AND game_is_active = true
+		);
 		if (gameLeafletData.rows.length == 0) {
 			bot.channels.fetch(`${row.text_channel_id}`).then((results) => {
 				let bananaScore = "";
@@ -1973,7 +1692,6 @@ function score(gameId) {
 				gameChannel.send(`<@${row.player_id}>: ${bananaScore}`);
 			});
 		});
-		// gameChannel.send(`\n\u200b\n\u200b`);
 	})().catch((err) => {
 		dmError(err);
 		console.error(err.stack);
@@ -2251,14 +1969,13 @@ function trace(x) {
 }
 
 async function turnIsInProgress(message) {
-	// TODO: remove voice dependency
 	const client = await pool.connect();
 	try {
 		const gameId = await client.query({
 			rowMode: "array",
 			text: `SELECT game_id ` +
 				`FROM public.games ` +
-				`WHERE category_id = ${message.member.voice.channel.parent.id} ` +
+				`WHERE category_id = ${message.channel.parent.id} ` +
 				`AND game_is_active = true ` +
 				`ORDER BY message_timestamp DESC LIMIT 1;`,
 		});
