@@ -20,7 +20,6 @@ async function createDatabaseTablesIfNotExist() {
                 category_name character varying(32) COLLATE pg_catalog."default",
                 category_id bigint,
                 text_channel_id bigint,
-                voice_channel_id bigint,
                 message_id bigint,
                 game_theme character varying(32) COLLATE pg_catalog."default",
                 theme_category_roll_array integer[],
@@ -37,26 +36,6 @@ async function createDatabaseTablesIfNotExist() {
             ALTER TABLE public.games
                 OWNER to ${config.connUser};`)
 
-            // await client.query(`CREATE TABLE IF NOT EXISTS public.players
-            // (
-            //     player_pk SERIAL NOT NULL,
-            //     game_id int,
-            //     playing boolean NOT NULL,
-            //     queued boolean NOT NULL,
-            //     readable_timestamp character varying(30) COLLATE pg_catalog."default",
-            //     message_timestamp bigint,
-            //     text_channel_id bigint,
-            //     author_id bigint,
-            //     author_username character varying(32) COLLATE pg_catalog."default",
-            //     CONSTRAINT player_pk_pkey PRIMARY KEY (player_pk)
-            // )
-            // WITH (
-            //     OIDS = FALSE
-            // )
-            // TABLESPACE pg_default;
-            // ALTER TABLE public.players
-            //     OWNER to ${config.connUser};`)
-
             await client.query(`CREATE TABLE IF NOT EXISTS public.turns
             (
                 turns_id SERIAL NOT NULL,
@@ -68,7 +47,6 @@ async function createDatabaseTablesIfNotExist() {
                 category_name character varying(32) COLLATE pg_catalog."default",
                 category_id bigint,
                 text_channel_id bigint,
-                voice_channel_id bigint,
                 message_id bigint,
                 game_theme character varying(32) COLLATE pg_catalog."default",
                 active_player_id bigint,
@@ -106,7 +84,6 @@ async function createDatabaseTablesIfNotExist() {
                 total_points int,
                 category_id bigint,
                 text_channel_id bigint,
-                voice_channel_id bigint,
                 CONSTRAINT game_leaflet_id_pkey PRIMARY KEY (game_leaflet_id)
             )
             WITH (
