@@ -247,39 +247,37 @@ bot.on("message", (message) => {
 					`The **!play** command only works at a game table once a game has started.`
 				);
 			} else {
-				gameIsInProgress(message).then((results) => {
-						gameIs = results;
-						playerInActiveGame(message).then((results) => {
-								playerIsAlreadyPlaying = results;
-								if (playerIsAlreadyPlaying == 0) {
-									if (gameIs == "true") {
-
+				// gameIsInProgress(message).then((results) => {
+				// 		gameIs = results;
+				// 		playerInActiveGame(message).then((results) => {
+				// 				playerIsAlreadyPlaying = results;
+				// 				if (playerIsAlreadyPlaying == 0) {
+				// 					if (gameIs == "true") {
 					play(message);
-
-									} else {
-										message.channel.send(
-											`First, a player types **!Bands**, **!College Courses**, ` +
-												`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
-												`**!Products** to create and join the game. \n\u200b \n\u200b` +
-												`Then the rest of the players use the **!play** command to join the game.\n\u200b \n\u200b`
-										);
-									}
-								} else if (playerIsAlreadyPlaying > 0) {
-									// TODO: bot should know the difference between "you're alrady playing this game" and "you're already in a game at a different table"
-									message.channel.send(
-										`${message.member}, you're already in a game at a different table.`
-									);
-								}
-							})
-							.catch((err) => {
-								dmError(err);
-								console.error(err);
-							});
-					})
-					.catch((err) => {
-						dmError(err);
-						console.error(err);
-					});
+				// 					} else {
+				// 						message.channel.send(
+				// 							`First, a player types **!Bands**, **!College Courses**, ` +
+				// 								`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
+				// 								`**!Products** to create and join the game. \n\u200b \n\u200b` +
+				// 								`Then the rest of the players use the **!play** command to join the game.\n\u200b \n\u200b`
+				// 						);
+				// 					}
+				// 				} else if (playerIsAlreadyPlaying > 0) {
+				// 					// TODO: bot should know the difference between "you're alrady playing this game" and "you're already in a game at a different table"
+				// 					message.channel.send(
+				// 						`${message.member}, you're already in a game at a different table.`
+				// 					);
+				// 				}
+				// 			})
+				// 			.catch((err) => {
+				// 				dmError(err);
+				// 				console.error(err);
+				// 			});
+				// 	})
+				// 	.catch((err) => {
+				// 		dmError(err);
+				// 		console.error(err);
+				// 	});
 			}
 			break;
 
@@ -422,12 +420,12 @@ bot.on("message", (message) => {
 																message
 															).then(
 																(results) => {
-																	gameIs = results;
+																	isGame = results;
 																	console.log(
-																		`inside case roll -> gameIsInProgress() -> gameIs = ${gameIs}`
+																		`inside case roll -> gameIsInProgress() -> gameIs = ${isGame}`
 																	);
 																	if (
-																		gameIs ==
+																		isGame ==
 																		"true"
 																	) {
 																		turnIsInProgress(
@@ -551,11 +549,11 @@ bot.on("message", (message) => {
 				) {
 					gameIsInProgress(message)
 						.then((results) => {
-							gameIs = results;
+							isGame = results;
 							console.log(
-								`theme choice -> gameIsInProgress() -> gameIs = ${gameIs}`
+								`theme choice -> gameIsInProgress() -> gameIs = ${isGame}`
 							);
-							if (gameIs == "true") {
+							if (isGame == "true") {
 								message.channel.send(
 									`This table is in use. Please choose ` +
 										`a different table or use the **!reset** ` +
@@ -1041,163 +1039,195 @@ async function leave(message) {
 async function play(message) {
 	const client = await pool.connect();
 	try {
-
-		// gameIsInProgress(message).then((results) => {
-		// 	gameIs = results;
-		// 	playerInActiveGame(message).then((results) => {
-		// 			playerIsAlreadyPlaying = results;
-		// 			if (playerIsAlreadyPlaying == 0) {
-		// 				if (gameIs == "true") {
-		// 					play(message);
-		// 				} else {
-		// 					message.channel.send(
-		// 						`First, a player types **!Bands**, **!College Courses**, ` +
-		// 							`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
-		// 							`**!Products** to create and join the game. \n\u200b \n\u200b` +
-		// 							`Then the rest of the players use the **!play** command to join the game.\n\u200b \n\u200b`
-		// 					);
-		// 				}
-		// 			} else if (playerIsAlreadyPlaying > 0) {
-		// 				// TODO: bot should know the difference between "you're alrady playing this game" and "you're already in a game at a different table"
-		// 				message.channel.send(
-		// 					`${message.member}, you're already in a game at a different table.`
-		// 				);
-		// 			}
-		// 		})
-		// 		.catch((err) => {
-		// 			dmError(err);
-		// 			console.error(err);
-		// 		});
-		// })
-		// .catch((err) => {
-		// 	dmError(err);
-		// 	console.error(err);
-		// });
-
-		// check for players already playing
-		// allow players to join again
-		await getGameId(message).then((results) => {
-			gameId = results;
-		});
-		console.log(`play() > gameId = ${gameId} `);
-		const playerIsPlaying = await client.query(
+		// Situations:
+			// 1. trying to join a game while in another game
+			// 2. trying to join the same game you're in
+			// 3. trying to join a game at a table where there is no game
+			// 4. trying to join a game where there is a game while not in another game - normal
+			
+		await getGameId(message) // returns game_id or 0 from public.games
+			.then((results) => {
+				gameId = results;
+			}).catch((err) => {
+				dmError(err);
+				console.error(err);
+			});
+		await gameIsInProgress(message) // returns bool from public.games
+			.then((results) => {
+				isGame = results;
+			}).catch((err) => {
+				dmError(err);
+				console.error(err);
+			});
+		await playerInActiveGame(message) // returns game_session_id or 0 from public.game_leaflet
+			.then((results) => {
+				playerIsInGame = results;
+			}).catch((err) => {
+				dmError(err);
+				console.error(err);
+			});
+		const playersGame = await client.query(
 			`SELECT * ` +
 				`FROM public.game_leaflet ` +
-				`WHERE player_id = ${message.member.id} ` +
-				`AND game_session_id = ${gameId} `
+				`WHERE game_is_active = true ` +
+				`AND player_id = ${message.member.id};`
 		);
-		console.log(
-			`playerIsPlaying.rows.length = ${playerIsPlaying.rows.length}`
-		);
-		console.log(
-			`playerIsPlaying.rows = ${JSON.stringify(playerIsPlaying.rows)}`
-		);
-		if (playerIsPlaying.rows.length > 0) {
-			console.log(`playerIsPlaying != null`);
-			playerIsPlaying.rows.forEach((row) => {
-				gameLeafletId = row.game_leaflet_id;
-				playerPlaying = row.playing;
-				playerQueued = row.queued;
-			});
-			console.log(`gameLeafletId = ${gameLeafletId}`);
-			console.log(`playerPlaying = ${playerPlaying}`);
-			console.log(`playerQueued = ${playerQueued}`);
-			if (playerPlaying == true) {
+		// let gameSessionId;
+		// let playerIsQueued;
+		// let playerIsPlaying;
+		// let playerLeftGame;
+		playersGame.rows.forEach((row) => {
+			gameSessionId = row.game_session_id;
+			playerIsQueued = row.queued;
+			playerIsPlaying = row.playing;
+			playerLeftGame = row.left_game;
+			playersGameTextChannelId = row.text_channel_id;
+		});
+		if (playerIsInGame > 0) {
+			if (message.channel.id == playersGameTextChannelId) {
 				message.channel.send(
-					`<@${message.member.id}>, don't get your bananas in a bunch. You're already in the game.`
+					`${message.member}, you're already in the game at this table.`)
+
+// PICK IT UP HERE
+
+			} else {message.channel.send(
+				`${message.member}, you're already in a game at a different table.`
+				
 				);
-			} else if (playerQueued == true) {
-				message.channel.send(
-					`<@${message.member.id}>, you're in the queue to start with the next round.`
-				);
-			} else {
-				// player can rejoin the game
-				await client.query(
-					`UPDATE public.game_leaflet ` +
-						`SET playing = false, ` +
-						`queued = true ` +
-						`WHERE game_leaflet_id = ${gameLeafletId} `
-				);
-				return;
 			}
-		} else {
-			const playerCount = await client.query(
-				`SELECT game_leaflet_id ` +
+		} else if (playerIsInGame == 0) {
+			// TODO: bot should know the difference between "you're alrady playing this game" and "you're already in a game at a different table"
+			message.channel.send(
+				`First, a player types **!Bands**, **!College Courses**, ` +
+					`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
+					`**!Products** to create and join the game. \n\u200b \n\u200b` +
+					`Then the rest of the players use the **!play** command to join the game.\n\u200b \n\u200b`
+			);
+			console.log(`play() > gameId = ${gameId} `);
+			const playerIsPlaying = await client.query(
+				`SELECT * ` +
 					`FROM public.game_leaflet ` +
-					`WHERE game_session_id = ${gameId} `
+					`WHERE player_id = ${message.member.id} ` +
+					`AND game_session_id = ${gameId} `
 			);
-			console.log(`playerCount = ${JSON.stringify(playerCount)}`);
-			console.log(`playerCount.rowCount = ${playerCount.rowCount}`);
-			let themeCategoryRollArray = [];
-			let titleJudgeRollArray = [];
-			let taglineJudgeRollArray = [];
 			console.log(
-				`leafletUpdate() > parseInt(gameId) = ${parseInt(gameId)}`
+				`playerIsPlaying.rows.length = ${playerIsPlaying.rows.length}`
 			);
-			const themeAndJudgeArrays = await client.query(
-				`SELECT ` +
-					`theme_category_roll_array, ` +
-					`title_judge_roll_array, ` +
-					`tagline_judge_roll_array ` +
-					`FROM public.games ` +
-					`WHERE game_id = ${gameId} ` +
-					`AND game_is_active = true;`
+			console.log(
+				`playerIsPlaying.rows = ${JSON.stringify(playerIsPlaying.rows)}`
 			);
-			themeAndJudgeArrays.rows.forEach((row) => {
-				themeCategoryRollArray = row.theme_category_roll_array;
-				titleJudgeRollArray = row.title_judge_roll_array;
-				taglineJudgeRollArray = row.tagline_judge_roll_array;
-			});
-			const prepGameLeaflet = {
-				game_session_id: parseInt(gameId),
-				game_is_active: true,
-				player_id: message.author.id,
-				playing: false,
-				queued: true,
-				turns_as_active_player: 0,
-				theme_category_roll:
-				themeCategoryRollArray[playerCount.rowCount],
-				title_judge_roll: titleJudgeRollArray[playerCount.rowCount],
-				title_judge_choice: null,
-				tagline_judge_roll: taglineJudgeRollArray[playerCount.rowCount],
-				tagline_judge_choice: null,
-				total_points: 0,
-				category_id: message.channel.parent.id,
-				text_channel_id: message.channel.id,
-			};
-			await client.query("BEGIN");
-			const insertGameLeafletText =
-				`INSERT INTO public.game_leaflet(game_session_id, game_is_active, player_id, ` +
-				`playing, queued, turns_as_active_player, theme_category_roll, title_judge_roll, ` +
-				`title_judge_choice, tagline_judge_roll, tagline_judge_choice, ` +
-				`total_points, category_id, text_channel_id) ` +
-				`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`;
-			const insertGameLeafletValues = [
-				prepGameLeaflet.game_session_id,
-				prepGameLeaflet.game_is_active,
-				prepGameLeaflet.player_id,
-				prepGameLeaflet.playing,
-				prepGameLeaflet.queued,
-				prepGameLeaflet.turns_as_active_player,
-				prepGameLeaflet.theme_category_roll,
-				prepGameLeaflet.title_judge_roll,
-				prepGameLeaflet.title_judge_choice,
-				prepGameLeaflet.tagline_judge_roll,
-				prepGameLeaflet.tagline_judge_choice,
-				prepGameLeaflet.total_points,
-				prepGameLeaflet.category_id,
-				prepGameLeaflet.text_channel_id,
-			];
-			await client.query(insertGameLeafletText, insertGameLeafletValues);
-			await client.query("COMMIT");
-			message
-				.delete()
-				.then(
+			if (playerIsPlaying.rows.length > 0) {
+				console.log(`playerIsPlaying != null`);
+				playerIsPlaying.rows.forEach((row) => {
+					gameLeafletId = row.game_leaflet_id;
+					playerPlaying = row.playing;
+					playerQueued = row.queued;
+				});
+				console.log(`gameLeafletId = ${gameLeafletId}`);
+				console.log(`playerPlaying = ${playerPlaying}`);
+				console.log(`playerQueued = ${playerQueued}`);
+				if (playerPlaying == true) {
 					message.channel.send(
-						`<@${message.member.id}> has taken a seat at the table`
-					)
-				)
-				.catch(console.error);
+						`<@${message.member.id}>, don't get your bananas in a bunch. You're already in the game.`
+					);
+				} else if (playerQueued == true) {
+					message.channel.send(
+						`<@${message.member.id}>, you're in the queue to start with the next round.`
+					);
+				} else {
+					// player can rejoin the game
+					await client.query(
+						`UPDATE public.game_leaflet ` +
+							`SET playing = false, ` +
+							`queued = true ` +
+							`WHERE game_leaflet_id = ${gameLeafletId} `
+					);
+					return;
+				}
+			} else {
+				const playerCount = await client.query(
+					`SELECT game_leaflet_id ` +
+						`FROM public.game_leaflet ` +
+						`WHERE game_session_id = ${gameId} `
+				);
+				console.log(`playerCount = ${JSON.stringify(playerCount)}`);
+				console.log(`playerCount.rowCount = ${playerCount.rowCount}`);
+				let themeCategoryRollArray = [];
+				let titleJudgeRollArray = [];
+				let taglineJudgeRollArray = [];
+				console.log(
+					`leafletUpdate() > parseInt(gameId) = ${parseInt(gameId)}`
+				);
+				const themeAndJudgeArrays = await client.query(
+					`SELECT ` +
+						`theme_category_roll_array, ` +
+						`title_judge_roll_array, ` +
+						`tagline_judge_roll_array ` +
+						`FROM public.games ` +
+						`WHERE game_id = ${gameId} ` +
+						`AND game_is_active = true;`
+				);
+				themeAndJudgeArrays.rows.forEach((row) => {
+					themeCategoryRollArray = row.theme_category_roll_array;
+					titleJudgeRollArray = row.title_judge_roll_array;
+					taglineJudgeRollArray = row.tagline_judge_roll_array;
+				});
+				const prepGameLeaflet = {
+					game_session_id: parseInt(gameId),
+					game_is_active: true,
+					player_id: message.author.id,
+					queued: true,
+					playing: false,
+					left_game: false,
+					turns_as_active_player: 0,
+					theme_category_roll:
+						themeCategoryRollArray[playerCount.rowCount],
+					title_judge_roll: titleJudgeRollArray[playerCount.rowCount],
+					title_judge_choice: null,
+					tagline_judge_roll:
+						taglineJudgeRollArray[playerCount.rowCount],
+					tagline_judge_choice: null,
+					total_points: 0,
+					category_id: message.channel.parent.id,
+					text_channel_id: message.channel.id,
+				};
+				await client.query("BEGIN");
+				const insertGameLeafletText =
+					`INSERT INTO public.game_leaflet(game_session_id, game_is_active, player_id, ` +
+					`queued, playing, left_game, turns_as_active_player, theme_category_roll, ` +
+					`title_judge_roll, title_judge_choice, tagline_judge_roll, tagline_judge_choice, ` +
+					`total_points, category_id, text_channel_id) ` +
+					`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`;
+				const insertGameLeafletValues = [
+					prepGameLeaflet.game_session_id,
+					prepGameLeaflet.game_is_active,
+					prepGameLeaflet.player_id,
+					prepGameLeaflet.queued,
+					prepGameLeaflet.playing,
+					prepGameLeaflet.left_game,
+					prepGameLeaflet.turns_as_active_player,
+					prepGameLeaflet.theme_category_roll,
+					prepGameLeaflet.title_judge_roll,
+					prepGameLeaflet.title_judge_choice,
+					prepGameLeaflet.tagline_judge_roll,
+					prepGameLeaflet.tagline_judge_choice,
+					prepGameLeaflet.total_points,
+					prepGameLeaflet.category_id,
+					prepGameLeaflet.text_channel_id,
+				];
+				await client.query(
+					insertGameLeafletText,
+					insertGameLeafletValues
+				);
+				await client.query("COMMIT");
+				message
+					.delete()
+					.then(
+						message.channel.send(
+							`<@${message.member.id}> has taken a seat at the table`
+						)
+					);
+			}
 		}
 	} catch (err) {
 		dmError(err);
@@ -1207,6 +1237,8 @@ async function play(message) {
 		client.release();
 	}
 }
+
+
 
 async function activePlayerCount(channelGameId) {
 	const client = await pool.connect();
@@ -1901,6 +1933,16 @@ async function startGame(message) {
 	let theme = themeFormat(message);
 	const client = await pool.connect();
 	try {
+		// Situations:
+
+		// 1. trying to start a game where there's already a game
+		// 2. trying to start a game while in another game
+		// 3. trying to start a game you're already in
+		// 4. starting a game at an empty table while not in another game - normal
+
+		// games: game_id, game_is_active
+		// game_leaflet: game_session_id, game_is_active, player_id, queued, playing, left_game
+
 		const prepGameStart = {
 			game_is_active: true,
 			readable_timestamp: getTimeStamp(),
