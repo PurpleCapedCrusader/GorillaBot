@@ -202,7 +202,8 @@ bot.on("message", (message) => {
 				.addField(
 					`**WORD HELP**`,
 					`While in the GorillaBot DM channel, enter "!word", a single word, and a single letter.\n\u200b` +
-						`**!word gorilla m** will return up to 25 words that start with the letter "M" and that are related to the word "Gorilla".\n\u200b`
+						`**!word gorilla m** will return up to 25 words that start with the letter "M" and that are related to the word "Gorilla".\n\u200b` +
+						`You can add a number to get back more or less words. **!word gorilla m 50** will return up to 50 words.\n\u200b`
 				)
 				.addField(
 					`**COMMANDS**`,
@@ -241,86 +242,25 @@ bot.on("message", (message) => {
 			}
 			break;
 
+		case "leave":
+			if (message.channel.type === "dm") {
+				message.channel.send(
+					`The **!leave** command only works at a game table during a game.`
+				);
+			} else {
+				leave(message);
+			}
+			break;
+
 		case "play":
 			if (message.channel.type === "dm") {
 				message.channel.send(
 					`The **!play** command only works at a game table once a game has started.`
 				);
 			} else {
-				// gameIsInProgress(message).then((results) => {
-				// 		gameIs = results;
-				// 		playerInActiveGame(message).then((results) => {
-				// 				playerIsAlreadyPlaying = results;
-				// 				if (playerIsAlreadyPlaying == 0) {
-				// 					if (gameIs == "true") {
-					play(message);
-				// 					} else {
-				// 						message.channel.send(
-				// 							`First, a player types **!Bands**, **!College Courses**, ` +
-				// 								`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
-				// 								`**!Products** to create and join the game. \n\u200b \n\u200b` +
-				// 								`Then the rest of the players use the **!play** command to join the game.\n\u200b \n\u200b`
-				// 						);
-				// 					}
-				// 				} else if (playerIsAlreadyPlaying > 0) {
-				// 					// TODO: bot should know the difference between "you're alrady playing this game" and "you're already in a game at a different table"
-				// 					message.channel.send(
-				// 						`${message.member}, you're already in a game at a different table.`
-				// 					);
-				// 				}
-				// 			})
-				// 			.catch((err) => {
-				// 				dmError(err);
-				// 				console.error(err);
-				// 			});
-				// 	})
-				// 	.catch((err) => {
-				// 		dmError(err);
-				// 		console.error(err);
-				// 	});
+				play(message);
 			}
 			break;
-
-		// case "play":
-		// if (message.channel.type === "dm") {
-		// 	message.channel.send(
-		// 		`The **!play** command only works at a game table once a game has started.`
-		// 	);
-		// } else {
-		// 	// TODO: move the following checks to the play() function
-		// gameIsInProgress(message).then((results) => {
-		// 		gameIs = results;
-		// 		playerInActiveGame(message).then((results) => {
-		// 				playerIsAlreadyPlaying = results;
-		// 				if (playerIsAlreadyPlaying == 0) {
-		// 					if (gameIs == "true") {
-		// 						play(message);
-		// 					} else {
-		// 						message.channel.send(
-		// 							`First, a player types **!Bands**, **!College Courses**, ` +
-		// 								`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
-		// 								`**!Products** to create and join the game. \n\u200b \n\u200b` +
-		// 								`Then the rest of the players use the **!play** command to join the game.\n\u200b \n\u200b`
-		// 						);
-		// 					}
-		// 				} else if (playerIsAlreadyPlaying > 0) {
-		// 					// TODO: bot should know the difference between "you're alrady playing this game" and "you're already in a game at a different table"
-		// 					message.channel.send(
-		// 						`${message.member}, you're already in a game at a different table.`
-		// 					);
-		// 				}
-		// 			})
-		// 			.catch((err) => {
-		// 				dmError(err);
-		// 				console.error(err);
-		// 			});
-		// 	})
-		// 	.catch((err) => {
-		// 		dmError(err);
-		// 		console.error(err);
-		// 	});
-		// }
-		// break;
 
 		case "players":
 			// TODO :list of players in game
@@ -377,9 +317,11 @@ bot.on("message", (message) => {
 			if (message.channel.type === "dm") {
 				message.channel.send(rollDice());
 			} else {
-				getGameId(message).then((results) => {
+				getGameId(message)
+					.then((results) => {
 						channelGameId = parseInt(results);
-						playerInActiveGame(message).then((results) => {
+						playerInActiveGame(message)
+							.then((results) => {
 								playerGameId = parseInt(results);
 								console.log(
 									`!roll: getGameId returned ${channelGameId} & playerInActiveGame returned ${playerGameId}`
@@ -387,15 +329,26 @@ bot.on("message", (message) => {
 								if (channelGameId == 0) {
 									message.channel.send(rollDice());
 									return;
-								} else if (channelGameId > 0 && playerGameId == 0) {
+								} else if (
+									channelGameId > 0 &&
+									playerGameId == 0
+								) {
 									message.channel.send(
 										`${message.member}, use the !play comand to join the game before using !roll.`
 									);
-								} else if (channelGameId > 0 && playerGameId > 0 && channelGameId != playerGameId) {
+								} else if (
+									channelGameId > 0 &&
+									playerGameId > 0 &&
+									channelGameId != playerGameId
+								) {
 									message.channel.send(
 										`${message.member}, your game is at a different table.`
 									);
-								} else if (channelGameId > 0 && playerGameId > 0 && channelGameId == playerGameId) {
+								} else if (
+									channelGameId > 0 &&
+									playerGameId > 0 &&
+									channelGameId == playerGameId
+								) {
 									activePlayerCount(channelGameId).then(
 										(results) => {
 											playerCount = results;
@@ -709,7 +662,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 					`AND text_channel_id = ${reaction.message.channel.id} ` +
 					`AND turn_is_active = true`
 			);
-			await pointAlreadyGiven.rows.forEach((row) => {
+			pointAlreadyGiven.rows.forEach((row) => {
 				if (row.point_earned == 1) {
 					reaction.remove();
 					reaction.message.channel.send(
@@ -781,7 +734,8 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 					text:
 						`SELECT game_leaflet_id ` +
 						`FROM public.game_leaflet ` +
-						`WHERE game_session_id = ${gameSessionId};`,
+						`WHERE game_session_id = ${gameSessionId} ` +
+						`AND left_game = false;`,
 				});
 				const twoTurns = await client.query({
 					rowMode: "array",
@@ -789,7 +743,8 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 						`SELECT game_leaflet_id ` +
 						`FROM public.game_leaflet ` +
 						`WHERE game_session_id = ${gameSessionId} ` +
-						`AND turns_as_active_player = 2;`,
+						`AND turns_as_active_player = 2 ` +
+						`AND left_game = false;`,
 				});
 				console.log(
 					`total_players.rows.length = ${total_players.rows.length}`
@@ -891,10 +846,15 @@ async function datamuse(message) {
 				`No results found for **${params.join(" ")}**.`
 			);
 		}
+		if (params[3] == null) {
+			numberOfWordsRequested = 25;
+		} else {
+			numberOfWordsRequested = params[3];
+		}
 		let wordList = "";
 		for (var i = 0; i <= list.length; i++) {
 			wordList = wordList.concat(`${list[i].word}, `);
-			if (i == 25 || i == list.length - 1) {
+			if (i == numberOfWordsRequested - 1 || i == list.length - 1) {
 				message.channel.send(wordList);
 				return;
 			}
@@ -1009,24 +969,38 @@ function getTimeStamp() {
 
 async function leave(message) {
 	// TODO: allow players to remove themselves from the game
+
+// PICK UP HERE
+
 	const client = await pool.connect();
 	try {
 		getGameId(message).then((results) => {
 			gameId = results;
+			console.log(
+				`leave() > parseInt(gameId.rows) = ${gameId}`
+			);
 		});
 
-		console.log(
-			`leave() > parseInt(gameId.rows) = ${parseInt(gameId.rows)}`
-		);
+		
 		console.log(`leave() author_id = ${message.author.id}`);
 
 		const playerIsPlaying = await client.query(
 			`SELECT * ` +
-				`FROM public.players ` +
-				`WHERE author_id = ${message.author.id} ` +
-				`AND game_id = ${parseInt(gameId.rows)} `
+				`FROM public.game_leaflet ` +
+				`WHERE player_id = ${message.member.id} ` +
+				`AND game_id = ${gameId} ` +
+				`AND left_game = false;`
 		);
-		// TODO: Update that sets is_at_table to false
+		playerIsPlaying.rows.forEach((row) => {
+			// gameLeafletId = parseInt(row.game_leaflet_id);
+			// gameSessionId = parseInt(row.game_session_id);
+			// playerIsQueued = row.queued;
+			// playerIsPlaying = row.playing;
+			// playerLeftGame = row.left_game;
+			leftGame = row.left_game;
+		});
+		console.log (`!leave() = ${leftGame}`)
+		
 	} catch (err) {
 		dmError(err);
 		await client.query("ROLLBACK");
@@ -1040,194 +1014,225 @@ async function play(message) {
 	const client = await pool.connect();
 	try {
 		// Situations:
-			// 1. trying to join a game while in another game
-			// 2. trying to join the same game you're in
-			// 3. trying to join a game at a table where there is no game
-			// 4. trying to join a game where there is a game while not in another game - normal
-			
-		await getGameId(message) // returns game_id or 0 from public.games
+		// 1. trying to join a game while in another game
+		// 2. trying to join the same game you're in
+		// 3. trying to join a game at a table where there is no game
+		// 4. trying to join a game where there is a game while not in another game - normal
+
+		await getGameId(message)
+			// returns game_id or 0 for this text channel - public.games
 			.then((results) => {
-				gameId = results;
-			}).catch((err) => {
+				gameId = parseInt(results);
+				console.log(`1 play() gameId = ${gameId}`);
+			})
+			.catch((err) => {
 				dmError(err);
 				console.error(err);
 			});
-		await gameIsInProgress(message) // returns bool from public.games
+		// await gameIsInProgress(message) // returns bool from public.games
+		// 	.then((results) => {
+		// 		isGame = results;
+		// 	}).catch((err) => {
+		// 		dmError(err);
+		// 		console.error(err);
+		// 	});
+		await playerInActiveGame(message)
+			// returns game_session_id or 0 from the player - public.game_leaflet
 			.then((results) => {
-				isGame = results;
-			}).catch((err) => {
+				playerIsInGame = parseInt(results);
+				console.log(`2 play() playerIsInGame = ${playerIsInGame}`);
+			})
+			.catch((err) => {
 				dmError(err);
 				console.error(err);
 			});
-		await playerInActiveGame(message) // returns game_session_id or 0 from public.game_leaflet
-			.then((results) => {
-				playerIsInGame = results;
-			}).catch((err) => {
-				dmError(err);
-				console.error(err);
-			});
-		const playersGame = await client.query(
-			`SELECT * ` +
-				`FROM public.game_leaflet ` +
-				`WHERE game_is_active = true ` +
-				`AND player_id = ${message.member.id};`
-		);
-		// let gameSessionId;
-		// let playerIsQueued;
-		// let playerIsPlaying;
-		// let playerLeftGame;
-		playersGame.rows.forEach((row) => {
-			gameSessionId = row.game_session_id;
-			playerIsQueued = row.queued;
-			playerIsPlaying = row.playing;
-			playerLeftGame = row.left_game;
-			playersGameTextChannelId = row.text_channel_id;
-		});
 		if (playerIsInGame > 0) {
-			if (message.channel.id == playersGameTextChannelId) {
-				message.channel.send(
-					`${message.member}, you're already in the game at this table.`)
+			const playersGame = await client.query(
+				`SELECT * ` +
+					`FROM public.game_leaflet ` +
+					`WHERE game_is_active = true ` +
+					`AND player_id = ${message.member.id};`
+			);
+			playersGame.rows.forEach((row) => {
+				gameLeafletId = parseInt(row.game_leaflet_id);
+				gameSessionId = parseInt(row.game_session_id);
+				playerIsQueued = row.queued;
+				playerIsPlaying = row.playing;
+				playerLeftGame = row.left_game;
+				playersGameTextChannelId = row.text_channel_id;
+			});
+		}
 
-// PICK IT UP HERE
-
-			} else {message.channel.send(
-				`${message.member}, you're already in a game at a different table.`
-				
-				);
-			}
-		} else if (playerIsInGame == 0) {
-			// TODO: bot should know the difference between "you're alrady playing this game" and "you're already in a game at a different table"
+		if (
+			// trying to join the game you're in
+			playerIsInGame > 0 &&
+			gameId == playerIsInGame &&
+			playerLeftGame == false
+		) {
+			message.channel.send(
+				`${message.member}, you're already in the game at this table.`
+			);
+		} else if (
+			// trying to re-join the game you left
+			playerIsInGame > 0 &&
+			gameId == playerIsInGame &&
+			playerLeftGame == true
+		) {
+			message.channel.send(
+				`Welcome back ${message.member}. You'll be included in the next !roll.`
+			);
+			await client.query(
+				`UPDATE public.game_leaflet ` +
+					`SET queued = true, ` +
+					`playing = false, ` +
+					`left_game = false ` +
+					`WHERE game_leaflet_id = ${gameLeafletId} `
+			);
+			return;
+		} else if (
+			//trying to join a game while in another game
+			playerIsInGame > 0 &&
+			gameId != playerIsInGame
+		) {
+			message.channel.send(
+				`${message.member}, you're already playing a game in the <#${playersGameTextChannelId}> channel.`
+			);
+		} else if (
+			// trying to join a game where there is no game
+			gameId == 0 &&
+			playerIsInGame == 0
+		) {
 			message.channel.send(
 				`First, a player types **!Bands**, **!College Courses**, ` +
 					`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
 					`**!Products** to create and join the game. \n\u200b \n\u200b` +
 					`Then the rest of the players use the **!play** command to join the game.\n\u200b \n\u200b`
 			);
-			console.log(`play() > gameId = ${gameId} `);
-			const playerIsPlaying = await client.query(
-				`SELECT * ` +
+		} else if (
+			// joining a game
+			gameId > 0 &&
+			playerIsInGame == 0
+		) {
+			// const playerIsPlaying = await client.query(
+			// 	`SELECT * ` +
+			// 		`FROM public.game_leaflet ` +
+			// 		`WHERE player_id = ${message.member.id} ` +
+			// 		`AND game_session_id = ${gameId} `
+			// );
+			// console.log(
+			// 	`playerIsPlaying.rows.length = ${playerIsPlaying.rows.length}`
+			// );
+			// console.log(
+			// 	`playerIsPlaying.rows = ${JSON.stringify(playerIsPlaying.rows)}`
+			// );
+			// if (playerIsPlaying.rows.length > 0) {
+			// 	console.log(`playerIsPlaying != null`);
+			// 	playerIsPlaying.rows.forEach((row) => {
+			// 		gameLeafletId = row.game_leaflet_id;
+			// 		playerPlaying = row.playing;
+			// 		playerQueued = row.queued;
+			// 	});
+			// 	console.log(`gameLeafletId = ${gameLeafletId}`);
+			// 	console.log(`playerPlaying = ${playerPlaying}`);
+			// 	console.log(`playerQueued = ${playerQueued}`);
+			// 	if (playerPlaying == true) {
+			// 		message.channel.send(
+			// 			`<@${message.member.id}>, don't get your bananas in a bunch. You're already in the game.`
+			// 		);
+			// 	} else if (playerQueued == true) {
+			// 		message.channel.send(
+			// 			`<@${message.member.id}>, you're in the queue to start with the next round.`
+			// 		);
+			// 	} else {
+			// 		// player can rejoin the game
+			// 		await client.query(
+			// 			`UPDATE public.game_leaflet ` +
+			// 				`SET playing = false, ` +
+			// 				`queued = true ` +
+			// 				`WHERE game_leaflet_id = ${gameLeafletId} `
+			// 		);
+			// 		return;
+			// 	}
+			// } else {
+			const playerCount = await client.query(
+				`SELECT game_leaflet_id ` +
 					`FROM public.game_leaflet ` +
-					`WHERE player_id = ${message.member.id} ` +
-					`AND game_session_id = ${gameId} `
+					`WHERE game_session_id = ${gameId} `
 			);
+			console.log(`playerCount = ${JSON.stringify(playerCount)}`);
+			console.log(`playerCount.rowCount = ${playerCount.rowCount}`);
+			let themeCategoryRollArray = [];
+			let titleJudgeRollArray = [];
+			let taglineJudgeRollArray = [];
 			console.log(
-				`playerIsPlaying.rows.length = ${playerIsPlaying.rows.length}`
+				`leafletUpdate() > parseInt(gameId) = ${parseInt(gameId)}`
 			);
-			console.log(
-				`playerIsPlaying.rows = ${JSON.stringify(playerIsPlaying.rows)}`
+			const themeAndJudgeArrays = await client.query(
+				`SELECT ` +
+					`theme_category_roll_array, ` +
+					`title_judge_roll_array, ` +
+					`tagline_judge_roll_array ` +
+					`FROM public.games ` +
+					`WHERE game_id = ${gameId} ` +
+					`AND game_is_active = true;`
 			);
-			if (playerIsPlaying.rows.length > 0) {
-				console.log(`playerIsPlaying != null`);
-				playerIsPlaying.rows.forEach((row) => {
-					gameLeafletId = row.game_leaflet_id;
-					playerPlaying = row.playing;
-					playerQueued = row.queued;
-				});
-				console.log(`gameLeafletId = ${gameLeafletId}`);
-				console.log(`playerPlaying = ${playerPlaying}`);
-				console.log(`playerQueued = ${playerQueued}`);
-				if (playerPlaying == true) {
+			themeAndJudgeArrays.rows.forEach((row) => {
+				themeCategoryRollArray = row.theme_category_roll_array;
+				titleJudgeRollArray = row.title_judge_roll_array;
+				taglineJudgeRollArray = row.tagline_judge_roll_array;
+			});
+			const prepGameLeaflet = {
+				game_session_id: parseInt(gameId),
+				game_is_active: true,
+				player_id: message.author.id,
+				queued: true,
+				playing: false,
+				left_game: false,
+				turns_as_active_player: 0,
+				theme_category_roll:
+					themeCategoryRollArray[playerCount.rowCount],
+				title_judge_roll: titleJudgeRollArray[playerCount.rowCount],
+				title_judge_choice: null,
+				tagline_judge_roll: taglineJudgeRollArray[playerCount.rowCount],
+				tagline_judge_choice: null,
+				total_points: 0,
+				category_id: message.channel.parent.id,
+				text_channel_id: message.channel.id,
+			};
+			await client.query("BEGIN");
+			const insertGameLeafletText =
+				`INSERT INTO public.game_leaflet(game_session_id, game_is_active, player_id, ` +
+				`queued, playing, left_game, turns_as_active_player, theme_category_roll, ` +
+				`title_judge_roll, title_judge_choice, tagline_judge_roll, tagline_judge_choice, ` +
+				`total_points, category_id, text_channel_id) ` +
+				`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`;
+			const insertGameLeafletValues = [
+				prepGameLeaflet.game_session_id,
+				prepGameLeaflet.game_is_active,
+				prepGameLeaflet.player_id,
+				prepGameLeaflet.queued,
+				prepGameLeaflet.playing,
+				prepGameLeaflet.left_game,
+				prepGameLeaflet.turns_as_active_player,
+				prepGameLeaflet.theme_category_roll,
+				prepGameLeaflet.title_judge_roll,
+				prepGameLeaflet.title_judge_choice,
+				prepGameLeaflet.tagline_judge_roll,
+				prepGameLeaflet.tagline_judge_choice,
+				prepGameLeaflet.total_points,
+				prepGameLeaflet.category_id,
+				prepGameLeaflet.text_channel_id,
+			];
+			await client.query(insertGameLeafletText, insertGameLeafletValues);
+			await client.query("COMMIT");
+			message
+				.delete()
+				.then(
 					message.channel.send(
-						`<@${message.member.id}>, don't get your bananas in a bunch. You're already in the game.`
-					);
-				} else if (playerQueued == true) {
-					message.channel.send(
-						`<@${message.member.id}>, you're in the queue to start with the next round.`
-					);
-				} else {
-					// player can rejoin the game
-					await client.query(
-						`UPDATE public.game_leaflet ` +
-							`SET playing = false, ` +
-							`queued = true ` +
-							`WHERE game_leaflet_id = ${gameLeafletId} `
-					);
-					return;
-				}
-			} else {
-				const playerCount = await client.query(
-					`SELECT game_leaflet_id ` +
-						`FROM public.game_leaflet ` +
-						`WHERE game_session_id = ${gameId} `
+						`<@${message.member.id}> has taken a seat at the table`
+					)
 				);
-				console.log(`playerCount = ${JSON.stringify(playerCount)}`);
-				console.log(`playerCount.rowCount = ${playerCount.rowCount}`);
-				let themeCategoryRollArray = [];
-				let titleJudgeRollArray = [];
-				let taglineJudgeRollArray = [];
-				console.log(
-					`leafletUpdate() > parseInt(gameId) = ${parseInt(gameId)}`
-				);
-				const themeAndJudgeArrays = await client.query(
-					`SELECT ` +
-						`theme_category_roll_array, ` +
-						`title_judge_roll_array, ` +
-						`tagline_judge_roll_array ` +
-						`FROM public.games ` +
-						`WHERE game_id = ${gameId} ` +
-						`AND game_is_active = true;`
-				);
-				themeAndJudgeArrays.rows.forEach((row) => {
-					themeCategoryRollArray = row.theme_category_roll_array;
-					titleJudgeRollArray = row.title_judge_roll_array;
-					taglineJudgeRollArray = row.tagline_judge_roll_array;
-				});
-				const prepGameLeaflet = {
-					game_session_id: parseInt(gameId),
-					game_is_active: true,
-					player_id: message.author.id,
-					queued: true,
-					playing: false,
-					left_game: false,
-					turns_as_active_player: 0,
-					theme_category_roll:
-						themeCategoryRollArray[playerCount.rowCount],
-					title_judge_roll: titleJudgeRollArray[playerCount.rowCount],
-					title_judge_choice: null,
-					tagline_judge_roll:
-						taglineJudgeRollArray[playerCount.rowCount],
-					tagline_judge_choice: null,
-					total_points: 0,
-					category_id: message.channel.parent.id,
-					text_channel_id: message.channel.id,
-				};
-				await client.query("BEGIN");
-				const insertGameLeafletText =
-					`INSERT INTO public.game_leaflet(game_session_id, game_is_active, player_id, ` +
-					`queued, playing, left_game, turns_as_active_player, theme_category_roll, ` +
-					`title_judge_roll, title_judge_choice, tagline_judge_roll, tagline_judge_choice, ` +
-					`total_points, category_id, text_channel_id) ` +
-					`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`;
-				const insertGameLeafletValues = [
-					prepGameLeaflet.game_session_id,
-					prepGameLeaflet.game_is_active,
-					prepGameLeaflet.player_id,
-					prepGameLeaflet.queued,
-					prepGameLeaflet.playing,
-					prepGameLeaflet.left_game,
-					prepGameLeaflet.turns_as_active_player,
-					prepGameLeaflet.theme_category_roll,
-					prepGameLeaflet.title_judge_roll,
-					prepGameLeaflet.title_judge_choice,
-					prepGameLeaflet.tagline_judge_roll,
-					prepGameLeaflet.tagline_judge_choice,
-					prepGameLeaflet.total_points,
-					prepGameLeaflet.category_id,
-					prepGameLeaflet.text_channel_id,
-				];
-				await client.query(
-					insertGameLeafletText,
-					insertGameLeafletValues
-				);
-				await client.query("COMMIT");
-				message
-					.delete()
-					.then(
-						message.channel.send(
-							`<@${message.member.id}> has taken a seat at the table`
-						)
-					);
-			}
+			// }
 		}
 	} catch (err) {
 		dmError(err);
@@ -1238,17 +1243,14 @@ async function play(message) {
 	}
 }
 
-
-
 async function activePlayerCount(channelGameId) {
 	const client = await pool.connect();
 	try {
-		// TODO: add a check that excludes players that leave during a game. 
 		const playersPlaying = await client.query(
 			`SELECT game_leaflet_id ` +
 				`FROM public.game_leaflet ` +
-				`WHERE game_session_id = ${channelGameId} ` //+
-				// `AND is_at_table = true '
+				`WHERE game_session_id = ${channelGameId} ` +
+				`AND left_game = false `
 		);
 		if (playersPlaying.rows.length === 0) {
 			return 0;
@@ -1357,7 +1359,8 @@ async function queuedPlayerUpdate(message) {
 				`SET playing = true, ` +
 				`queued = false ` +
 				`WHERE game_session_id = ${gameId} ` +
-				`AND queued = true`
+				`AND queued = true ` +
+				`AND left_game = false;`
 		);
 	} catch (err) {
 		await client.query("ROLLBACK");
@@ -1486,7 +1489,6 @@ function roll_for_game(message) {
 		const client = await pool.connect();
 		try {
 			await queuedPlayerUpdate(message);
-			// TODO: if author not in game, send message: "Before you can !roll, you must use the !play command to join the game"
 
 			// await getGameId(message).then((results) => {
 			// 	gameId = results;
@@ -1523,6 +1525,7 @@ function roll_for_game(message) {
 			gameLeafletData.rows.forEach((row) => {
 				gameSessionId = row.game_session_id;
 				gameIsActive = row.game_is_active;
+				leftGame = row.left_game;
 				turnsAsActivePlayer = row.turns_as_active_player;
 				themeCategory = row.theme_category_roll;
 				titleJudge = row.title_judge_roll;
@@ -1536,6 +1539,12 @@ function roll_for_game(message) {
 			// 	   titleJudge = row.title_judge_roll;
 			// 	   taglineJudge = row.tagline_judge_roll;
 			//    });
+			if (leftGame == true) {
+				message.channel.send(
+					`${message.member}, use the **!play** command to re-join the game.`
+				);
+				return;
+			}
 			let winningTitle;
 			console.log(`gameSessionId = ${gameSessionId}`);
 			// console.log(`turnsAsActivePlayer = ${turnsAsActivePlayer}`);
@@ -1613,7 +1622,8 @@ function roll_for_game(message) {
 					`FROM public.game_leaflet ` +
 					`WHERE text_channel_id = ${message.channel.id} ` +
 					`AND game_is_active = true ` +
-					`AND playing = true`
+					`AND playing = true ` +
+					`AND left_game = false`
 			);
 			playersFromDatabase.rows.forEach((row) => {
 				playersInGame = row.player_id;
@@ -1777,7 +1787,8 @@ function score(gameId) {
 		const gameLeafletData = await client.query(
 			`SELECT * ` +
 				`FROM public.game_leaflet ` +
-				`WHERE game_session_id = ${gameId};`
+				`WHERE game_session_id = ${gameId};` // +
+			// `AND left_game = false;`
 		);
 		if (gameLeafletData.rows.length == 0) {
 			bot.channels.fetch(`${row.text_channel_id}`).then((results) => {
@@ -1789,7 +1800,13 @@ function score(gameId) {
 					bananaScore = bananaScore.concat(":banana:");
 				}
 				gameChannel = results;
-				gameChannel.send(`<@${row.player_id}>: ${bananaScore}`);
+				if (row.left_game == false) {
+					gameChannel.send(`<@${row.player_id}>: ${bananaScore}`);
+				} else if (row.left_game == true) {
+					gameChannel.send(
+						`~~<@${row.player_id}>: ${bananaScore}~~ - player left game`
+					);
+				}
 			});
 		}
 		gameLeafletData.rows.forEach((row) => {
@@ -1802,7 +1819,13 @@ function score(gameId) {
 					bananaScore = bananaScore.concat(":banana:");
 				}
 				gameChannel = results;
-				gameChannel.send(`<@${row.player_id}>: ${bananaScore}`);
+				if (row.left_game == false) {
+					gameChannel.send(`<@${row.player_id}>: ${bananaScore}`);
+				} else if (row.left_game == true) {
+					gameChannel.send(
+						`~~<@${row.player_id}>~~: ${bananaScore}  ::  player left game`
+					);
+				}
 			});
 		});
 	})().catch((err) => {
