@@ -199,8 +199,11 @@ bot.on("message", (message) => {
 				)
 				.addField(
 					`**COMMANDS**`,
-					`**!roll** - When used while not in a game, GorillaBot will send a single dice roll to the same channel.\n\u200b` +
+					`**!roll** - When used while not in a game, GorillaBot will send a single dice roll.\n\u200b` +
 						`**!score** - displays current score.\n\u200b` +
+						`**!players** - displays a list of players and how many times each has been the Active Player.\n\u200b` +
+						`**!leave** - Have to go? Use the **!leave** command exit. If you return, use **!play** to re-join the game.\n\u200b` +
+						`**!remove @name** - displays current score.\n\u200b` +
 						`**!reset** - clears the table for a new game.\n\u200b`
 				);
 			message.channel.send(embed).catch(console.error);
@@ -255,6 +258,7 @@ bot.on("message", (message) => {
 			}
 			break;
 
+		case "player":
 		case "players":
 			if (message.channel.type === "dm") {
 				message.author.send(
@@ -266,7 +270,9 @@ bot.on("message", (message) => {
 			break;
 
 		case "reboot": // TODO: NOT WORKING CORRECTLY
-			if (message.author.id !== config.ownerID) return;
+			if (message.author.id !== config.ownerID) {
+			return;
+			}
 			try {
 				message.channel.send("Rebooting...").then(() => {
 					bot.destroy().then(() => {
