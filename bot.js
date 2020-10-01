@@ -1031,7 +1031,7 @@ async function removePlayer(message, playerId) {
 	}
 }
 
-async function play(message) { // TODO: fix player added as a new player instead of just re-joining the game.
+async function play(message) {
 	const client = await pool.connect();
 	try {
 		// Situations:
@@ -1050,17 +1050,6 @@ async function play(message) { // TODO: fix player added as a new player instead
 				dmError(err);
 				console.error(err);
 			});
-		await playerInActiveGame(message)
-			// returns game_session_id or 0 from the player - public.game_leaflet
-			.then((results) => {
-				playerIsInGame = parseInt(results);
-				console.log(`2 play() playerIsInGame = ${playerIsInGame}`);
-			})
-			.catch((err) => {
-				dmError(err);
-				console.error(err);
-			});
-		if (playerIsInGame > 0) {
 			const playersGame = await client.query(
 				`SELECT * ` +
 				`FROM public.game_leaflet ` +
@@ -1069,14 +1058,16 @@ async function play(message) { // TODO: fix player added as a new player instead
 			);
 			playersGame.rows.forEach((row) => {
 				gameLeafletId = parseInt(row.game_leaflet_id);
-				gameSessionId = parseInt(row.game_session_id);
+				playerIsInGame = parseInt(row.game_session_id);
 				playerIsQueued = row.queued;
 				playerIsPlaying = row.playing;
 				playerLeftGame = row.left_game;
 				playersGameTextChannelId = row.text_channel_id;
 			});
+		if (playersGame.rows.length === 0) {
+			playerIsInGame = 0
 		}
-		// console.log(`!play - playerLeftGame = ${playerLeftGame}`);
+		console.log(`!play - playerLeftGame = ${playerLeftGame}`);
 		if (
 			// trying to join the game you're in
 			playerIsInGame > 0 &&
@@ -1204,7 +1195,6 @@ async function play(message) { // TODO: fix player added as a new player instead
 						`<@${message.member.id}> has taken a seat at the table`
 					)
 				);
-			// }
 		}
 	} catch (err) {
 		dmError(err);
