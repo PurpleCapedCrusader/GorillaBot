@@ -52,7 +52,7 @@ bot.on("guildMemberAdd", (member) => {
 		)
 		.addField(
 			`**LIST OF COMMANDS**`,
-			`**!help** - There's no need to remember all of these commands. Use !help to bring up this list.\n\u200b`
+			`**!help** - There's no need to remember all of these commands. Use **!help** to bring up this list.\n\u200b`
 		)
 		.addField(
 			`**START A GAME**`,
@@ -62,7 +62,7 @@ bot.on("guildMemberAdd", (member) => {
 		)
 		.addField(
 			`**JOIN A GAME**`,
-			`Once the game has started, the rest of the players can use the **!play** command to join the game.\n\u200b`
+			`After a player starts the game, the rest of the players can use **!play** to join the game.\n\u200b`
 		)
 		.addField(
 			`**ROLL**`,
@@ -90,16 +90,20 @@ bot.on("guildMemberAdd", (member) => {
 		);
 	member.send(embed1).catch(console.error);
 	const embed2 = new Discord.MessageEmbed().addField(
-		`WORD HELP`,
+		`**WORD HELP**`,
 		`While in the GorillaBot DM channel, enter "!word", a single word, and a single letter.\n\u200b` +
-			`**!word gorilla m** will return up to 25 words that start with the letter "M" ` +
-			`and that are related to the word "Gorilla".`
+			`**!word gorilla m** will return up to 25 words that start with the letter "M" and that are related to the word "Gorilla".\n\u200b` +
+			`You can also add a number to get back more or less words. **!word gorilla m 50** will return up to 50 words.\n\u200b`
 	);
 	member.send(embed2).catch(console.error);
 	const embed3 = new Discord.MessageEmbed().addField(
-		`COMMANDS`,
-		`**!roll** - When used while not in a game, GorillaBot will send a single dice roll to the same channel.\n\u200b` +
+		`**COMMANDS**`,
+		`**!roll** - When used while not in a game, GorillaBot will send a single dice roll.\n\u200b` +
 			`**!score** - displays current score.\n\u200b` +
+			`**!players** - displays a list of players and how many times each has been the Active Player.\n\u200b` +
+			`**!leave** - Have to go? Use the **!leave** command to exit. If you return, use **!play** to re-join the game.\n\u200b` +
+			`**!remove @name** - If a player stops responding? (computer crash, internet outage, etc.) Keep the game moving forward by ` +
+			`removing that player from the game. If they come back, they can use **!play** to re-join the game.\n\u200b` +
 			`**!reset** - clears the table for a new game.\n\u200b`
 	);
 	// .setURL([`Gorilla Marketing Rules`](`https://cdn.shopify.com/s/files/1/0246/2190/8043/t/5/assets/07d4153e02b0--Gorilla-Marketing-Rulebook-Web-2020.02.01-fa36f9.pdf?6037`))
@@ -166,7 +170,7 @@ bot.on("message", (message) => {
 				)
 				.addField(
 					`**JOIN A GAME**`,
-					`Once the game has started, the rest of the players can use the **!play** command to join the game.\n\u200b`
+					`After a player starts the game, the rest of the players can use **!play** to join the game.\n\u200b`
 				)
 				.addField(
 					`**ROLL**`,
@@ -177,7 +181,8 @@ bot.on("message", (message) => {
 					`**WRITE**`,
 					`**All Players**: Open your DM from GorillaBot\n\u200b` +
 						`**Active Player**: Add a reaction emoji to the award you want to give.\n\u200b` +
-						`**All Other Players**: Respond with the Title (round 1) or Tagline (round 2) you create based on the acronym formed by your dice.\n\u200b` +
+						`**All Other Players**: Respond with the Title (round 1) or Tagline (round 2) ` +
+						`you create based on the acronym formed by your dice.\n\u200b` +
 						`**All players**: Return to the text channel at your table.\n\u200b`
 				)
 				.addField(
@@ -195,15 +200,16 @@ bot.on("message", (message) => {
 					`**WORD HELP**`,
 					`While in the GorillaBot DM channel, enter "!word", a single word, and a single letter.\n\u200b` +
 						`**!word gorilla m** will return up to 25 words that start with the letter "M" and that are related to the word "Gorilla".\n\u200b` +
-						`You can add a number to get back more or less words. **!word gorilla m 50** will return up to 50 words.\n\u200b`
+						`You can also add a number to get back more or less words. **!word gorilla m 50** will return up to 50 words.\n\u200b`
 				)
 				.addField(
 					`**COMMANDS**`,
 					`**!roll** - When used while not in a game, GorillaBot will send a single dice roll.\n\u200b` +
 						`**!score** - displays current score.\n\u200b` +
 						`**!players** - displays a list of players and how many times each has been the Active Player.\n\u200b` +
-						`**!leave** - Have to go? Use the **!leave** command exit. If you return, use **!play** to re-join the game.\n\u200b` +
-						`**!remove @name** - displays current score.\n\u200b` +
+						`**!leave** - Have to go? Use the **!leave** command to exit. If you return, use **!play** to re-join the game.\n\u200b` +
+						`**!remove @name** - If a player stops responding? (computer crash, internet outage, etc.) Keep the game moving forward by ` +
+						`removing that player from the game. If they come back, they can use **!play** to re-join the game.\n\u200b` +
 						`**!reset** - clears the table for a new game.\n\u200b`
 				);
 			message.channel.send(embed).catch(console.error);
@@ -271,7 +277,7 @@ bot.on("message", (message) => {
 
 		case "reboot": // TODO: NOT WORKING CORRECTLY
 			if (message.author.id !== config.ownerID) {
-			return;
+				return;
 			}
 			try {
 				message.channel.send("Rebooting...").then(() => {
