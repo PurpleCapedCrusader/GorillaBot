@@ -1078,7 +1078,6 @@ async function play(message) {
 		if (playersGame.rows.length === 0) {
 			playerIsInGame = 0;
 		}
-		console.log(`!play - playerLeftGame = ${playerLeftGame}`);
 		if (
 			// trying to join the game you're in
 			playerIsInGame > 0 &&
