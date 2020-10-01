@@ -470,7 +470,7 @@ bot.on("message", (message) => {
 								`SELECT game_session_id ` +
 								`FROM public.turns ` +
 								`WHERE text_channel_id = ${message.channel.id} ` +
-								`AND turn_is_active = true ` +
+								`AND game_is_active = true ` +
 								`ORDER BY message_timestamp DESC LIMIT 1;`,
 						});
 						if (gameSessionId.rows.length != 0) {
