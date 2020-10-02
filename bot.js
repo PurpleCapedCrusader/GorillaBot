@@ -976,7 +976,7 @@ function getTimeStamp() {
 	return "[" + now.toLocaleString() + "]";
 }
 
-async function removePlayer(message, playerId) {
+async function removePlayer(message, playerId) { // TODO: check for end of turn and end of game.
 	const client = await pool.connect();
 	try {
 		await getGameId(message).then((results) => {
