@@ -976,7 +976,7 @@ function getTimeStamp() {
 	return "[" + now.toLocaleString() + "]";
 }
 
-async function removePlayer(message, playerId) { // TODO: check for end of turn and end of game.
+async function removePlayer(message, playerId) {
 	const client = await pool.connect();
 	try {
 		await getGameId(message).then((results) => {
@@ -1005,18 +1005,7 @@ async function removePlayer(message, playerId) { // TODO: check for end of turn 
 								`AND turn_is_active = true ` +
 								`ORDER BY message_timestamp DESC LIMIT 1`,
 						});
-						if (
-							parseInt(activePlayer.rows) === parseInt(playerId)
-						) {
-							endTurn(message);
-							message.channel.send(
-								`<@${playerId}> has left the game.`
-							);
-							message.channel.send(
-								`\n\u200bReady for next player to **!roll**`
-							);
-						}
-						client.query(
+						await client.query(
 							`UPDATE public.game_leaflet ` +
 								`SET playing = false, ` +
 								`queued = false, ` +
@@ -1028,6 +1017,53 @@ async function removePlayer(message, playerId) { // TODO: check for end of turn 
 							message.channel.send(
 								`<@${playerId}> has left the game.`
 							);
+						}
+						if (
+							parseInt(activePlayer.rows) === parseInt(playerId)
+						) {
+							const total_players = await client.query({
+								rowMode: "array",
+								text:
+									`SELECT game_leaflet_id ` +
+									`FROM public.game_leaflet ` +
+									`WHERE game_session_id = ${gameId} ` +
+									`AND left_game = false;`,
+							});
+							const twoTurns = await client.query({
+								rowMode: "array",
+								text:
+									`SELECT game_leaflet_id ` +
+									`FROM public.game_leaflet ` +
+									`WHERE game_session_id = ${gameId} ` +
+									`AND turns_as_active_player = 2 ` +
+									`AND left_game = false;`,
+							});
+							if (
+								total_players.rows.length !=
+								twoTurns.rows.length
+							) {
+								endTurn(message);
+								message.channel.send(
+									`<@${playerId}> has left the game.`
+								);
+								message.channel.send(
+									`\n\u200bReady for next player to **!roll**`
+								);
+							}
+							if (
+								total_players.rows.length ===
+								twoTurns.rows.length
+							) {
+								message.channel.send(
+									`<@${playerId}> has left the game.`
+								);
+								message.channel.send(
+									`\n\u200b\n\u200b**Final Score:**`
+								);
+								endTurn(message).then(
+									score(gameId).then(resetTable(gameId))
+								);
+							}
 						}
 					})().catch((err) => {
 						dmError(err);
@@ -1099,9 +1135,13 @@ async function play(message) {
 			gameId == playerIsInGame &&
 			playerLeftGame == true
 		) {
-			message.channel.send(
-				`Welcome back ${message.member}. You'll be included in the next !roll.`
-			);
+			message
+				.delete()
+				.then(
+					message.channel.send(
+						`Welcome back ${message.member}. You'll be included in the next !roll.`
+					)
+				);
 			await client.query(
 				`UPDATE public.game_leaflet ` +
 					`SET queued = true, ` +
@@ -1254,7 +1294,7 @@ async function playerInActiveGame(message) {
 				`FROM public.game_leaflet ` +
 				`WHERE player_id = ${message.member.id} ` +
 				`AND game_is_active = true ` +
-				`AND left_game = false;`, // TODO: this might cause issues... added with very little testing
+				`AND left_game = false;`,
 		});
 		console.log(
 			`playersInActiveGames() game_session_id = ${playersInActiveGames.rows}`
