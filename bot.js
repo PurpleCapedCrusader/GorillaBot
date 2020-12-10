@@ -976,7 +976,7 @@ function getTimeStamp() {
 	return "[" + now.toLocaleString() + "]";
 }
 
-async function removePlayer(message, playerId) {
+async function removePlayer(message, playerId) { //REMOVE TAble ROLE TO SHOW PLAYER NOLONGER AT A TABLE
 	const client = await pool.connect();
 	try {
 		await getGameId(message).then((results) => {
@@ -1084,7 +1084,7 @@ async function removePlayer(message, playerId) {
 	}
 }
 
-async function play(message) {
+async function play(message) { //ADD ROLE UPDATE TO SHOW PLAYER AT A TABLE
 	const client = await pool.connect();
 	try {
 		// Situations:
@@ -1429,7 +1429,7 @@ async function queuedPlayerUpdate(message) {
 	}
 }
 
-async function resetTable(gameId) {
+async function resetTable(gameId) { //REMOVE TABLE ROLE FROM ALL PLAYERS IN GAME TO SHOW PLAYER NOLONGER AT A TABLE
 	const client = await pool.connect();
 	try {
 		const textChannelId = await client.query({
