@@ -30,7 +30,7 @@ bot.on("ready", () => {
 // TODO: Additional features ideas:
 // Restart bot if fatal error
 // Display total standings for all players of all games
-//
+// 123
 
 // error catch-all
 bot.on("error", (e) => console.error(`ERROR: ${getTimeStamp()} :: ${e}`));
