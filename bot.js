@@ -126,6 +126,8 @@ bot.on("message", (message) => {
 			}
 		} else {
 			messageArchive(message);
+
+	message.channel.send("1");
 		}
 	}
 
@@ -1087,6 +1089,8 @@ async function removePlayer(message, playerId) {
 async function play(message) {
 	const client = await pool.connect();
 	try {
+		tableRoleJoin(message);
+		console.log('message.category_name');
 		// Situations:
 		// 1. trying to join a game while in another game
 		// 2. trying to join the same game you're in
@@ -1252,6 +1256,7 @@ async function play(message) {
 						`<@${message.member.id}> has taken a seat at the table`
 					)
 				);
+			tableRoleJoin(message);
 		}
 	} catch (err) {
 		dmError(err);
@@ -2058,6 +2063,21 @@ async function startGame(message) {
 	} finally {
 		client.release();
 	}
+}
+
+function tableRoleJoin(message){
+	console.log('message.category_name');
+	  var role = message.guild.roles.cache.find(
+		(r) => r.name === message.category_name
+	  );
+	  message.member.roles.add(role).catch(console.error);
+}
+
+function tableRoleLeave(message) {
+	  var role = message.guild.roles.cache.find(
+		(r) => r.name === message.category_name
+	  );
+	  message.member.roles.remove(role).catch(console.error);
 }
 
 function themeFormat(message) {
