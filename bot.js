@@ -1,7 +1,8 @@
 const Discord = require("discord.js");
 const config = require("./config.json");
 var dbCreds = require("./dbCreds.js");
-var lowerCase = require("lower-case");
+// var lowerCase = require("lower-case");
+const { lowerCase } = require("lower-case");
 var gameRooms = require("./gameRooms.js");
 const databaseCheck = require("./databaseBuilder.js");
 var _ = require("lodash");
@@ -30,7 +31,7 @@ bot.on("ready", () => {
 // TODO: Additional features ideas:
 // Restart bot if fatal error
 // Display total standings for all players of all games
-// 123
+// Fix all players leaving a game before the first roll
 
 // error catch-all
 bot.on("error", (e) => console.error(`ERROR: ${getTimeStamp()} :: ${e}`));
@@ -126,8 +127,6 @@ bot.on("message", (message) => {
 			}
 		} else {
 			messageArchive(message);
-
-	message.channel.send("1");
 		}
 	}
 
@@ -253,6 +252,7 @@ bot.on("message", (message) => {
 			} else {
 				let playerId = message.author.id;
 				removePlayer(message, playerId);
+				tableRoleLeave(message, playerId);
 			}
 			break;
 
@@ -290,7 +290,6 @@ bot.on("message", (message) => {
 			} catch (err) {
 				console.log(err.stack);
 				dmError(err);
-				throw err;
 			}
 			break;
 
@@ -301,8 +300,15 @@ bot.on("message", (message) => {
 				);
 			} else {
 				// TODO: verify the author is a player in the game
-				let playerId = message.mentions.users.first().id;
-				removePlayer(message, playerId);
+				try {
+					let playerId = message.mentions.users.first().id;
+					console.log(`REMOVE PLAYER ID --------------------------------------- ${playerId}`);
+					removePlayer(message, playerId);
+					tableRoleKick(message, playerId);
+				} catch (err) {
+					console.log(err.stack);
+					dmError(err);
+				}
 			}
 			break;
 
@@ -318,6 +324,7 @@ bot.on("message", (message) => {
 					if (gameId > 0) {
 						resetTable(gameId);
 					}
+					tableRoleAllLeave(message, gameId);
 				});
 			}
 			break;
@@ -483,7 +490,6 @@ bot.on("message", (message) => {
 						}
 					} catch (err) {
 						dmError(err);
-						throw err;
 					} finally {
 						client.release();
 					}
@@ -780,7 +786,8 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 							);
 						})
 						.then(score(gameSessionId))
-						.then(resetTable(gameSessionId));
+						.then(resetTable(gameSessionId))
+						.then(tableRoleAllLeave(message, gameSessionId));
 				}
 			}
 		}
@@ -788,7 +795,6 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 		await client.query("ROLLBACK");
 		console.log(err.stack);
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -836,7 +842,6 @@ bot.on("messageReactionRemove", async (reaction, user) => {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -873,7 +878,6 @@ async function datamuse(message) {
 	} catch (err) {
 		console.log(err.stack);
 		dmError(err);
-		throw err;
 	}
 }
 
@@ -916,7 +920,6 @@ async function endTurn(message) {
 	} catch (err) {
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -942,7 +945,6 @@ async function gameIsInProgress(message) {
 		}
 	} catch (err) {
 		dmError(err);
-		throw err;
 	}
 }
 
@@ -967,7 +969,6 @@ async function getGameId(message) {
 		}
 	} catch (err) {
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1019,6 +1020,7 @@ async function removePlayer(message, playerId) {
 							message.channel.send(
 								`<@${playerId}> has left the game.`
 							);
+							// tableRoleKick(message, playerId);
 						}
 						if (
 							parseInt(activePlayer.rows) === parseInt(playerId)
@@ -1063,7 +1065,9 @@ async function removePlayer(message, playerId) {
 									`\n\u200b\n\u200b**Final Score:**`
 								);
 								endTurn(message).then(
-									score(gameId).then(resetTable(gameId))
+									score(gameId).then(
+										resetTable(gameId)
+									)
 								);
 							}
 						}
@@ -1080,7 +1084,6 @@ async function removePlayer(message, playerId) {
 	} catch (err) {
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1089,8 +1092,6 @@ async function removePlayer(message, playerId) {
 async function play(message) {
 	const client = await pool.connect();
 	try {
-		tableRoleJoin(message);
-		console.log('message.category_name');
 		// Situations:
 		// 1. trying to join a game while in another game
 		// 2. trying to join the same game you're in
@@ -1261,7 +1262,6 @@ async function play(message) {
 	} catch (err) {
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1283,7 +1283,6 @@ async function activePlayerCount(channelGameId) {
 		}
 	} catch (err) {
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1311,7 +1310,6 @@ async function playerInActiveGame(message) {
 		}
 	} catch (err) {
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1346,7 +1344,6 @@ async function playerInAnotherGame(message) {
 		return;
 	} catch (err) {
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1384,7 +1381,6 @@ async function players(message) {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1405,7 +1401,6 @@ async function playerTurnsTaken(message) {
 		return numberOfTurns.rows;
 	} catch (err) {
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1428,7 +1423,6 @@ async function queuedPlayerUpdate(message) {
 	} catch (err) {
 		await client.query("ROLLBACK");
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1502,7 +1496,6 @@ async function resetTable(gameId) {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1780,7 +1773,6 @@ function roll_for_game(message) {
 						} catch (err) {
 							dmError(err);
 							await client.query("ROLLBACK");
-							throw err;
 						} finally {
 							client.release();
 						}
@@ -1793,7 +1785,6 @@ function roll_for_game(message) {
 		} catch (err) {
 			dmError(err);
 			await client.query("ROLLBACK");
-			throw err;
 		} finally {
 			client.release();
 		}
@@ -1859,7 +1850,6 @@ async function score(gameId) {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1960,7 +1950,6 @@ async function sendToTextChannel(gameSessionID) {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -2059,25 +2048,82 @@ async function startGame(message) {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
 }
 
-function tableRoleJoin(message){
-	console.log('message.category_name');
-	  var role = message.guild.roles.cache.find(
-		(r) => r.name === message.category_name
-	  );
-	  message.member.roles.add(role).catch(console.error);
+async function tableRoleAllLeave(message, gameId) {
+	const client = await pool.connect();
+	try {
+		const tableName = await client.query({
+			rowMode: "array",
+			text:
+				`SELECT category_name ` +
+				`FROM public.games ` +
+				`WHERE game_id = ${gameId} ` +
+				`ORDER BY message_timestamp DESC LIMIT 1;`,
+		});
+		const guildIdData = await client.query({
+			rowMode: "array",
+			text:
+				`SELECT guild_id ` +
+				`FROM public.games ` +
+				`WHERE game_id = ${gameId} ` +
+				`ORDER BY message_timestamp DESC LIMIT 1;`,
+		});
+		// console.log(`GAME TABLE NAME-----------------------: ${tableName.rows}`);
+		// console.log(`GUILD ID----------------------: ${guildIdData.rows}`);
+		const gameLeafletData = await client.query(
+			`SELECT * ` +
+				`FROM public.game_leaflet ` +
+				`WHERE game_session_id = ${gameId};`
+		);
+		var role = message.guild.roles.cache.find(
+			(r) => r.name === `${tableName.rows}`
+		);
+		var guild = bot.guilds.cache.find(
+			(g) => g.id === `${guildIdData.rows}`
+		);
+		gameLeafletData.rows.forEach((row) => {
+			var player = guild.members.cache.find(
+				(p) => p.id === `${row.player_id}`
+			);
+			// console.log(`bot.guilds.cache -----------------------: ${JSON.stringify(guild)}`);
+			// console.log(`ROLE -----------------------: ${role.id}`);
+			// console.log(`PLAYER -----------------------: ${JSON.stringify(player)}`);
+			player.roles.remove(role).catch(console.error);
+		});
+	} catch (err) {
+		console.log(err.stack);
+		dmError(err);
+	} finally {
+		client.release();
+	}
 }
 
-function tableRoleLeave(message) {
-	  var role = message.guild.roles.cache.find(
-		(r) => r.name === message.category_name
-	  );
-	  message.member.roles.remove(role).catch(console.error);
+function tableRoleJoin(message) {
+	var role = message.guild.roles.cache.find(
+		(r) => r.name === message.channel.parent.name
+	);
+	message.member.roles.add(role).catch(console.error);
+}
+
+function tableRoleKick(message, playerId) {
+	var role = message.guild.roles.cache.find(
+		(r) => r.name === message.channel.parent.name
+	);
+	var player = message.guild.members.cache.find(
+		(p) => p.id === `${playerId}`
+	);
+	player.roles.remove(role).catch(console.error);
+}
+
+function tableRoleLeave(message, playerId) {
+	var role = message.guild.roles.cache.find(
+		(r) => r.name === message.channel.parent.name
+	);
+	message.member.roles.remove(role).catch(console.error);
 }
 
 function themeFormat(message) {
@@ -2153,7 +2199,6 @@ async function titleTaglineFromPlayer(message) {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -2213,7 +2258,6 @@ async function turnIsInProgress(message) {
 	} catch (err) {
 		console.log(err.stack);
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -2416,7 +2460,6 @@ async function messageArchive(message) {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -2450,7 +2493,6 @@ async function dmArchive(message) {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
