@@ -32,7 +32,6 @@ bot.on("ready", () => {
 // Restart bot if fatal error
 // Display total standings for all players of all games
 // Fix all players leaving a game before the first roll
-// git ssh test
 
 // error catch-all
 bot.on("error", (e) => console.error(`ERROR: ${getTimeStamp()} :: ${e}`));
