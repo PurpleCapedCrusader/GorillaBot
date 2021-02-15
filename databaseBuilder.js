@@ -3,13 +3,16 @@ var dbCreds = require('./dbCreds.js');
 const { Pool } = require('pg');
 const pool = new Pool(dbCreds);
 
-async function createDatabaseTablesIfNotExist() {
+async function createSchemaIfNotExist() {
     ;
     (async () => {
         const client = await pool.connect()
         try {
             console.log(`creating tables`);
-            await client.query(`CREATE TABLE IF NOT EXISTS public.games
+
+            await client.query(`CREATE SCHEMA IF NOT EXISTS gorilla_schema`)
+
+            await client.query(`CREATE TABLE IF NOT EXISTS gorilla_schema.games
             (
                 game_id SERIAL NOT NULL,
                 game_is_active boolean NOT NULL,
@@ -33,10 +36,10 @@ async function createDatabaseTablesIfNotExist() {
                 OIDS = FALSE
             )
             TABLESPACE pg_default;
-            ALTER TABLE public.games
+            ALTER TABLE gorilla_schema.games
                 OWNER to ${config.connUser};`)
 
-            await client.query(`CREATE TABLE IF NOT EXISTS public.turns
+            await client.query(`CREATE TABLE IF NOT EXISTS gorilla_schema.turns
             (
                 turns_id SERIAL NOT NULL,
                 game_session_id int,
@@ -64,10 +67,10 @@ async function createDatabaseTablesIfNotExist() {
                 OIDS = FALSE
             )
             TABLESPACE pg_default;
-            ALTER TABLE public.turns
+            ALTER TABLE gorilla_schema.turns
                 OWNER to ${config.connUser};`)
 
-            await client.query(`CREATE TABLE IF NOT EXISTS public.game_leaflet 
+            await client.query(`CREATE TABLE IF NOT EXISTS gorilla_schema.game_leaflet 
             (
                 game_leaflet_id SERIAL NOT NULL,
                 game_session_id int,
@@ -91,10 +94,10 @@ async function createDatabaseTablesIfNotExist() {
                 OIDS = FALSE
             )
             TABLESPACE pg_default;
-            ALTER TABLE public.game_leaflet
+            ALTER TABLE gorilla_schema.game_leaflet
                 OWNER to ${config.connUser};`)
 
-            await client.query(`CREATE TABLE IF NOT EXISTS public.dm_archive
+            await client.query(`CREATE TABLE IF NOT EXISTS gorilla_schema.dm_archive
             (
                 dm_archive_id SERIAL NOT NULL,
                 readable_timestamp character varying COLLATE pg_catalog."default",
@@ -108,10 +111,10 @@ async function createDatabaseTablesIfNotExist() {
                 OIDS = FALSE
             )
             TABLESPACE pg_default;            
-            ALTER TABLE public.dm_archive
+            ALTER TABLE gorilla_schema.dm_archive
                 OWNER to ${config.connUser};`)
 
-            await client.query(`CREATE TABLE IF NOT EXISTS public.message_archive
+            await client.query(`CREATE TABLE IF NOT EXISTS gorilla_schema.message_archive
             (
                 messagearchive_id SERIAL NOT NULL,
                 readable_timestamp character varying(30) COLLATE pg_catalog."default",
@@ -131,13 +134,13 @@ async function createDatabaseTablesIfNotExist() {
                 OIDS = FALSE
             )
             TABLESPACE pg_default;            
-            ALTER TABLE public.message_archive
+            ALTER TABLE gorilla_schema.message_archive
                 OWNER to ${config.connUser};`)
 
 
         } catch (e) {
             await client.query('ROLLBACK')
-            throw e
+            console.log(e)
         } finally {
             // Make sure to release the client before any error handling,
             // just in case the error handling itself throws an error.
@@ -146,4 +149,4 @@ async function createDatabaseTablesIfNotExist() {
     })().catch(err => console.log(err.stack))
 }
 
-module.exports = createDatabaseTablesIfNotExist();
+module.exports = createSchemaIfNotExist();
