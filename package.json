@@ -1,8 +1,8 @@
 {
   "name": "gorillabot",
   "version": "1.0.0",
-  "description": "",
-  "main": "bot.js",
+  "description": "Gorilla Marketign Discord Bot",
+  "main": "gorilla.js",
   "dependencies": {
     "check-types": "^11.1.2",
     "dblapi.js": "^2.4.0",
@@ -17,13 +17,14 @@
   },
   "devDependencies": {},
   "scripts": {
+    "start": "node gorilla.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/PurpleCapedCrusader/GorillaBot.git"
   },
-  "author": "",
+  "author": "Alex Cotton",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/PurpleCapedCrusader/GorillaBot/issues"

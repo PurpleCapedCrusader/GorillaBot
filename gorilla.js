@@ -1,15 +1,11 @@
 const Discord = require("discord.js");
 const config = require("./config.json");
 var dbCreds = require("./dbCreds.js");
-// var lowerCase = require("lower-case");
 const { lowerCase } = require("lower-case");
 var gameRooms = require("./gameRooms.js");
 const databaseCheck = require("./databaseBuilder.js");
 var _ = require("lodash");
 const fetch = require("node-fetch");
-// const fs = require("fs");
-// var check = require("check-types");
-// const express = require("express");
 const bot = new Discord.Client();
 const PREFIX = config.prefix;
 const { Pool } = require("pg");
@@ -25,11 +21,10 @@ bot.on("ready", () => {
 	);
 	updateStatus();
 	adminNotify(`GorillaBot started: ${getTimeStamp()}`);
-	databaseCheck.createDatabaseTablesIfNotExist;
+	databaseCheck.createSchemaIfNotExist;
 });
 
 // TODO: Additional features ideas:
-// Restart bot if fatal error
 // Display total standings for all players of all games
 // Fix all players leaving a game before the first roll
 
@@ -477,7 +472,7 @@ bot.on("message", (message) => {
 							rowMode: "array",
 							text:
 								`SELECT game_session_id ` +
-								`FROM public.turns ` +
+								`FROM gorilla_schema.turns ` +
 								`WHERE text_channel_id = ${message.channel.id} ` +
 								`AND game_is_active = true ` +
 								`ORDER BY message_timestamp DESC LIMIT 1;`,
@@ -620,7 +615,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 				rowMode: "array",
 				text:
 					`SELECT turn_is_active ` +
-					`FROM public.turns ` +
+					`FROM gorilla_schema.turns ` +
 					`WHERE active_player_id = ${user.id} ` +
 					`AND game_is_active = true ` +
 					`ORDER BY message_timestamp DESC LIMIT 1;`,
@@ -629,7 +624,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 				rowMode: "array",
 				text:
 					`SELECT turns_as_active_player ` +
-					`FROM public.game_leaflet ` +
+					`FROM gorilla_schema.game_leaflet ` +
 					`WHERE player_id = ${user.id} ` +
 					`AND game_is_active = true ` +
 					`ORDER BY game_leaflet_id DESC LIMIT 1;`,
@@ -638,7 +633,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 				rowMode: "array",
 				text:
 					`SELECT game_session_id ` +
-					`FROM public.game_leaflet ` +
+					`FROM gorilla_schema.game_leaflet ` +
 					`WHERE player_id = ${user.id} ` +
 					`AND game_is_active = true ` +
 					`ORDER BY game_leaflet_id DESC LIMIT 1`,
@@ -651,7 +646,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 						`turnAsActivePlayer = ${turnAsActivePlayer.rows}`
 					);
 					await client.query(
-						`UPDATE public.game_leaflet ` +
+						`UPDATE gorilla_schema.game_leaflet ` +
 							`SET title_judge_choice = $$${reaction.message.content}$$ ` +
 							`WHERE player_id = ${user.id} ` +
 							`AND game_is_active = true;`
@@ -662,7 +657,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 						`turnAsActivePlayer = ${turnAsActivePlayer.rows}`
 					);
 					await client.query(
-						`UPDATE public.game_leaflet ` +
+						`UPDATE gorilla_schema.game_leaflet ` +
 							`SET tagline_judge_choice = $$${reaction.message.content}$$ ` +
 							`WHERE player_id = ${user.id} ` +
 							`AND game_is_active = true;`
@@ -674,7 +669,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 		if (reaction.message.channel.type != "dm") {
 			const pointAlreadyGiven = await client.query(
 				`SELECT point_earned ` +
-					`FROM public.turns ` +
+					`FROM gorilla_schema.turns ` +
 					`WHERE active_player_id = ${user.id} ` +
 					`AND text_channel_id = ${reaction.message.channel.id} ` +
 					`AND turn_is_active = true`
@@ -694,13 +689,13 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 				rowMode: "array",
 				text:
 					`SELECT active_player_id ` +
-					`FROM public.turns ` +
+					`FROM gorilla_schema.turns ` +
 					`WHERE dice_and_tagline = $$${reaction.message.content}$$ ` +
 					`AND turn_is_active = true ` +
 					`ORDER BY message_timestamp DESC LIMIT 1;`,
 			});
 			const turnWinnerData = await client.query(
-				`SELECT * FROM public.turns ` +
+				`SELECT * FROM gorilla_schema.turns ` +
 					`WHERE dice_and_tagline = $$${reaction.message.content}$$ ` +
 					`AND turn_is_active = true ` +
 					`ORDER BY message_timestamp DESC LIMIT 1;`
@@ -711,7 +706,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 			});
 			if (activePlayerId.rows == user.id) {
 				await client.query(
-					`UPDATE public.turns ` +
+					`UPDATE gorilla_schema.turns ` +
 						`SET point_earned = 1 ` +
 						`WHERE active_player_id = ${user.id} ` +
 						`AND dice_and_tagline = $$${reaction.message.content}$$ ` +
@@ -721,14 +716,14 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 					rowMode: "array",
 					text:
 						`SELECT total_points ` +
-						`FROM public.game_leaflet ` +
+						`FROM gorilla_schema.game_leaflet ` +
 						`WHERE game_session_id = ${gameSessionId} ` +
 						`AND player_id = ${playerId};`,
 				});
 				let playerPoints = parseInt(total_points.rows);
 				playerPoints += 1;
 				await client.query(
-					`UPDATE public.game_leaflet ` +
+					`UPDATE gorilla_schema.game_leaflet ` +
 						`SET total_points = ${playerPoints} ` +
 						`WHERE game_session_id = ${gameSessionId} ` +
 						`AND player_id = ${playerId}`
@@ -736,7 +731,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 
 				const turnWinnerData = await client.query(
 					`SELECT * ` +
-						`FROM public.turns ` +
+						`FROM gorilla_schema.turns ` +
 						`WHERE dice_and_tagline = $$${reaction.message.content}$$ ` +
 						`AND turn_is_active = true ` +
 						`ORDER BY message_timestamp DESC LIMIT 1;`
@@ -750,7 +745,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 					rowMode: "array",
 					text:
 						`SELECT game_leaflet_id ` +
-						`FROM public.game_leaflet ` +
+						`FROM gorilla_schema.game_leaflet ` +
 						`WHERE game_session_id = ${gameSessionId} ` +
 						`AND left_game = false;`,
 				});
@@ -758,7 +753,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 					rowMode: "array",
 					text:
 						`SELECT game_leaflet_id ` +
-						`FROM public.game_leaflet ` +
+						`FROM gorilla_schema.game_leaflet ` +
 						`WHERE game_session_id = ${gameSessionId} ` +
 						`AND turns_as_active_player = 2 ` +
 						`AND left_game = false;`,
@@ -824,14 +819,14 @@ bot.on("messageReactionRemove", async (reaction, user) => {
 			rowMode: "array",
 			text:
 				`SELECT active_player_id ` +
-				`FROM public.turns ` +
+				`FROM gorilla_schema.turns ` +
 				`WHERE dice_and_tagline = $$${reaction.message.content}$$ ` +
 				`AND turn_is_active = true ` +
 				`ORDER BY message_timestamp DESC LIMIT 1;`,
 		});
 		if (activePlayerId.rows == user.id) {
 			await client.query(
-				`UPDATE public.turns ` +
+				`UPDATE gorilla_schema.turns ` +
 					`SET point_earned = 0 ` +
 					`WHERE active_player_id = ${user.id} ` +
 					`AND dice_and_tagline = $$${reaction.message.content}$$ ` +
@@ -913,7 +908,7 @@ async function endTurn(message) {
 	const client = await pool.connect();
 	try {
 		await client.query(
-			`UPDATE public.turns \n
+			`UPDATE gorilla_schema.turns \n
             SET turn_is_active = false \n
             WHERE text_channel_id = ${message.channel.id};`
 		);
@@ -932,7 +927,7 @@ async function gameIsInProgress(message) {
 			rowMode: "array",
 			text:
 				`SELECT game_is_active ` +
-				`FROM public.games ` +
+				`FROM gorilla_schema.games ` +
 				`WHERE text_channel_id = ${message.channel.id} ` +
 				`ORDER BY message_timestamp DESC LIMIT 1`,
 		});
@@ -955,7 +950,7 @@ async function getGameId(message) {
 			rowMode: "array",
 			text:
 				`SELECT game_id ` +
-				`FROM public.games ` +
+				`FROM gorilla_schema.games ` +
 				`WHERE text_channel_id = ${message.channel.id} ` +
 				`AND game_is_active = true ` +
 				`ORDER BY message_timestamp DESC LIMIT 1;`,
@@ -1003,13 +998,13 @@ async function removePlayer(message, playerId) {
 							rowMode: "array",
 							text:
 								`SELECT active_player_id ` +
-								`FROM public.turns ` +
+								`FROM gorilla_schema.turns ` +
 								`WHERE game_session_id = ${gameId} ` +
 								`AND turn_is_active = true ` +
 								`ORDER BY message_timestamp DESC LIMIT 1`,
 						});
 						await client.query(
-							`UPDATE public.game_leaflet ` +
+							`UPDATE gorilla_schema.game_leaflet ` +
 								`SET playing = false, ` +
 								`queued = false, ` +
 								`left_game = true ` +
@@ -1029,7 +1024,7 @@ async function removePlayer(message, playerId) {
 								rowMode: "array",
 								text:
 									`SELECT game_leaflet_id ` +
-									`FROM public.game_leaflet ` +
+									`FROM gorilla_schema.game_leaflet ` +
 									`WHERE game_session_id = ${gameId} ` +
 									`AND left_game = false;`,
 							});
@@ -1037,7 +1032,7 @@ async function removePlayer(message, playerId) {
 								rowMode: "array",
 								text:
 									`SELECT game_leaflet_id ` +
-									`FROM public.game_leaflet ` +
+									`FROM gorilla_schema.game_leaflet ` +
 									`WHERE game_session_id = ${gameId} ` +
 									`AND turns_as_active_player = 2 ` +
 									`AND left_game = false;`,
@@ -1099,7 +1094,7 @@ async function play(message) {
 		// 4. trying to join a game where there is a game while not in another game - normal
 
 		await getGameId(message)
-			// returns game_id or 0 for this text channel - public.games
+			// returns game_id or 0 for this text channel - gorilla_schema.games
 			.then((results) => {
 				gameId = parseInt(results);
 				console.log(`1 play() gameId = ${gameId}`);
@@ -1110,7 +1105,7 @@ async function play(message) {
 			});
 		const playersGame = await client.query(
 			`SELECT * ` +
-				`FROM public.game_leaflet ` +
+				`FROM gorilla_schema.game_leaflet ` +
 				`WHERE game_is_active = true ` +
 				`AND player_id = ${message.member.id};`
 		);
@@ -1148,7 +1143,7 @@ async function play(message) {
 					)
 				);
 			await client.query(
-				`UPDATE public.game_leaflet ` +
+				`UPDATE gorilla_schema.game_leaflet ` +
 					`SET queued = true, ` +
 					`playing = false, ` +
 					`left_game = false ` +
@@ -1181,7 +1176,7 @@ async function play(message) {
 		) {
 			const playerCount = await client.query(
 				`SELECT game_leaflet_id ` +
-					`FROM public.game_leaflet ` +
+					`FROM gorilla_schema.game_leaflet ` +
 					`WHERE game_session_id = ${gameId} `
 			);
 			console.log(`playerCount = ${JSON.stringify(playerCount)}`);
@@ -1197,7 +1192,7 @@ async function play(message) {
 					`theme_category_roll_array, ` +
 					`title_judge_roll_array, ` +
 					`tagline_judge_roll_array ` +
-					`FROM public.games ` +
+					`FROM gorilla_schema.games ` +
 					`WHERE game_id = ${gameId} ` +
 					`AND game_is_active = true;`
 			);
@@ -1226,7 +1221,7 @@ async function play(message) {
 			};
 			await client.query("BEGIN");
 			const insertGameLeafletText =
-				`INSERT INTO public.game_leaflet(game_session_id, game_is_active, player_id, ` +
+				`INSERT INTO gorilla_schema.game_leaflet(game_session_id, game_is_active, player_id, ` +
 				`queued, playing, left_game, turns_as_active_player, theme_category_roll, ` +
 				`title_judge_roll, title_judge_choice, tagline_judge_roll, tagline_judge_choice, ` +
 				`total_points, category_id, text_channel_id) ` +
@@ -1272,7 +1267,7 @@ async function activePlayerCount(channelGameId) {
 	try {
 		const playersPlaying = await client.query(
 			`SELECT game_leaflet_id ` +
-				`FROM public.game_leaflet ` +
+				`FROM gorilla_schema.game_leaflet ` +
 				`WHERE game_session_id = ${channelGameId} ` +
 				`AND left_game = false `
 		);
@@ -1295,7 +1290,7 @@ async function playerInActiveGame(message) {
 			rowMode: "array",
 			text:
 				`SELECT game_session_id ` +
-				`FROM public.game_leaflet ` +
+				`FROM gorilla_schema.game_leaflet ` +
 				`WHERE player_id = ${message.member.id} ` +
 				`AND game_is_active = true ` +
 				`AND left_game = false;`,
@@ -1323,7 +1318,7 @@ async function playerInAnotherGame(message) {
 			rowMode: "array",
 			text:
 				`SELECT game_session_id ` +
-				`FROM public.game_leaflet ` +
+				`FROM gorilla_schema.game_leaflet ` +
 				`WHERE player_id = ${message.member.id} ` +
 				`AND game_is_active = true;`,
 		});
@@ -1332,7 +1327,7 @@ async function playerInAnotherGame(message) {
 			rowMode: "array",
 			text:
 				`SELECT text_channel_id ` +
-				`FROM public.games ` +
+				`FROM gorilla_schema.games ` +
 				`WHERE game_id = ${playersInActiveGames.rows} ` +
 				`AND game_is_active = true;`,
 		});
@@ -1361,7 +1356,7 @@ async function players(message) {
 		}
 		const gameLeafletData = await client.query(
 			`SELECT * ` +
-				`FROM public.game_leaflet ` +
+				`FROM gorilla_schema.game_leaflet ` +
 				`WHERE game_session_id = ${gameId};`
 		);
 		message.channel.send(`**Turns as Active Player**`);
@@ -1393,7 +1388,7 @@ async function playerTurnsTaken(message) {
 			rowMode: "array",
 			text:
 				`SELECT turns_as_active_player ` +
-				`FROM public.game_leaflet ` +
+				`FROM gorilla_schema.game_leaflet ` +
 				`WHERE player_id = ${message.member.id} ` +
 				`AND text_channel_id = ${message.channel.id} ` +
 				`AND game_is_active = true;`,
@@ -1413,7 +1408,7 @@ async function queuedPlayerUpdate(message) {
 			gameId = results;
 		});
 		client.query(
-			`UPDATE public.game_leaflet ` +
+			`UPDATE gorilla_schema.game_leaflet ` +
 				`SET playing = true, ` +
 				`queued = false ` +
 				`WHERE game_session_id = ${gameId} ` +
@@ -1435,51 +1430,51 @@ async function resetTable(gameId) {
 			rowMode: "array",
 			text:
 				`SELECT text_channel_id ` +
-				`FROM public.games ` +
+				`FROM gorilla_schema.games ` +
 				`WHERE game_id = ${gameId} ` +
 				`ORDER BY message_timestamp DESC LIMIT 1;`,
 		});
 		client.query(
-			`UPDATE public.games ` +
+			`UPDATE gorilla_schema.games ` +
 				`SET game_is_active = false ` +
 				`WHERE game_id = ${gameId}`
 		);
 		// client.query(
-		// 	`UPDATE public.turns ` +
+		// 	`UPDATE gorilla_schema.turns ` +
 		// 	`SET game_is_active = false, ` +
 		// 	`turn_is_active = false, ` +
 		// 	`title_tagline_is_submitted = true `
 		// 	`WHERE game_session_id = ${gameId}`
 		// );
 		client.query(
-			`UPDATE public.turns ` +
+			`UPDATE gorilla_schema.turns ` +
 				`SET game_is_active = false ` +
 				`WHERE game_session_id = ${gameId}`
 		);
 		client.query(
-			`UPDATE public.turns ` +
+			`UPDATE gorilla_schema.turns ` +
 				`SET turn_is_active = false ` +
 				`WHERE game_session_id = ${gameId}`
 		);
 		client.query(
-			`UPDATE public.turns ` +
+			`UPDATE gorilla_schema.turns ` +
 				`SET title_tagline_is_submitted = true ` +
 				`WHERE game_session_id = ${gameId}`
 		);
 		// client.query(
-		// 	`UPDATE public.game_leaflet ` +
+		// 	`UPDATE gorilla_schema.game_leaflet ` +
 		// 	`SET game_is_active = false, ` +
 		// 	`playing = false, ` +
 		// 	`queued = false ` +
 		// 	`WHERE game_session_id = ${gameId}`
 		// );
 		client.query(
-			`UPDATE public.game_leaflet ` +
+			`UPDATE gorilla_schema.game_leaflet ` +
 				`SET game_is_active = false ` +
 				`WHERE game_session_id = ${gameId}`
 		);
 		client.query(
-			`UPDATE public.game_leaflet ` +
+			`UPDATE gorilla_schema.game_leaflet ` +
 				`SET playing = false, ` +
 				`queued = false ` +
 				`WHERE game_session_id = ${gameId}`
@@ -1547,7 +1542,7 @@ function roll_for_game(message) {
 			await queuedPlayerUpdate(message);
 			const gameLeafletData = await client.query(
 				`SELECT * ` +
-					`FROM public.game_leaflet ` +
+					`FROM gorilla_schema.game_leaflet ` +
 					`WHERE player_id = ${message.member.id} ` +
 					`AND game_is_active = true `
 			);
@@ -1581,7 +1576,7 @@ function roll_for_game(message) {
 			if (turnsAsActivePlayer == 0) {
 				turnsAsActivePlayer += 1;
 				await client.query(
-					`UPDATE public.game_leaflet ` +
+					`UPDATE gorilla_schema.game_leaflet ` +
 						`SET turns_as_active_player = 1 ` +
 						`WHERE player_id = ${message.member.id} ` +
 						`AND game_is_active = true;`
@@ -1589,7 +1584,7 @@ function roll_for_game(message) {
 			} else if (turnsAsActivePlayer == 1) {
 				turnsAsActivePlayer += 1;
 				await client.query(
-					`UPDATE public.game_leaflet ` +
+					`UPDATE gorilla_schema.game_leaflet ` +
 						`SET turns_as_active_player = 2 ` +
 						`WHERE player_id = ${message.member.id} ` +
 						`AND game_is_active = true;`
@@ -1598,7 +1593,7 @@ function roll_for_game(message) {
 					rowMode: "array",
 					text:
 						`SELECT title_tagline ` +
-						`FROM public.turns ` +
+						`FROM gorilla_schema.turns ` +
 						`WHERE active_player_id = ${message.member.id} ` +
 						`AND game_is_active = true ` +
 						`AND point_earned = 1 ` +
@@ -1610,7 +1605,7 @@ function roll_for_game(message) {
 				rowMode: "array",
 				text:
 					`SELECT game_theme ` +
-					`FROM public.games ` +
+					`FROM gorilla_schema.games ` +
 					`WHERE text_channel_id = ${message.channel.id} ` +
 					`AND game_is_active = true ` +
 					`ORDER BY message_timestamp DESC LIMIT 1;`,
@@ -1635,14 +1630,14 @@ function roll_for_game(message) {
 				rowMode: "array",
 				text:
 					`SELECT guild_id ` +
-					`FROM public.games ` +
+					`FROM gorilla_schema.games ` +
 					`WHERE text_channel_id = ${message.channel.id} ` +
 					`AND game_is_active = true ` +
 					`ORDER BY message_timestamp DESC LIMIT 1;`,
 			});
 			const playersFromDatabase = await client.query(
 				`SELECT * ` +
-					`FROM public.game_leaflet ` +
+					`FROM gorilla_schema.game_leaflet ` +
 					`WHERE text_channel_id = ${message.channel.id} ` +
 					`AND game_is_active = true ` +
 					`AND playing = true ` +
@@ -1711,7 +1706,7 @@ function roll_for_game(message) {
 								rowMode: "array",
 								text:
 									`SELECT game_theme ` +
-									`FROM public.games ` +
+									`FROM gorilla_schema.games ` +
 									`WHERE text_channel_id = ${message.channel.id} ` +
 									`AND game_is_active = true ` +
 									`ORDER BY message_timestamp DESC LIMIT 1;`,
@@ -1741,7 +1736,7 @@ function roll_for_game(message) {
 							};
 							await client.query("BEGIN");
 							const prepStmntKeys =
-								`INSERT INTO public.turns(game_session_id, game_is_active, ` +
+								`INSERT INTO gorilla_schema.turns(game_session_id, game_is_active, ` +
 								`turn_is_active, readable_timestamp, message_timestamp, ` +
 								`category_name, category_id, text_channel_id, ` +
 								`message_id, game_theme, active_player_id, active_player_username, ` +
@@ -1800,7 +1795,7 @@ async function score(gameId) {
 	try {
 		const gameLeafletData = await client.query(
 			`SELECT * ` +
-				`FROM public.game_leaflet ` +
+				`FROM gorilla_schema.game_leaflet ` +
 				`WHERE game_session_id = ${gameId};`
 		);
 		if (gameLeafletData.rows.length == 0) {
@@ -1841,11 +1836,6 @@ async function score(gameId) {
 				}
 			});
 		});
-		// })().catch((err) => {
-		// 	dmError(err);
-		// 	console.error(err.stack);
-		// });
-		// }
 	} catch (err) {
 		console.log(err.stack);
 		dmError(err);
@@ -1862,7 +1852,7 @@ async function sendToTextChannel(gameSessionID) {
 			rowMode: "array",
 			text:
 				`SELECT turns_id ` +
-				`FROM public.turns ` +
+				`FROM gorilla_schema.turns ` +
 				`WHERE game_session_id = ${gameSessionID} ` +
 				`AND turn_is_active = true`,
 		});
@@ -1872,7 +1862,7 @@ async function sendToTextChannel(gameSessionID) {
 			rowMode: "array",
 			text:
 				`SELECT active_player_id ` +
-				`FROM public.turns ` +
+				`FROM gorilla_schema.turns ` +
 				`WHERE game_session_id = ${gameSessionID} ` +
 				`AND turn_is_active = true ` +
 				`ORDER BY message_timestamp DESC LIMIT 1`,
@@ -1881,14 +1871,14 @@ async function sendToTextChannel(gameSessionID) {
 			rowMode: "array",
 			text:
 				`SELECT turns_id ` +
-				`FROM public.turns ` +
+				`FROM gorilla_schema.turns ` +
 				`WHERE game_session_id = ${gameSessionID} ` +
 				`AND turn_is_active = true ` +
 				`AND title_tagline_is_submitted = true `,
 		});
 		const gameLeafletData = await client.query(
 			`SELECT * ` +
-				`FROM public.game_leaflet ` +
+				`FROM gorilla_schema.game_leaflet ` +
 				`WHERE player_id = ${activePlayer.rows} ` +
 				`AND game_session_id = ${gameSessionID}`
 		);
@@ -1924,7 +1914,7 @@ async function sendToTextChannel(gameSessionID) {
 					});
 				const allTaglines = await client.query(
 					`SELECT * ` +
-						`FROM public.turns ` +
+						`FROM gorilla_schema.turns ` +
 						`WHERE game_session_id = ${gameSessionID} ` +
 						`AND turn_is_active = true ` +
 						`ORDER BY RANDOM()`
@@ -2005,7 +1995,7 @@ async function startGame(message) {
 		};
 		await client.query("BEGIN");
 		const insertGameStartText =
-			`INSERT INTO public.games(game_is_active, readable_timestamp, message_timestamp, ` +
+			`INSERT INTO gorilla_schema.games(game_is_active, readable_timestamp, message_timestamp, ` +
 			`guild_name, guild_id, category_name, category_id, text_channel_id, ` +
 			`message_id, game_theme, theme_category_roll_array, ` +
 			`title_judge_roll_array, tagline_judge_roll_array, author_id, author_username) ` +
@@ -2060,7 +2050,7 @@ async function tableRoleAllLeave(message, gameId) {
 			rowMode: "array",
 			text:
 				`SELECT category_name ` +
-				`FROM public.games ` +
+				`FROM gorilla_schema.games ` +
 				`WHERE game_id = ${gameId} ` +
 				`ORDER BY message_timestamp DESC LIMIT 1;`,
 		});
@@ -2068,7 +2058,7 @@ async function tableRoleAllLeave(message, gameId) {
 			rowMode: "array",
 			text:
 				`SELECT guild_id ` +
-				`FROM public.games ` +
+				`FROM gorilla_schema.games ` +
 				`WHERE game_id = ${gameId} ` +
 				`ORDER BY message_timestamp DESC LIMIT 1;`,
 		});
@@ -2076,7 +2066,7 @@ async function tableRoleAllLeave(message, gameId) {
 		// console.log(`GUILD ID----------------------: ${guildIdData.rows}`);
 		const gameLeafletData = await client.query(
 			`SELECT * ` +
-				`FROM public.game_leaflet ` +
+				`FROM gorilla_schema.game_leaflet ` +
 				`WHERE game_session_id = ${gameId};`
 		);
 		var role = message.guild.roles.cache.find(
@@ -2148,7 +2138,7 @@ async function titleTaglineFromPlayer(message) {
 			rowMode: "array",
 			text:
 				`SELECT title_tagline_is_submitted ` +
-				`FROM public.turns ` +
+				`FROM gorilla_schema.turns ` +
 				`WHERE player_id = ${message.author.id} ` +
 				`ORDER BY message_timestamp DESC LIMIT 1;`,
 		});
@@ -2158,30 +2148,30 @@ async function titleTaglineFromPlayer(message) {
 		let titleTagline = clean(message.content);
 		console.log(`${message.author.username} sent ${titleTagline}`);
 		await client.query(
-			`UPDATE public.turns ` +
+			`UPDATE gorilla_schema.turns ` +
 				`SET title_tagline = $$${titleTagline}$$ ` +
 				`WHERE player_id = ${message.author.id} ` +
 				`AND turn_is_active = true ` +
-				`AND message_timestamp = (SELECT MAX(message_timestamp) from public.turns);`
+				`AND message_timestamp = (SELECT MAX(message_timestamp) from gorilla_schema.turns);`
 		);
 		const lettersGiven = await client.query({
 			rowMode: "array",
 			text:
 				`SELECT letters_given ` +
-				`FROM public.turns ` +
+				`FROM gorilla_schema.turns ` +
 				`WHERE title_tagline = $$${titleTagline}$$ ` +
 				`AND turn_is_active = true LIMIT 1;`,
 		});
 
 		await client.query(
-			`UPDATE public.turns ` +
+			`UPDATE gorilla_schema.turns ` +
 				`SET dice_and_tagline = $$${lettersGiven.rows}: ${titleTagline}$$ ` +
 				`WHERE player_id = ${message.author.id} ` +
 				`AND turn_is_active = true ` +
-				`AND message_timestamp = (SELECT MAX(message_timestamp) from public.turns);`
+				`AND message_timestamp = (SELECT MAX(message_timestamp) from gorilla_schema.turns);`
 		);
 		await client.query(
-			`UPDATE public.turns ` +
+			`UPDATE gorilla_schema.turns ` +
 				`SET title_tagline_is_submitted = true ` +
 				`WHERE player_id = ${message.author.id} ` +
 				`AND title_tagline_is_submitted = false;`
@@ -2190,7 +2180,7 @@ async function titleTaglineFromPlayer(message) {
 			rowMode: "array",
 			text:
 				`SELECT game_session_id ` +
-				`FROM public.turns ` +
+				`FROM gorilla_schema.turns ` +
 				`WHERE title_tagline = $$${titleTagline}$$ ` +
 				`ORDER BY message_timestamp DESC LIMIT 1;`,
 		});
@@ -2215,7 +2205,7 @@ async function turnIsInProgress(message) {
 			rowMode: "array",
 			text:
 				`SELECT game_id ` +
-				`FROM public.games ` +
+				`FROM gorilla_schema.games ` +
 				`WHERE category_id = ${message.channel.parent.id} ` +
 				`AND game_is_active = true ` +
 				`ORDER BY message_timestamp DESC LIMIT 1;`,
@@ -2225,7 +2215,7 @@ async function turnIsInProgress(message) {
 			rowMode: "array",
 			text:
 				`SELECT game_session_id ` +
-				`FROM public.turns ` +
+				`FROM gorilla_schema.turns ` +
 				`WHERE game_session_id = ${activeGameId} ` +
 				`AND turn_is_active = true ` +
 				`ORDER BY message_timestamp DESC LIMIT 1;`,
@@ -2238,7 +2228,7 @@ async function turnIsInProgress(message) {
 				rowMode: "array",
 				text:
 					`SELECT turns_id ` +
-					`FROM public.turns ` +
+					`FROM gorilla_schema.turns ` +
 					`WHERE text_channel_id = ${message.channel.id} ` +
 					`AND turn_is_active = true ` +
 					`AND point_earned = 1 ` +
@@ -2434,7 +2424,7 @@ async function messageArchive(message) {
 		};
 		await client.query("BEGIN");
 		const insertMessageArchiveText =
-			`INSERT INTO public.message_archive(readable_timestamp, guild_name, guild_id, ` +
+			`INSERT INTO gorilla_schema.message_archive(readable_timestamp, guild_name, guild_id, ` +
 			`channel_name, channel_id, message_id, author_id, author_username, ` +
 			`member_nickname, message_timestamp, message_content) ` +
 			`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`;
@@ -2477,7 +2467,7 @@ async function dmArchive(message) {
 		};
 		await client.query("BEGIN");
 		const insertDmArchiveText =
-			`INSERT INTO public.dm_archive(readable_timestamp, author_username, ` +
+			`INSERT INTO gorilla_schema.dm_archive(readable_timestamp, author_username, ` +
 			`author_id, message_timestamp, message_content) ` +
 			`VALUES ($1, $2, $3, $4, $5)`;
 		const insertDmArchiveValues = [
