@@ -849,6 +849,9 @@ async function datamuse(message) {
 		if (!params.length) {
 			return message.channel.send("You need to supply a search term!");
 		}
+		if (params[2].length > 1 || !isNaN(params[2])) {
+			return message.channel.send(`"${params[2]}" won't work. You must use a single letter to search for words starting with that letter.`);
+		}
 		const list = await fetch(
 			`http://api.datamuse.com/words?ml=${params[1]}&sp=${params[2]}*`
 		).then((response) => response.json());
