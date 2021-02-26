@@ -288,7 +288,6 @@ bot.on("message", (message) => {
 			} catch (err) {
 				console.log(err.stack);
 				dmError(err);
-				throw err;
 			}
 			break;
 
@@ -481,7 +480,6 @@ bot.on("message", (message) => {
 						}
 					} catch (err) {
 						dmError(err);
-						throw err;
 					} finally {
 						client.release();
 					}
@@ -786,7 +784,6 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 		await client.query("ROLLBACK");
 		console.log(err.stack);
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -834,7 +831,6 @@ bot.on("messageReactionRemove", async (reaction, user) => {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -871,7 +867,6 @@ async function datamuse(message) {
 	} catch (err) {
 		console.log(err.stack);
 		dmError(err);
-		throw err;
 	}
 }
 
@@ -914,7 +909,6 @@ async function endTurn(message) {
 	} catch (err) {
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -940,7 +934,6 @@ async function gameIsInProgress(message) {
 		}
 	} catch (err) {
 		dmError(err);
-		throw err;
 	}
 }
 
@@ -965,7 +958,6 @@ async function getGameId(message) {
 		}
 	} catch (err) {
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1078,7 +1070,6 @@ async function removePlayer(message, playerId) { //REMOVE TAble ROLE TO SHOW PLA
 	} catch (err) {
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1256,7 +1247,6 @@ async function play(message) { //ADD ROLE UPDATE TO SHOW PLAYER AT A TABLE
 	} catch (err) {
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1278,7 +1268,6 @@ async function activePlayerCount(channelGameId) {
 		}
 	} catch (err) {
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1306,7 +1295,6 @@ async function playerInActiveGame(message) {
 		}
 	} catch (err) {
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1341,7 +1329,6 @@ async function playerInAnotherGame(message) {
 		return;
 	} catch (err) {
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1379,7 +1366,6 @@ async function players(message) {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1400,7 +1386,6 @@ async function playerTurnsTaken(message) {
 		return numberOfTurns.rows;
 	} catch (err) {
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1423,7 +1408,6 @@ async function queuedPlayerUpdate(message) {
 	} catch (err) {
 		await client.query("ROLLBACK");
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1497,7 +1481,6 @@ async function resetTable(gameId) { //REMOVE TABLE ROLE FROM ALL PLAYERS IN GAME
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1775,7 +1758,6 @@ function roll_for_game(message) {
 						} catch (err) {
 							dmError(err);
 							await client.query("ROLLBACK");
-							throw err;
 						} finally {
 							client.release();
 						}
@@ -1788,7 +1770,6 @@ function roll_for_game(message) {
 		} catch (err) {
 			dmError(err);
 			await client.query("ROLLBACK");
-			throw err;
 		} finally {
 			client.release();
 		}
@@ -1854,7 +1835,6 @@ async function score(gameId) {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -1955,7 +1935,6 @@ async function sendToTextChannel(gameSessionID) {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -2054,7 +2033,6 @@ async function startGame(message) {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -2133,7 +2111,6 @@ async function titleTaglineFromPlayer(message) {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -2193,7 +2170,6 @@ async function turnIsInProgress(message) {
 	} catch (err) {
 		console.log(err.stack);
 		dmError(err);
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -2396,7 +2372,6 @@ async function messageArchive(message) {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
@@ -2430,7 +2405,6 @@ async function dmArchive(message) {
 		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
-		throw err;
 	} finally {
 		client.release();
 	}
