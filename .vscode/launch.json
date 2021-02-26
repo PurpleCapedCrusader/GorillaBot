@@ -12,7 +12,7 @@
                 "<node_internals>/**",
                 "node_modules/**/*.js"
             ],
-            "program": "${workspaceFolder}/bot.js"
+            "program": "${workspaceFolder}/gorilla.js"
         }
     ]
 }
