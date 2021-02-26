@@ -1487,7 +1487,7 @@ async function resetTable(gameId) { //REMOVE TABLE ROLE FROM ALL PLAYERS IN GAME
 			gameChannel.send(
 				`\n\u200b\n\u200bType **!Bands**, **!College Courses**, ` +
 					`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
-					`**!Products** to choose your theme.`
+					`**!Products** to choose your theme.\n\u200b\n\u200b`
 			);
 		});
 	} catch (err) {
@@ -2023,8 +2023,9 @@ async function startGame(message) {
 		await client.query(insertGameStartText, insertGameStartValues);
 		await client.query("COMMIT");
 
-		message.channel.send(`**Starting Gorilla Marketing**`);
+		message.channel.send(`:banana: :gorilla: :banana:  **Starting Gorilla Marketing**  :banana: :orangutan: :banana:\n\u200b`);
 		message.channel.send(
+			`Join this game with the **!play** command.\n\u200b\n\u200b` +
 			`**1**. **!roll** - Sets Active Player and starts turn.\n\u200b` +
 				`**2**. All players go to GorillaBot DM.\n\u200b` +
 				`   - Active Player: add a reaction emoji to the award you want to give.\n\u200b` +
@@ -2033,6 +2034,9 @@ async function startGame(message) {
 				`**4**. Active Player: add a reaction emoji to the best title or tagline.\n\u200b` +
 				`**5**. Repeat and have fun!!!\n\u200b\n\u200b` +
 				`Commands:\n\u200b` +
+				`  **!leave** - leave your game.\n\u200b` +
+				`  **!remove @username** - remove an inactive player.\n\u200b` +
+				`  **!play** - join or re-join a game.\n\u200b` +
 				`  **!reset** - clears the table for a new game.\n\u200b` +
 				`  **!score** - displays current scores.\n\u200b` +
 				`  **!help** - full list of commands.\n\u200b`
