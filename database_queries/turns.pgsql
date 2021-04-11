@@ -1,0 +1,1 @@
+SELECT * FROM gorilla_schema.turns ORDER BY turns_id DESC;

@@ -1,10 +1,12 @@
 const Discord = require("discord.js");
 const config = require("./config.json");
-var dbCreds = require("./dbCreds.js");
-const { lowerCase } = require("lower-case");
-var gameRooms = require("./gameRooms.js");
+const dbCreds = require("./dbCreds.js");
+const gameRooms = require("./gameRooms.js");
+const activityStatus = require("./activityStatus.js");
+const dbQuery = require("./dbQuery.js");
 const databaseCheck = require("./databaseBuilder.js");
-var _ = require("lodash");
+const { lowerCase } = require("lower-case");
+const _ = require("lodash");
 const fetch = require("node-fetch");
 const bot = new Discord.Client();
 const PREFIX = config.prefix;
@@ -13,6 +15,7 @@ const { string } = require("check-types");
 const { get } = require("lodash");
 const { stringify } = require("querystring");
 const pool = new Pool(dbCreds);
+
 bot.on("ready", () => {
 	console.log(
 		`${getTimeStamp()} :: GorillaBot is ready to serve on ${
@@ -23,10 +26,6 @@ bot.on("ready", () => {
 	adminNotify(`GorillaBot started: ${getTimeStamp()}`);
 	databaseCheck.createSchemaIfNotExist;
 });
-
-// TODO: Additional features ideas:
-// Display total standings for all players of all games
-// Fix all players leaving a game before the first roll
 
 // error catch-all
 bot.on("error", (e) => console.error(`ERROR: ${getTimeStamp()} :: ${e}`));
@@ -301,7 +300,6 @@ bot.on("message", (message) => {
 					removePlayer(message, playerId);
 					tableRoleKick(message, playerId);
 				} catch (err) {
-					console.log(err.stack);
 					dmError(err);
 				}
 			}
@@ -433,7 +431,6 @@ bot.on("message", (message) => {
 													})
 													.catch((err) => {
 														dmError(err);
-														console.error(err);
 													});
 											} else {
 												message.channel.send(
@@ -448,12 +445,10 @@ bot.on("message", (message) => {
 							})
 							.catch((err) => {
 								dmError(err);
-								console.error(err);
 							});
 					})
 					.catch((err) => {
 						dmError(err);
-						console.error(err);
 					});
 			}
 			break;
@@ -490,7 +485,6 @@ bot.on("message", (message) => {
 					}
 				})().catch((err) => {
 					dmError(err);
-					console.error(err.stack);
 				});
 			}
 			break;
@@ -550,13 +544,11 @@ bot.on("message", (message) => {
 									})
 									.catch((err) => {
 										dmError(err);
-										console.error(err);
 									});
 							}
 						})
 						.catch((err) => {
 							dmError(err);
-							console.error(err);
 						});
 				} else {
 					message.channel.send(
@@ -586,7 +578,7 @@ bot.on("message", (message) => {
 bot.on("messageReactionAdd", async (reaction, user) => {
 	// When we receive a reaction we check if the reaction is partial or not
 	if (reaction.partial) {
-		// If the message this reaction belongs to was removed the fetching might result in an API error, which we need to handle
+		// If the user message this reaction belongs to was removed the fetching might result in an API error, which we need to handle
 		console.log("messageReactionAdd Partial");
 		try {
 			await reaction.fetch();
@@ -788,7 +780,6 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 		}
 	} catch (err) {
 		await client.query("ROLLBACK");
-		console.log(err.stack);
 		dmError(err);
 	} finally {
 		client.release();
@@ -834,7 +825,6 @@ bot.on("messageReactionRemove", async (reaction, user) => {
 			);
 		}
 	} catch (err) {
-		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
 	} finally {
@@ -874,7 +864,6 @@ async function datamuse(message) {
 			}
 		}
 	} catch (err) {
-		console.log(err.stack);
 		dmError(err);
 	}
 }
@@ -894,6 +883,7 @@ function clean(text) {
 function dmError(err) {
 	let adminUser = bot.users.cache.get(`${config.adminID}`);
 	adminUser.send(`ERROR: ${getTimeStamp()} :: ${err.stack}`);
+	console.log(`ERROR: ${getTimeStamp()} :: ${err.stack}`);
 }
 
 function adminNotify(msg) {
@@ -916,8 +906,8 @@ async function endTurn(message) {
             WHERE text_channel_id = ${message.channel.id};`
 		);
 	} catch (err) {
-		dmError(err);
-		await client.query("ROLLBACK");
+		await client.query("ROLLBACK")
+		dmError(err);;
 	} finally {
 		client.release();
 	}
@@ -934,6 +924,7 @@ async function gameIsInProgress(message) {
 				`WHERE text_channel_id = ${message.channel.id} ` +
 				`ORDER BY message_timestamp DESC LIMIT 1`,
 		});
+		//TODO - move this to after error
 		await client.release();
 		console.log(`gameIsInProgres() game_is_active = ${result.rows}`);
 		if (result.rows.length === 0) {
@@ -943,7 +934,10 @@ async function gameIsInProgress(message) {
 		}
 	} catch (err) {
 		dmError(err);
-	}
+	} 
+	// finally {
+	// 	client.release();
+	// }
 }
 
 async function getGameId(message) {
@@ -1071,17 +1065,15 @@ async function removePlayer(message, playerId) { //REMOVE TAble ROLE TO SHOW PLA
 						}
 					})().catch((err) => {
 						dmError(err);
-						console.error(err.stack);
 					});
 				}
 			})
 			.catch((err) => {
 				dmError(err);
-				console.error(err);
 			});
 	} catch (err) {
-		dmError(err);
 		await client.query("ROLLBACK");
+		dmError(err);
 	} finally {
 		client.release();
 	}
@@ -1104,7 +1096,6 @@ async function play(message) { //ADD ROLE UPDATE TO SHOW PLAYER AT A TABLE
 			})
 			.catch((err) => {
 				dmError(err);
-				console.error(err);
 			});
 		const playersGame = await client.query(
 			`SELECT * ` +
@@ -1258,8 +1249,8 @@ async function play(message) { //ADD ROLE UPDATE TO SHOW PLAYER AT A TABLE
 			tableRoleJoin(message);
 		}
 	} catch (err) {
-		dmError(err);
 		await client.query("ROLLBACK");
+		dmError(err);
 	} finally {
 		client.release();
 	}
@@ -1376,7 +1367,6 @@ async function players(message) {
 			}
 		});
 	} catch (err) {
-		console.log(err.stack);
 		dmError(err);
 		await client.query("ROLLBACK");
 	} finally {
@@ -1491,9 +1481,8 @@ async function resetTable(gameId) { //REMOVE TABLE ROLE FROM ALL PLAYERS IN GAME
 			);
 		});
 	} catch (err) {
-		console.log(err.stack);
-		dmError(err);
 		await client.query("ROLLBACK");
+		dmError(err);
 	} finally {
 		client.release();
 	}
@@ -1769,26 +1758,24 @@ function roll_for_game(message) {
 							await client.query(prepStmntKeys, prepStmntValues);
 							await client.query("COMMIT");
 						} catch (err) {
-							dmError(err);
 							await client.query("ROLLBACK");
+							dmError(err);
 						} finally {
 							client.release();
 						}
 					})().catch((err) => {
 						dmError(err);
-						console.error(err.stack);
 					});
 				}
 			});
 		} catch (err) {
-			dmError(err);
 			await client.query("ROLLBACK");
+			dmError(err);
 		} finally {
 			client.release();
 		}
 	})().catch((err) => {
 		dmError(err);
-		console.error(err.stack);
 	});
 }
 
@@ -1840,15 +1827,15 @@ async function score(gameId) {
 			});
 		});
 	} catch (err) {
-		console.log(err.stack);
-		dmError(err);
 		await client.query("ROLLBACK");
+		dmError(err);
 	} finally {
 		client.release();
 	}
 }
 
 async function sendToTextChannel(gameSessionID) {
+	console.log(`sendToTextChannel - game_session_id = ${gameSessionID}`)
 	const client = await pool.connect();
 	try {
 		const playerCount = await client.query({
@@ -1879,6 +1866,14 @@ async function sendToTextChannel(gameSessionID) {
 				`AND turn_is_active = true ` +
 				`AND title_tagline_is_submitted = true `,
 		});
+		const guild_Id = await client.query({
+			rowMode: "array",
+			text:
+				`SELECT guild_id ` +
+				`FROM gorilla_schema.games ` +
+				`WHERE game_id = ${gameSessionID} ` +
+				`AND game_is_active = true`,
+		});
 		const gameLeafletData = await client.query(
 			`SELECT * ` +
 				`FROM gorilla_schema.game_leaflet ` +
@@ -1891,58 +1886,190 @@ async function sendToTextChannel(gameSessionID) {
 			taglineJudge = row.tagline_judge_choice;
 			textChannelId = row.text_channel_id;
 		});
-		var awardChoice;
+		var waitingForResponsesMessage = await getWaitingForResponsesMessageIdFromDB(gameSessionID)
+		let guildId = guild_Id.rows;
 		console.log(`turnsAsActivePlayer = ${turnsAsActivePlayer}`);
 		console.log(`titleJudge = ${titleJudge}`);
 		console.log(`taglineJudge = ${taglineJudge}`);
 		console.log(`textChannelId = ${textChannelId}`);
+		console.log(`playerCount.rows.length = ${playerCount.rows.length}`);
+		console.log(`taglineCount.rows.length = ${taglineCount.rows.length}`);
+		console.log(`waitingForResponsesMessageId = ${waitingForResponsesMessage}`);
+		console.log(`guildId = ${guildId}`);
+		var awardChoice;
 		if (turnsAsActivePlayer == 1) {
 			awardChoice = titleJudge;
 		}
 		if (turnsAsActivePlayer == 2) {
 			awardChoice = taglineJudge;
 		}
+		var totalNumberOfPlayers = playerCount.rows.length + 1;
+		var numberOfTitlesAndTaglinesSubmitted = taglineCount.rows.length;
+		var activePlayerSubmitted = 0;
 		if (awardChoice != null) {
-			if (playerCount.rows.length == taglineCount.rows.length) {
-				bot.channels
-					.fetch(`${textChannelId}`)
-					.then((results) => {
+			activePlayerSubmitted = 1;
+		}
+		var totalNumberOfSubmissions = numberOfTitlesAndTaglinesSubmitted + activePlayerSubmitted;
+		if (totalNumberOfPlayers == totalNumberOfSubmissions) {
+			bot.channels
+				.fetch(`${textChannelId}`)
+				.then((results) => {
 						textChannel = results;
 						console.log(`textChannel = ${textChannel}`);
+						// delete previous "waiting" message if there is one
+						if (waitingForResponsesMessage != 0) {
+							textChannel.messages.fetch({
+									around: waitingForResponsesMessage,
+									limit: 1
+								})
+								.then(messages => {
+									messages.first().delete();
+								});
+						}
 						textChannel.send(`Award: **${awardChoice}**`);
+					})
+					.then(updateLastMessageID(gameSessionID, 0))
+					.catch((err) => {
+						dmError(err);
+					});
+			const allTaglines = await client.query(
+				`SELECT * ` +
+					`FROM gorilla_schema.turns ` +
+					`WHERE game_session_id = ${gameSessionID} ` +
+					`AND turn_is_active = true ` +
+					`ORDER BY RANDOM()`
+			);
+			allTaglines.rows.forEach((row) => {
+				bot.channels
+					.fetch(`${row.text_channel_id}`)
+					.then((results) => {
+						gameChannel = results;
+						console.log(`gameChannel = ${gameChannel}`);
+						gameChannel.send(
+							`${row.letters_given}: ${row.title_tagline}`
+						);
 					})
 					.catch((err) => {
 						dmError(err);
-						console.error(err);
 					});
-				const allTaglines = await client.query(
-					`SELECT * ` +
-						`FROM gorilla_schema.turns ` +
-						`WHERE game_session_id = ${gameSessionID} ` +
-						`AND turn_is_active = true ` +
-						`ORDER BY RANDOM()`
-				);
-				allTaglines.rows.forEach((row) => {
-					bot.channels
-						.fetch(`${row.text_channel_id}`)
-						.then((results) => {
-							gameChannel = results;
-							console.log(`gameChannel = ${gameChannel}`);
-							gameChannel.send(
-								`${row.letters_given}: ${row.title_tagline}`
-							);
-						})
-						.catch((err) => {
-							dmError(err);
-							console.error(err);
-						});
+			});
+		// sends a message to the text channel: "Waiting on X players"
+		// if "Waiting on X players" was the last message, update it
+		// if "Waiting on X players" is not the last message send a new one.
+
+		} else if (totalNumberOfSubmissions < totalNumberOfPlayers) {
+			bot.channels
+				.fetch(`${textChannelId}`)
+				.then((results) => {
+					channel = results;
+					console.log(`channel = ${channel}`);
+					console.log(`allPlayerSubmissions = ${totalNumberOfSubmissions}`);
+					console.log(`totalNumberOfPlayers = ${totalNumberOfPlayers}`);
+
+					// Get messages
+					if (totalNumberOfPlayers - totalNumberOfSubmissions > 1) {
+						console.log(`Inside IF totalNumberOfPlayers - totalNumberOfSubmissions > 1`);
+						deleteMessageByID(textChannelId, waitingForResponsesMessage)
+						.then(waitingForResponsesMessage = channel.send(`Waiting on **${totalNumberOfPlayers - totalNumberOfSubmissions}** players.`)
+						// .then(sentMessage => waitingForResponsesMessageId = sentMessage.id)
+						// .then(waitingForResponsesMessage => console.log(`.then(message => = ${JSON.stringify(waitingForResponsesMessage)}`))
+						.then(waitingForResponsesMessage => updateLastMessageID(gameSessionID, waitingForResponsesMessage.id)))
+						// .then(console.log(`waitingForResponsesMessageId = ${waitingForResponsesMessage.id}`)))
+					}
+					// if (totalNumberOfPlayers - totalNumberOfSubmissions > 1) {
+					// 	console.log(`Inside IF totalNumberOfPlayers - totalNumberOfSubmissions > 1`);
+					// 	deleteMessageByID(textChannelId, waitingForResponsesMessageId)
+					// 		.then(channel.send(`Waiting on **${totalNumberOfPlayers - totalNumberOfSubmissions}** players.`))
+					// 		.then(updateLastMessageID(gameSessionID, channel.lastMessageID))
+					// 	console.log(`channel.lastMessageID = ${channel.lastMessageID}`)
+					// }
+					if (totalNumberOfPlayers - totalNumberOfSubmissions == 1) {
+						console.log(`Inside IF totalNumberOfPlayers - totalNumberOfSubmissions == 1`);
+						deleteMessageByID(textChannelId, waitingForResponsesMessage)
+						.then(waitingForResponsesMessage = channel.send(`Waiting on **${totalNumberOfPlayers - totalNumberOfSubmissions}** more player.`)
+						// .then(sentMessage => waitingForResponsesMessageId = sentMessage.id)
+						// .then(waitingForResponsesMessage => console.log(`.then(message => = ${JSON.stringify(waitingForResponsesMessage)}`))
+						.then(waitingForResponsesMessage => updateLastMessageID(gameSessionID, waitingForResponsesMessage.id)))
+						// .then(console.log(`waitingForResponsesMessageId = ${waitingForResponsesMessage.id}`)))
+					}
+					// if (totalNumberOfPlayers - totalNumberOfSubmissions == 1) {
+					// 	console.log(`Inside IF totalNumberOfPlayers - totalNumberOfSubmissions == 1`);
+					// 	deleteMessageByID(textChannelId, waitingForResponsesMessageId)
+					// 		.then(channel.send(`Waiting on **${totalNumberOfPlayers - totalNumberOfSubmissions}** more player.`))
+					// 		.then(updateLastMessageID(gameSessionID, channel.lastMessageID));
+					// 	console.log(`channel.lastMessageID = ${channel.lastMessageID}`)
+					// }
+				})
+				.catch((err) => {
+					dmError(err);
 				});
-			}
 		}
 	} catch (err) {
-		console.log(err.stack);
-		dmError(err);
 		await client.query("ROLLBACK");
+		dmError(err);
+	} finally {
+		client.release();
+	}
+}
+
+async function deleteMessageByID(textChannelId, waitingForResponsesMessageId) {
+	try {
+		console.log(`inside deleteMessageByID - waitingForResponsesMessageId = ${waitingForResponsesMessageId}`);
+		if (waitingForResponsesMessageId != 0) {
+			var channel = bot.channels.cache.find(
+				(c) => c.id === `${textChannelId}`
+			);
+			var message = channel.messages.cache.find(
+				(m) => m.id === `${waitingForResponsesMessageId}`
+			);
+			console.log(`deleteMessageByID - messages = ${JSON.stringify(message)}`)
+			await message.delete();
+			// channel.messages.fetch({
+			// 		around: waitingForResponsesMessageId,
+			// 		limit: 1
+			// 	})
+				// .then(messages => {
+				// 	messages.first().edit("This fetched message was edited");
+				// })
+			// console.log(`deleteMessageByID - messages = ${JSON.stringify(message)}`)
+		}
+	} catch (err) {
+		dmError(err);
+	}
+}
+
+async function getWaitingForResponsesMessageIdFromDB(gameSessionId) {
+	const client = await pool.connect();
+	try {
+		const waitingForResponsesMessageId = await client.query({
+			rowMode: "array",
+			text:
+				`SELECT waiting_for_responses_message_id ` +
+				`FROM gorilla_schema.games ` +
+				`WHERE game_id = ${gameSessionId} ` +
+				`AND game_is_active = true ` +
+				`ORDER BY message_timestamp DESC LIMIT 1;`,
+		});
+		console.log(`inside waitingForResponsesMessageId = ${waitingForResponsesMessageId.rows}`);
+		return waitingForResponsesMessageId.rows;
+	} catch (err) {
+		dmError(err);
+	} finally {
+		client.release();
+	}
+}
+
+async function updateLastMessageID(gameSessionID, lastMessageID) {
+	const client = await pool.connect();
+	try {
+		await client.query(
+			`UPDATE gorilla_schema.games \n
+            SET waiting_for_responses_message_id = ${lastMessageID} \n
+            WHERE game_id = ${gameSessionID};`
+		);
+	} catch (err) {
+		await client.query("ROLLBACK");
+		dmError(err);
 	} finally {
 		client.release();
 	}
@@ -1995,14 +2122,15 @@ async function startGame(message) {
 			tagline_judge_roll_array: shuffle(Array.from(Array(27).keys())),
 			author_id: message.author.id,
 			author_username: message.author.username,
+			waiting_for_responses_message_id: 0,
 		};
 		await client.query("BEGIN");
 		const insertGameStartText =
 			`INSERT INTO gorilla_schema.games(game_is_active, readable_timestamp, message_timestamp, ` +
 			`guild_name, guild_id, category_name, category_id, text_channel_id, ` +
 			`message_id, game_theme, theme_category_roll_array, ` +
-			`title_judge_roll_array, tagline_judge_roll_array, author_id, author_username) ` +
-			`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`;
+			`title_judge_roll_array, tagline_judge_roll_array, author_id, author_username, waiting_for_responses_message_id) ` +
+			`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`;
 		const insertGameStartValues = [
 			prepGameStart.game_is_active,
 			prepGameStart.readable_timestamp,
@@ -2019,6 +2147,7 @@ async function startGame(message) {
 			prepGameStart.tagline_judge_roll_array,
 			prepGameStart.author_id,
 			prepGameStart.author_username,
+			prepGameStart.waiting_for_responses_message_id,
 		];
 		await client.query(insertGameStartText, insertGameStartValues);
 		await client.query("COMMIT");
@@ -2038,9 +2167,8 @@ async function startGame(message) {
 				`  **!help** - full list of commands.\n\u200b`
 		);
 	} catch (err) {
-		console.log(err.stack);
-		dmError(err);
 		await client.query("ROLLBACK");
+		dmError(err);
 	} finally {
 		client.release();
 	}
@@ -2088,7 +2216,6 @@ async function tableRoleAllLeave(message, gameId) {
 			player.roles.remove(role).catch(console.error);
 		});
 	} catch (err) {
-		console.log(err.stack);
 		dmError(err);
 	} finally {
 		client.release();
@@ -2189,9 +2316,8 @@ async function titleTaglineFromPlayer(message) {
 		});
 		await sendToTextChannel(gameSessionID.rows);
 	} catch (err) {
-		console.log(err.stack);
-		dmError(err);
 		await client.query("ROLLBACK");
+		dmError(err);
 	} finally {
 		client.release();
 	}
@@ -2249,7 +2375,6 @@ async function turnIsInProgress(message) {
 			}
 		}
 	} catch (err) {
-		console.log(err.stack);
 		dmError(err);
 	} finally {
 		client.release();
@@ -2260,154 +2385,29 @@ async function updateStatus() {
 	var watchPlay = [0, 1, 2, 3, 4];
 	shuffle(watchPlay);
 	if (watchPlay[0] == 0 || watchPlay[0] == 1) {
-		var statusArray = [
-			"Barrel of Monkeys",
-			"Donkey Kong",
-			"Donkey Kong Country",
-			"Diddy Kong Racing",
-			"Donkey Kong Barrel Blast",
-			"Mario Kart",
-			"Gorilla Marketing",
-			"GRASS: Bananaham",
-			"Donkey Kong Jr.",
-			"Banana Blast",
-			"Cheeky Monkey",
-			"Monkey Madness",
-			"Go Ape!",
-			"Rumble in the Jungle",
-			"Bananagrams",
-			"Santorini",
-			"Santorini: New York",
-			"Dice Throne",
-			"Dice Throne Adventures",
-			"Steampunk Rally",
-			"Steampunk Rally Fusion",
-			"Super Motherload",
-			"Brass: Birmingham",
-			"Brass: Lancashire",
-			"SKYRISE",
-			"Santorini App",
-			"with a coconut",
-			"Win, Lose, Or Banana",
-			"Tiny Epic Apes",
-			"One Night Ultimate Were-ape",
-			"Hey, That's My Banana!",
-			"Dominant Species",
-			"Evolution",
-			"Castles of Mad King Kong",
-			"Zooloretto",
-			"A Few Acres of Jungle",
-			"without a full deck",
-			"for keeps",
-			"with fire",
-			"devil's advocate",
-			"in traffic",
-			"bongos",
-			"Fruit Ninja",
-			"Super Monkey Ball",
-			"Ape Escape",
-			"Ape Out",
-			"Dissection: Murder By King Kong",
-			"Monkey Island",
-			"that funky music, white boy",
-			"games with your heart",
-		];
-		shuffle(statusArray);
-		bot.user
-			.setActivity(statusArray[0], {
-				type: "PLAYING",
-			})
-			.then((presence) =>
-				console.log(`Playing ${presence.activities[0].name}`)
-			)
-			.catch((err) => {
-				dmError(err);
-				console.error(err);
-			});
+		var statusArray = activityStatus.boardGames;
+		var activityType = "PLAYING";
 	} else if (watchPlay[0] == 2 || watchPlay[0] == 3) {
-		var statusArray = [
-			"King Kong",
-			"Congo",
-			"Planet of the Apes",
-			"Gorillas in the Mist",
-			"Kong: Skull Island",
-			"Tarzan",
-			"The One and Only Ivan",
-			"George of the Jungle",
-			"Mighty Joe Young",
-			"Bride of the Gorilla",
-			"Queen Kong",
-			"Son of Kong",
-			"Magilla Gorilla",
-			"Curious George",
-			"The Jungle Book",
-			"Bananas In Pyjamas",
-			"12 Monkeys",
-			"Zoboomafoo",
-			"Swingers",
-			"Space Chimps",
-			"Dora The Explorer",
-			"Family Guy",
-			"his weight",
-			"his language",
-			"the clock",
-			"paint dry",
-			"the watchers",
-			"a very slow progress bar",
-			"Animal Planet",
-		];
-		shuffle(statusArray);
-		bot.user
-			.setActivity(statusArray[0], {
-				type: "WATCHING",
-			})
-			.then((presence) =>
-				console.log(`Watching ${presence.activities[0].name}`)
-			)
-			.catch((err) => {
-				dmError(err);
-				console.error(err);
-			});
+		var statusArray = activityStatus.movies;
+		var activityType = "WATCHING";
 	} else if (watchPlay[0] == 4) {
-		var statusArray = [
-			"Monkey, by George Michael",
-			"Brass Monkey, by the Beastie Boys",
-			"Peter Gabriel - Shock The Monkey",
-			"Monkey Wrench, by the Foo Fighters",
-			"The Monkees - Daydream Believer",
-			"Monkey Man, by the Rolling Stones",
-			"Copa Banana, by Barry Manilow",
-			"Gorillaz - Rock The House feat. Del The Funky Homosapien",
-			"My Brother The Ape, by They Might Be Giants",
-			"Bananarama - Venus",
-			"Love Monkey #9, by Bootsauce",
-			"Arctic Monkeys - I Bet You Look Good On The Dancefloor",
-			"Tarzan Boy, by Baltimora",
-			"Jungle Love, by the Steve Miller Band",
-			"Welcome To The Jungle, by Guns N' Roses",
-			"Jungle Love, by Morris Day and The Time",
-			"Bananaphone, by Raffi",
-			"Yes, We Have No Bananas, by Louis Prima",
-			"Banana Boat Song (Day-O), by Harry Belafonte",
-			"Space Monkey, by John Prine",
-			"Tweeter and the Monkey Man, by the Traveling Wilburys",
-			"99 Red Baboons, by Nena",
-			"Code Monkey, by Jonathan Coulton",
-		];
-		shuffle(statusArray);
-		bot.user
-			.setActivity(`${statusArray[0]}`, {
-				type: "LISTENING",
-			})
-			.then((presence) =>
-				console.log(`Listening to ${presence.activities[0].name}`)
-			)
-			.catch((err) => {
-				dmError(err);
-				console.error(err);
-			});
+		var statusArray = activityStatus.songs;
+		var activityType = "LISTENING";
 	}
+	shuffle(statusArray);
+	bot.user
+		.setActivity(`${statusArray[0]}`, {
+			type: activityType,
+		})
+		.then((presence) =>
+			console.log(`${activityType} ${presence.activities[0].name}`)
+		)
+		.catch((err) => {
+			dmError(err);
+		});
 }
+
+
 
 async function messageArchive(message) {
 	const client = await pool.connect();
@@ -2450,9 +2450,8 @@ async function messageArchive(message) {
 		);
 		await client.query("COMMIT");
 	} catch (err) {
-		console.log(err.stack);
-		dmError(err);
 		await client.query("ROLLBACK");
+		dmError(err);
 	} finally {
 		client.release();
 	}
@@ -2483,9 +2482,8 @@ async function dmArchive(message) {
 		await client.query(insertDmArchiveText, insertDmArchiveValues);
 		await client.query("COMMIT");
 	} catch (err) {
-		console.log(err.stack);
-		dmError(err);
 		await client.query("ROLLBACK");
+		dmError(err);
 	} finally {
 		client.release();
 	}

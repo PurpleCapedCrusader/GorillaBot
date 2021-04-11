@@ -1,0 +1,1 @@
+SELECT * FROM gorilla_schema.game_leaflet ORDER BY game_leaflet_id DESC;

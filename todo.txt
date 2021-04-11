@@ -1,0 +1,12 @@
+TODO: Additional features ideas:
+DONE - 1. list 0/4 submitted
+- display the user who recieved the banana award after each turn.
+- automatically close game 1 hour after last activity
+- Fix all players leaving a game before the first roll
+- remove everyone from table roll at end of game
+- Only players can send commands - especially kick and reset
+- Display total standings for all players of all games
+- Display "349 Games Played" in a locked channel like BlackBox
+- Standings / Wins - list the total times you've won games in the server.
+- Award for shortest response time.
+- Answer timer
