@@ -30,6 +30,7 @@ async function createSchemaIfNotExist() {
 			    tagline_judge_roll_array integer[],
                 author_id bigint,
                 author_username character varying(32) COLLATE pg_catalog."default",
+                waiting_for_responses_message_id bigint,
                 CONSTRAINT game_id_pkey PRIMARY KEY (game_id)
             )
             WITH (
