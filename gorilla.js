@@ -138,21 +138,6 @@ bot.on("message", (message) => {
 
 	args[0] = lowerCase(args[0]);
 	switch (args[0]) {
-		// case "answers":
-		// case "titles":
-		// case "taglines":
-		// case "tag":
-		// case "tags":
-		//     // TODO: set all submissions to true and display answers
-		// break;
-
-		// case "change":
-		//     // TODO: update current turn with a new title or tagline submission
-		// break;
-
-		// case "resend":
-		//     // TODO: resend latest info(roll or awards) to DM of message.author
-		// break;
 
 		case "help":
 			var embed = new Discord.MessageEmbed()
@@ -670,7 +655,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 				if (row.point_earned == 1) {
 					reaction.remove();
 					reaction.message.channel.send(
-						`**The Active Player may only add 1 reaction emoji** \n\u200b` +
+						`\n\u200b\n\u200b**The Active Player may only add 1 reaction emoji** \n\u200b` +
 							`The Active Player's reaction emoji is used as a banana (1 point). ` +
 							`To change who gets the banana, the reaction must be removed before another is added.`
 					);
@@ -759,6 +744,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 					bot.channels.fetch(`${textChannelId}`).then((results) => {
 						gameChannel = results;
 						gameChannel.send(
+							`\n\u200b\n\u200bThe :banana: goes to <@${playerId}>` +
 							`\n\u200b\n\u200bReady for next player to **!roll**`
 						);
 					});
@@ -769,12 +755,13 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 						.then((results) => {
 							gameChannel = results;
 							gameChannel.send(
+								`\n\u200b\n\u200bThe last :banana: goes to <@${playerId}>` +
 								`\n\u200b\n\u200b**Final Score:**`
 							);
 						})
-						.then(score(gameSessionId))
-						.then(resetTable(gameSessionId))
-						.then(tableRoleAllLeave(message, gameSessionId));
+						.then(score(gameSessionId)
+						.then(tableRoleAllLeave(message, gameSessionId)
+						.then(resetTable(gameSessionId))));
 				}
 			}
 		}
