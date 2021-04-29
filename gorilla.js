@@ -2,6 +2,7 @@ const Discord = require("discord.js");
 const config = require("./config.json");
 const dbCreds = require("./dbCreds.js");
 const gameRooms = require("./gameRooms.js");
+const pkg = require("./package.json");
 const activityStatus = require("./activityStatus.js");
 const dbQuery = require("./dbQuery.js");
 const databaseCheck = require("./databaseBuilder.js");
@@ -23,7 +24,7 @@ bot.on("ready", () => {
 		} servers, for ${bot.users.cache.size} users.`
 	);
 	updateStatus();
-	adminNotify(`GorillaBot started: ${getTimeStamp()}`);
+	adminNotify(`GorillaBot version ${pkg.version} started: ${getTimeStamp()}`);
 	databaseCheck.createSchemaIfNotExist;
 });
 
@@ -107,8 +108,11 @@ bot.on("guildMemberAdd", (member) => {
 
 setInterval(function () {
 	updateStatus();
-}, 900000); // 86400000 = 1day, 3600000 = 1hr, 60000 = 1min
-// }, 60000);
+}, 900000);
+// 86400000 = 1day
+// 3600000 = 1hr
+// 900000 = 15 min
+// 60000 = 1min
 
 // Main Args/Response
 bot.on("message", (message) => {
@@ -145,8 +149,8 @@ bot.on("message", (message) => {
 				.addField(
 					`**START A GAME**`,
 					`Choose a theme and start a game by typing **!Bands**, **!College Courses**, ` +
-						`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
-						`**!Products** in the text channel of one of the game tables.\n\u200b`
+					`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
+					`**!Products** in the text channel of one of the game tables.\n\u200b`
 				)
 				.addField(
 					`**JOIN A GAME**`,
@@ -155,42 +159,42 @@ bot.on("message", (message) => {
 				.addField(
 					`**ROLL**`,
 					`**Active Player**: use the **!roll** command to start the turn.\n\u200b` +
-						`GorillaBot will DM all players.\n\u200b`
+					`GorillaBot will DM all players.\n\u200b`
 				)
 				.addField(
 					`**WRITE**`,
 					`**All Players**: Open your DM from GorillaBot\n\u200b` +
-						`**Active Player**: Add a reaction emoji to the award you want to give.\n\u200b` +
-						`**All Other Players**: Respond with the Title (round 1) or Tagline (round 2) ` +
-						`you create based on the acronym formed by your dice.\n\u200b` +
-						`**All players**: Return to the text channel at your table.\n\u200b`
+					`**Active Player**: Add a reaction emoji to the award you want to give.\n\u200b` +
+					`**All Other Players**: Respond with the Title (round 1) or Tagline (round 2) ` +
+					`you create based on the acronym formed by your dice.\n\u200b` +
+					`**All players**: Return to the text channel at your table.\n\u200b`
 				)
 				.addField(
 					`**AWARD**`,
 					`**Active Player**: Use a reaction emoji to award your favorite title or tagline with a banana (point).\n\u200b` +
-						`Choose a player, who hasn't been the Active Player this round, to be the new Active Player\n\u200b` +
-						`Repeat from the **ROLL** phase and have fun!!!\n\u200b`
+					`Choose a player, who hasn't been the Active Player this round, to be the new Active Player\n\u200b` +
+					`Repeat from the **ROLL** phase and have fun!!!\n\u200b`
 				)
 				.addField(
 					`**GAME OVER**`,
 					`The game ends once all players have completed two turns as the Active Player.\n\u200b` +
-						`The score is displayed and the table is reset for the next game.\n\u200b`
+					`The score is displayed and the table is reset for the next game.\n\u200b`
 				)
 				.addField(
 					`**WORD HELP**`,
 					`While in the GorillaBot DM channel, enter "!word", a single word, and a single letter.\n\u200b` +
-						`**!word gorilla m** will return up to 25 words that start with the letter "M" and that are related to the word "Gorilla".\n\u200b` +
-						`You can also add a number to get back more or less words. **!word gorilla m 50** will return up to 50 words.\n\u200b`
+					`**!word gorilla m** will return up to 25 words that start with the letter "M" and that are related to the word "Gorilla".\n\u200b` +
+					`You can also add a number to get back more or less words. **!word gorilla m 50** will return up to 50 words.\n\u200b`
 				)
 				.addField(
 					`**COMMANDS**`,
 					`**!roll** - When used while not in a game, GorillaBot will send a single dice roll.\n\u200b` +
-						`**!score** - displays current score.\n\u200b` +
-						`**!players** - displays a list of players and how many times each has been the Active Player.\n\u200b` +
-						`**!leave** - Have to go? Use the **!leave** command to exit. If you return, use **!play** to re-join the game.\n\u200b` +
-						`**!remove @name** - If a player stops responding? (computer crash, internet outage, etc.) Keep the game moving forward by ` +
-						`removing that player from the game. If they come back, they can use **!play** to re-join the game.\n\u200b` +
-						`**!reset** - clears the table for a new game.\n\u200b`
+					`**!score** - displays current score.\n\u200b` +
+					`**!players** - displays a list of players and how many times each has been the Active Player.\n\u200b` +
+					`**!leave** - Have to go? Use the **!leave** command to exit. If you return, use **!play** to re-join the game.\n\u200b` +
+					`**!remove @name** - If a player stops responding? (computer crash, internet outage, etc.) Keep the game moving forward by ` +
+					`removing that player from the game. If they come back, they can use **!play** to re-join the game.\n\u200b` +
+					`**!reset** - clears the table for a new game.\n\u200b`
 				);
 			message.channel.send(embed).catch(console.error);
 			break;
@@ -500,8 +504,8 @@ bot.on("message", (message) => {
 							if (isGame == "true") {
 								message.channel.send(
 									`This table is in use. Please choose ` +
-										`a different table or use the **!reset** ` +
-										`command to close the current game.`
+									`a different table or use the **!reset** ` +
+									`command to close the current game.`
 								);
 							} else {
 								playerInActiveGame(message)
@@ -568,10 +572,6 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 		try {
 			await reaction.fetch();
 		} catch (err) {
-			console.log(
-				"Something went wrong when fetching the message: ",
-				err
-			);
 			dmError(err);
 			// Return as `reaction.message.author` may be undefined/null
 			return;
@@ -579,9 +579,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 	}
 	console.log(`reaction.message.content = ${reaction.message.content}`);
 	console.log(`reaction.message.channel.id = ${reaction.message.channel.id}`);
-	console.log(
-		`reaction.message.channel.type = ${reaction.message.channel.type}`
-	);
+	console.log(`reaction.message.channel.type = ${reaction.message.channel.type}`);
 	console.log(`user.id = ${user.id}`);
 
 	const client = await pool.connect();
@@ -624,9 +622,9 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 					);
 					await client.query(
 						`UPDATE gorilla_schema.game_leaflet ` +
-							`SET title_judge_choice = $$${reaction.message.content}$$ ` +
-							`WHERE player_id = ${user.id} ` +
-							`AND game_is_active = true;`
+						`SET title_judge_choice = $$${reaction.message.content}$$ ` +
+						`WHERE player_id = ${user.id} ` +
+						`AND game_is_active = true;`
 					);
 				}
 				if (turnAsActivePlayer.rows == "2") {
@@ -635,9 +633,9 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 					);
 					await client.query(
 						`UPDATE gorilla_schema.game_leaflet ` +
-							`SET tagline_judge_choice = $$${reaction.message.content}$$ ` +
-							`WHERE player_id = ${user.id} ` +
-							`AND game_is_active = true;`
+						`SET tagline_judge_choice = $$${reaction.message.content}$$ ` +
+						`WHERE player_id = ${user.id} ` +
+						`AND game_is_active = true;`
 					);
 				}
 			}
@@ -646,48 +644,58 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 		if (reaction.message.channel.type != "dm") {
 			const pointAlreadyGiven = await client.query(
 				`SELECT point_earned ` +
-					`FROM gorilla_schema.turns ` +
-					`WHERE active_player_id = ${user.id} ` +
-					`AND text_channel_id = ${reaction.message.channel.id} ` +
-					`AND turn_is_active = true`
+				`FROM gorilla_schema.turns ` +
+				`WHERE active_player_id = ${user.id} ` +
+				`AND text_channel_id = ${reaction.message.channel.id} ` +
+				`AND turn_is_active = true;`
 			);
 			pointAlreadyGiven.rows.forEach((row) => {
 				if (row.point_earned == 1) {
-					reaction.remove();
+					console.log(`row.point_earned == ${row.point_earned}`);
+					reaction.remove(); // TODO: REMOVE ONLY THE 1 REACTION JUST ADDED... NOT THE EMOJI AND ALL THE CLICKS IT HAD.
 					reaction.message.channel.send(
-						`\n\u200b\n\u200b**The Active Player may only add 1 reaction emoji** \n\u200b` +
-							`The Active Player's reaction emoji is used as a banana (1 point). ` +
-							`To change who gets the banana, the reaction must be removed before another is added.`
+						`\n\u200b\n\u200bThe Active Player may only award **1 banana per round**. \n\u200b` +
+							`You can reassign the banana until the start of the next round by removing the emoji before placing it on a different answer.`
 					);
 					return;
 				}
 			});
-			const activePlayerId = await client.query({
-				rowMode: "array",
-				text:
-					`SELECT active_player_id ` +
-					`FROM gorilla_schema.turns ` +
-					`WHERE dice_and_tagline = $$${reaction.message.content}$$ ` +
-					`AND turn_is_active = true ` +
-					`ORDER BY message_timestamp DESC LIMIT 1;`,
-			});
 			const turnWinnerData = await client.query(
-				`SELECT * FROM gorilla_schema.turns ` +
-					`WHERE dice_and_tagline = $$${reaction.message.content}$$ ` +
-					`AND turn_is_active = true ` +
-					`ORDER BY message_timestamp DESC LIMIT 1;`
+				`SELECT * ` +
+				`FROM gorilla_schema.turns ` +
+				`WHERE dice_and_tagline = $$${reaction.message.content}$$ ` +
+				`ORDER BY message_timestamp DESC LIMIT 1;`
 			);
+			if (turnWinnerData.rows.length === 0) {
+				console.log(`Player added emoji to: "${reaction.message.content}"`);
+				return;
+			}
 			turnWinnerData.rows.forEach((row) => {
 				gameSessionId = row.game_session_id;
 				playerId = row.player_id;
+				activePlayerId = row.active_player_id;
+				textChannelId = row.text_channel_id;
+				turnIsActive = row.turn_is_active;
+				turnScored = row.turn_scored;
+				pointEarned = row.point_earned;
+				diceAndTagline = row.dice_and_tagline;
 			});
-			if (activePlayerId.rows == user.id) {
+			if (activePlayerId == user.id &&
+			String(turnIsActive) == 'true' &&
+			String(turnScored) == 'false' &&
+			pointEarned == 0) {
 				await client.query(
 					`UPDATE gorilla_schema.turns ` +
-						`SET point_earned = 1 ` +
-						`WHERE active_player_id = ${user.id} ` +
-						`AND dice_and_tagline = $$${reaction.message.content}$$ ` +
-						`AND point_earned = 0;`
+					`SET point_earned = 1 ` +
+					`WHERE active_player_id = ${user.id} ` +
+					`AND dice_and_tagline = $$${reaction.message.content}$$ ` +
+					`AND point_earned = 0;`
+				);
+				await client.query(
+					`UPDATE gorilla_schema.turns ` +
+					`SET turn_scored = true ` +
+					`WHERE game_session_id = ${gameSessionId} ` +
+					`AND turn_is_active = true;`
 				);
 				const total_points = await client.query({
 					rowMode: "array",
@@ -701,23 +709,10 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 				playerPoints += 1;
 				await client.query(
 					`UPDATE gorilla_schema.game_leaflet ` +
-						`SET total_points = ${playerPoints} ` +
-						`WHERE game_session_id = ${gameSessionId} ` +
-						`AND player_id = ${playerId}`
+					`SET total_points = ${playerPoints} ` +
+					`WHERE game_session_id = ${gameSessionId} ` +
+					`AND player_id = ${playerId};`
 				);
-
-				const turnWinnerData = await client.query(
-					`SELECT * ` +
-						`FROM gorilla_schema.turns ` +
-						`WHERE dice_and_tagline = $$${reaction.message.content}$$ ` +
-						`AND turn_is_active = true ` +
-						`ORDER BY message_timestamp DESC LIMIT 1;`
-				);
-				turnWinnerData.rows.forEach((row) => {
-					gameSessionId = row.game_session_id;
-					playerId = row.player_id;
-					textChannelId = row.text_channel_id;
-				});
 				const total_players = await client.query({
 					rowMode: "array",
 					text:
@@ -740,14 +735,20 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 				);
 				console.log(`twoTurns.rows.length = ${twoTurns.rows.length}`);
 				console.log(`gameSessionId = ${gameSessionId}`);
+				// let roundWinnerMessage;
 				if (total_players.rows.length != twoTurns.rows.length) {
-					bot.channels.fetch(`${textChannelId}`).then((results) => {
-						gameChannel = results;
-						gameChannel.send(
+					bot.channels.fetch(`${textChannelId}`)
+						.then((results) => {
+							gameChannel = results;
+						})
+						.then(roundWinnerMessage = gameChannel.send(
 							`\n\u200b\n\u200bThe :banana: goes to <@${playerId}>` +
 							`\n\u200b\n\u200bReady for next player to **!roll**`
-						);
-					});
+						)
+						.then(roundWinnerMessage => updateRoundWinnerMessageID(gameSessionId, roundWinnerMessage.id)))
+						.catch((err) => {
+							dmError(err);
+						});
 				}
 				if (total_players.rows.length === twoTurns.rows.length) {
 					bot.channels
@@ -760,7 +761,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 							);
 						})
 						.then(score(gameSessionId)
-						.then(tableRoleAllLeave(message, gameSessionId)
+						.then(tableRoleAllLeave(reaction.message, gameSessionId) // changed message to reaction.message ---------------------------------- LEFT OFF HERE
 						.then(resetTable(gameSessionId))));
 				}
 			}
@@ -789,26 +790,84 @@ bot.on("messageReactionRemove", async (reaction, user) => {
 			return;
 		}
 	}
-	console.log(`reaction.message.content = ${reaction.message.content}`);
-	console.log(`reaction.message.channel.id = ${reaction.message.channel.id}`);
+	// console.log(`emoji reaction removed - reaction.message.content = ${reaction.message.content}`);
+	// console.log(`reaction.message.channel.id = ${reaction.message.channel.id}`);
 	const client = await pool.connect();
 	try {
+		const turnIsActive = await client.query({
+			rowMode: "array",
+			text:
+				`SELECT turn_is_active ` +
+				`FROM gorilla_schema.turns ` +
+				`WHERE dice_and_tagline = $$${reaction.message.content}$$ ` +
+				`ORDER BY message_timestamp DESC LIMIT 1;`
+		});
 		const activePlayerId = await client.query({
 			rowMode: "array",
 			text:
 				`SELECT active_player_id ` +
 				`FROM gorilla_schema.turns ` +
 				`WHERE dice_and_tagline = $$${reaction.message.content}$$ ` +
-				`AND turn_is_active = true ` +
-				`ORDER BY message_timestamp DESC LIMIT 1;`,
+				`ORDER BY message_timestamp DESC LIMIT 1;`
 		});
-		if (activePlayerId.rows == user.id) {
+		// console.log(`turnIsActive = ${turnIsActive.rows}, ${typeof turnIsActive.rows}`);
+		// console.log(`Boolean turnIsActive = ${Boolean(turnIsActive.rows)}, ${typeof Boolean(turnIsActive.rows)}`);
+		// console.log(`String turnIsActive = ${String(turnIsActive.rows)}, ${typeof String(turnIsActive.rows)}`);
+		// console.log(`activePlayerId = ${activePlayerId.rows}, ${typeof activePlayerId.rows}`);
+		// console.log(`activePlayerId = ${String(activePlayerId.rows)}, ${typeof String(activePlayerId.rows)}`);
+		// console.log(`user.id =        ${user.id}, ${typeof user.id}`);
+		if (activePlayerId.rows == user.id &&
+			String(turnIsActive.rows) == 'true') {
+			const turnData = await client.query(
+				`SELECT * ` +
+				`FROM gorilla_schema.turns ` +
+				`WHERE dice_and_tagline = $$${reaction.message.content}$$ ` +
+				`AND turn_is_active = true ` +
+				`ORDER BY message_timestamp DESC LIMIT 1;`
+			);
+			turnData.rows.forEach((row) => {
+				gameSessionId = row.game_session_id;
+				playerId = row.player_id;
+				textChannelId = row.text_channel_id;
+			});
+			// console.log(`TURNDATA = ${gameSessionId}, activePlayerId = ${activePlayerId}, user.id = ${user.id}, ${playerId}, ${textChannelId}, ${turnIsActive.rows}, ${typeof turnIsActive.rows}`);
+			const roundWinnerMessageId = await client.query({
+				rowMode: "array",
+				text:
+					`SELECT round_winner_message_id ` +
+					`FROM gorilla_schema.games ` +
+					`WHERE game_id = ${gameSessionId} ` +
+					`AND game_is_active = true`,
+			});
+			deleteMessageByID(textChannelId, roundWinnerMessageId.rows)
 			await client.query(
 				`UPDATE gorilla_schema.turns ` +
-					`SET point_earned = 0 ` +
-					`WHERE active_player_id = ${user.id} ` +
-					`AND dice_and_tagline = $$${reaction.message.content}$$ ` +
-					`AND point_earned = 1;`
+				`SET point_earned = 0 ` +
+				`WHERE active_player_id = ${user.id} ` +
+				`AND dice_and_tagline = $$${reaction.message.content}$$ ` +
+				`AND point_earned = 1;`
+			);
+			await client.query(
+				`UPDATE gorilla_schema.turns ` +
+				`SET turn_scored = false ` +
+				`WHERE game_session_id = ${gameSessionId} ` +
+				`AND turn_is_active = true;`
+			);
+			const total_points = await client.query({
+				rowMode: "array",
+				text:
+					`SELECT total_points ` +
+					`FROM gorilla_schema.game_leaflet ` +
+					`WHERE game_session_id = ${gameSessionId} ` +
+					`AND player_id = ${playerId};`,
+			});
+			let playerPoints = parseInt(total_points.rows);
+			playerPoints -= 1;
+			await client.query(
+				`UPDATE gorilla_schema.game_leaflet ` +
+				`SET total_points = ${playerPoints} ` +
+				`WHERE game_session_id = ${gameSessionId} ` +
+				`AND player_id = ${playerId}`
 			);
 		}
 	} catch (err) {
@@ -989,11 +1048,11 @@ async function removePlayer(message, playerId) { //REMOVE TAble ROLE TO SHOW PLA
 						});
 						await client.query(
 							`UPDATE gorilla_schema.game_leaflet ` +
-								`SET playing = false, ` +
-								`queued = false, ` +
-								`left_game = true ` +
-								`WHERE game_session_id = ${gameId} ` +
-								`AND player_id = ${playerId} `
+							`SET playing = false, ` +
+							`queued = false, ` +
+							`left_game = true ` +
+							`WHERE game_session_id = ${gameId} ` +
+							`AND player_id = ${playerId} `
 						);
 						if (parseInt(activePlayer.rows) != parseInt(playerId)) {
 							message.channel.send(
@@ -1086,9 +1145,9 @@ async function play(message) { //ADD ROLE UPDATE TO SHOW PLAYER AT A TABLE
 			});
 		const playersGame = await client.query(
 			`SELECT * ` +
-				`FROM gorilla_schema.game_leaflet ` +
-				`WHERE game_is_active = true ` +
-				`AND player_id = ${message.member.id};`
+			`FROM gorilla_schema.game_leaflet ` +
+			`WHERE game_is_active = true ` +
+			`AND player_id = ${message.member.id};`
 		);
 		playersGame.rows.forEach((row) => {
 			gameLeafletId = parseInt(row.game_leaflet_id);
@@ -1125,10 +1184,10 @@ async function play(message) { //ADD ROLE UPDATE TO SHOW PLAYER AT A TABLE
 				);
 			await client.query(
 				`UPDATE gorilla_schema.game_leaflet ` +
-					`SET queued = true, ` +
-					`playing = false, ` +
-					`left_game = false ` +
-					`WHERE game_leaflet_id = ${gameLeafletId} `
+				`SET queued = true, ` +
+				`playing = false, ` +
+				`left_game = false ` +
+				`WHERE game_leaflet_id = ${gameLeafletId} `
 			);
 			return;
 		} else if (
@@ -1146,9 +1205,9 @@ async function play(message) { //ADD ROLE UPDATE TO SHOW PLAYER AT A TABLE
 		) {
 			message.channel.send(
 				`First, a player types **!Bands**, **!College Courses**, ` +
-					`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
-					`**!Products** to create and join the game. \n\u200b \n\u200b` +
-					`Then the rest of the players use the **!play** command to join the game.\n\u200b \n\u200b`
+				`**!Companies**, **!Food Trucks**, **!Movies**, **!Organizations**, or ` +
+				`**!Products** to create and join the game. \n\u200b \n\u200b` +
+				`Then the rest of the players use the **!play** command to join the game.\n\u200b \n\u200b`
 			);
 		} else if (
 			// joining a game
@@ -1157,8 +1216,8 @@ async function play(message) { //ADD ROLE UPDATE TO SHOW PLAYER AT A TABLE
 		) {
 			const playerCount = await client.query(
 				`SELECT game_leaflet_id ` +
-					`FROM gorilla_schema.game_leaflet ` +
-					`WHERE game_session_id = ${gameId} `
+				`FROM gorilla_schema.game_leaflet ` +
+				`WHERE game_session_id = ${gameId} `
 			);
 			console.log(`playerCount = ${JSON.stringify(playerCount)}`);
 			console.log(`playerCount.rowCount = ${playerCount.rowCount}`);
@@ -1170,12 +1229,12 @@ async function play(message) { //ADD ROLE UPDATE TO SHOW PLAYER AT A TABLE
 			);
 			const themeAndJudgeArrays = await client.query(
 				`SELECT ` +
-					`theme_category_roll_array, ` +
-					`title_judge_roll_array, ` +
-					`tagline_judge_roll_array ` +
-					`FROM gorilla_schema.games ` +
-					`WHERE game_id = ${gameId} ` +
-					`AND game_is_active = true;`
+				`theme_category_roll_array, ` +
+				`title_judge_roll_array, ` +
+				`tagline_judge_roll_array ` +
+				`FROM gorilla_schema.games ` +
+				`WHERE game_id = ${gameId} ` +
+				`AND game_is_active = true;`
 			);
 			themeAndJudgeArrays.rows.forEach((row) => {
 				themeCategoryRollArray = row.theme_category_roll_array;
@@ -1248,9 +1307,9 @@ async function activePlayerCount(channelGameId) {
 	try {
 		const playersPlaying = await client.query(
 			`SELECT game_leaflet_id ` +
-				`FROM gorilla_schema.game_leaflet ` +
-				`WHERE game_session_id = ${channelGameId} ` +
-				`AND left_game = false `
+			`FROM gorilla_schema.game_leaflet ` +
+			`WHERE game_session_id = ${channelGameId} ` +
+			`AND left_game = false `
 		);
 		if (playersPlaying.rows.length === 0) {
 			return 0;
@@ -1337,8 +1396,8 @@ async function players(message) {
 		}
 		const gameLeafletData = await client.query(
 			`SELECT * ` +
-				`FROM gorilla_schema.game_leaflet ` +
-				`WHERE game_session_id = ${gameId};`
+			`FROM gorilla_schema.game_leaflet ` +
+			`WHERE game_session_id = ${gameId};`
 		);
 		message.channel.send(`**Turns as Active Player**`);
 		gameLeafletData.rows.forEach((row) => {
@@ -1389,11 +1448,11 @@ async function queuedPlayerUpdate(message) {
 		});
 		client.query(
 			`UPDATE gorilla_schema.game_leaflet ` +
-				`SET playing = true, ` +
-				`queued = false ` +
-				`WHERE game_session_id = ${gameId} ` +
-				`AND queued = true ` +
-				`AND left_game = false;`
+			`SET playing = true, ` +
+			`queued = false ` +
+			`WHERE game_session_id = ${gameId} ` +
+			`AND queued = true ` +
+			`AND left_game = false;`
 		);
 	} catch (err) {
 		await client.query("ROLLBACK");
@@ -1416,8 +1475,8 @@ async function resetTable(gameId) { //REMOVE TABLE ROLE FROM ALL PLAYERS IN GAME
 		});
 		client.query(
 			`UPDATE gorilla_schema.games ` +
-				`SET game_is_active = false ` +
-				`WHERE game_id = ${gameId}`
+			`SET game_is_active = false ` +
+			`WHERE game_id = ${gameId}`
 		);
 		// client.query(
 		// 	`UPDATE gorilla_schema.turns ` +
@@ -1428,18 +1487,18 @@ async function resetTable(gameId) { //REMOVE TABLE ROLE FROM ALL PLAYERS IN GAME
 		// );
 		client.query(
 			`UPDATE gorilla_schema.turns ` +
-				`SET game_is_active = false ` +
-				`WHERE game_session_id = ${gameId}`
+			`SET game_is_active = false ` +
+			`WHERE game_session_id = ${gameId}`
 		);
 		client.query(
 			`UPDATE gorilla_schema.turns ` +
-				`SET turn_is_active = false ` +
-				`WHERE game_session_id = ${gameId}`
+			`SET turn_is_active = false ` +
+			`WHERE game_session_id = ${gameId}`
 		);
 		client.query(
 			`UPDATE gorilla_schema.turns ` +
-				`SET title_tagline_is_submitted = true ` +
-				`WHERE game_session_id = ${gameId}`
+			`SET title_tagline_is_submitted = true ` +
+			`WHERE game_session_id = ${gameId}`
 		);
 		// client.query(
 		// 	`UPDATE gorilla_schema.game_leaflet ` +
@@ -1711,6 +1770,7 @@ function roll_for_game(message) {
 								letters_given: playersDice,
 								title_tagline: null,
 								title_tagline_is_submitted: false,
+								turn_scored: false,
 								point_earned: 0,
 							};
 							await client.query("BEGIN");
@@ -1720,8 +1780,8 @@ function roll_for_game(message) {
 								`category_name, category_id, text_channel_id, ` +
 								`message_id, game_theme, active_player_id, active_player_username, ` +
 								`player_id, player_username, letters_given, title_tagline, ` +
-								`title_tagline_is_submitted, point_earned) ` +
-								`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`;
+								`title_tagline_is_submitted, turn_scored, point_earned) ` +
+								`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`;
 							const prepStmntValues = [
 								prepStmnt.game_session_id,
 								prepStmnt.game_is_active,
@@ -1740,6 +1800,7 @@ function roll_for_game(message) {
 								prepStmnt.letters_given,
 								prepStmnt.title_tagline,
 								prepStmnt.title_tagline_is_submitted,
+								prepStmnt.turn_scored,
 								prepStmnt.point_earned,
 							];
 							await client.query(prepStmntKeys, prepStmntValues);
@@ -1863,9 +1924,9 @@ async function sendToTextChannel(gameSessionID) {
 		});
 		const gameLeafletData = await client.query(
 			`SELECT * ` +
-				`FROM gorilla_schema.game_leaflet ` +
-				`WHERE player_id = ${activePlayer.rows} ` +
-				`AND game_session_id = ${gameSessionID}`
+			`FROM gorilla_schema.game_leaflet ` +
+			`WHERE player_id = ${activePlayer.rows} ` +
+			`AND game_session_id = ${gameSessionID}`
 		);
 		gameLeafletData.rows.forEach((row) => {
 			turnsAsActivePlayer = row.turns_as_active_player;
@@ -1921,10 +1982,10 @@ async function sendToTextChannel(gameSessionID) {
 					});
 			const allTaglines = await client.query(
 				`SELECT * ` +
-					`FROM gorilla_schema.turns ` +
-					`WHERE game_session_id = ${gameSessionID} ` +
-					`AND turn_is_active = true ` +
-					`ORDER BY RANDOM()`
+				`FROM gorilla_schema.turns ` +
+				`WHERE game_session_id = ${gameSessionID} ` +
+				`AND turn_is_active = true ` +
+				`ORDER BY RANDOM()`
 			);
 			allTaglines.rows.forEach((row) => {
 				bot.channels
@@ -1958,34 +2019,14 @@ async function sendToTextChannel(gameSessionID) {
 						console.log(`Inside IF totalNumberOfPlayers - totalNumberOfSubmissions > 1`);
 						deleteMessageByID(textChannelId, waitingForResponsesMessage)
 						.then(waitingForResponsesMessage = channel.send(`Waiting on **${totalNumberOfPlayers - totalNumberOfSubmissions}** players.`)
-						// .then(sentMessage => waitingForResponsesMessageId = sentMessage.id)
-						// .then(waitingForResponsesMessage => console.log(`.then(message => = ${JSON.stringify(waitingForResponsesMessage)}`))
 						.then(waitingForResponsesMessage => updateLastMessageID(gameSessionID, waitingForResponsesMessage.id)))
-						// .then(console.log(`waitingForResponsesMessageId = ${waitingForResponsesMessage.id}`)))
 					}
-					// if (totalNumberOfPlayers - totalNumberOfSubmissions > 1) {
-					// 	console.log(`Inside IF totalNumberOfPlayers - totalNumberOfSubmissions > 1`);
-					// 	deleteMessageByID(textChannelId, waitingForResponsesMessageId)
-					// 		.then(channel.send(`Waiting on **${totalNumberOfPlayers - totalNumberOfSubmissions}** players.`))
-					// 		.then(updateLastMessageID(gameSessionID, channel.lastMessageID))
-					// 	console.log(`channel.lastMessageID = ${channel.lastMessageID}`)
-					// }
 					if (totalNumberOfPlayers - totalNumberOfSubmissions == 1) {
 						console.log(`Inside IF totalNumberOfPlayers - totalNumberOfSubmissions == 1`);
 						deleteMessageByID(textChannelId, waitingForResponsesMessage)
 						.then(waitingForResponsesMessage = channel.send(`Waiting on **${totalNumberOfPlayers - totalNumberOfSubmissions}** more player.`)
-						// .then(sentMessage => waitingForResponsesMessageId = sentMessage.id)
-						// .then(waitingForResponsesMessage => console.log(`.then(message => = ${JSON.stringify(waitingForResponsesMessage)}`))
 						.then(waitingForResponsesMessage => updateLastMessageID(gameSessionID, waitingForResponsesMessage.id)))
-						// .then(console.log(`waitingForResponsesMessageId = ${waitingForResponsesMessage.id}`)))
 					}
-					// if (totalNumberOfPlayers - totalNumberOfSubmissions == 1) {
-					// 	console.log(`Inside IF totalNumberOfPlayers - totalNumberOfSubmissions == 1`);
-					// 	deleteMessageByID(textChannelId, waitingForResponsesMessageId)
-					// 		.then(channel.send(`Waiting on **${totalNumberOfPlayers - totalNumberOfSubmissions}** more player.`))
-					// 		.then(updateLastMessageID(gameSessionID, channel.lastMessageID));
-					// 	console.log(`channel.lastMessageID = ${channel.lastMessageID}`)
-					// }
 				})
 				.catch((err) => {
 					dmError(err);
@@ -1999,26 +2040,18 @@ async function sendToTextChannel(gameSessionID) {
 	}
 }
 
-async function deleteMessageByID(textChannelId, waitingForResponsesMessageId) {
+async function deleteMessageByID(textChannelId, messageId) {
 	try {
-		console.log(`inside deleteMessageByID - waitingForResponsesMessageId = ${waitingForResponsesMessageId}`);
-		if (waitingForResponsesMessageId != 0) {
+		console.log(`inside deleteMessageByID - messageId = ${messageId}`);
+		if (messageId != 0) {
 			var channel = bot.channels.cache.find(
 				(c) => c.id === `${textChannelId}`
 			);
 			var message = channel.messages.cache.find(
-				(m) => m.id === `${waitingForResponsesMessageId}`
+				(m) => m.id === `${messageId}`
 			);
 			console.log(`deleteMessageByID - messages = ${JSON.stringify(message)}`)
 			await message.delete();
-			// channel.messages.fetch({
-			// 		around: waitingForResponsesMessageId,
-			// 		limit: 1
-			// 	})
-				// .then(messages => {
-				// 	messages.first().edit("This fetched message was edited");
-				// })
-			// console.log(`deleteMessageByID - messages = ${JSON.stringify(message)}`)
 		}
 	} catch (err) {
 		dmError(err);
@@ -2046,13 +2079,29 @@ async function getWaitingForResponsesMessageIdFromDB(gameSessionId) {
 	}
 }
 
-async function updateLastMessageID(gameSessionID, lastMessageID) {
+async function updateRoundWinnerMessageID(gameSessionId, messageId) {
 	const client = await pool.connect();
 	try {
 		await client.query(
-			`UPDATE gorilla_schema.games \n
-            SET waiting_for_responses_message_id = ${lastMessageID} \n
-            WHERE game_id = ${gameSessionID};`
+			`UPDATE gorilla_schema.games ` +
+            `SET round_winner_message_id = ${messageId} ` +
+            `WHERE game_id = ${gameSessionId};`
+		);
+	} catch (err) {
+		await client.query("ROLLBACK");
+		dmError(err);
+	} finally {
+		client.release();
+	}
+}
+
+async function updateLastMessageID(gameSessionId, messageId) {
+	const client = await pool.connect();
+	try {
+		await client.query(
+			`UPDATE gorilla_schema.games ` +
+            `SET waiting_for_responses_message_id = ${messageId} ` +
+            `WHERE game_id = ${gameSessionId};`
 		);
 	} catch (err) {
 		await client.query("ROLLBACK");
@@ -2110,14 +2159,15 @@ async function startGame(message) {
 			author_id: message.author.id,
 			author_username: message.author.username,
 			waiting_for_responses_message_id: 0,
+			round_winner_message_id: 0,
 		};
 		await client.query("BEGIN");
 		const insertGameStartText =
 			`INSERT INTO gorilla_schema.games(game_is_active, readable_timestamp, message_timestamp, ` +
 			`guild_name, guild_id, category_name, category_id, text_channel_id, ` +
 			`message_id, game_theme, theme_category_roll_array, ` +
-			`title_judge_roll_array, tagline_judge_roll_array, author_id, author_username, waiting_for_responses_message_id) ` +
-			`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`;
+			`title_judge_roll_array, tagline_judge_roll_array, author_id, author_username, waiting_for_responses_message_id, round_winner_message_id) ` +
+			`VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`;
 		const insertGameStartValues = [
 			prepGameStart.game_is_active,
 			prepGameStart.readable_timestamp,
@@ -2135,6 +2185,7 @@ async function startGame(message) {
 			prepGameStart.author_id,
 			prepGameStart.author_username,
 			prepGameStart.waiting_for_responses_message_id,
+			prepGameStart.round_winner_message_id,
 		];
 		await client.query(insertGameStartText, insertGameStartValues);
 		await client.query("COMMIT");

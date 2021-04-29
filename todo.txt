@@ -1,6 +1,7 @@
-TODO: Additional features ideas:
-DONE - 1. list 0/4 submitted
-- display the user who recieved the banana award after each turn.
+TODO: Additional features & bug fixes:
+DONE - list 0/4 submitted
+DONE - display the user who recieved the banana award after each turn.
+DONE - issues when active player adds emoji to more than 1 title/tagline.
 - automatically close game 1 hour after last activity
 - Fix all players leaving a game before the first roll
 - remove everyone from table roll at end of game

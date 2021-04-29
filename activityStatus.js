@@ -74,13 +74,14 @@ let movies = [
     "Space Chimps",
     "Dora The Explorer",
     "Family Guy",
-    "his weight",
-    "his language",
+    "my weight",
+    "my language",
     "the clock",
     "paint dry",
     "the watchers",
     "a very slow progress bar",
     "Animal Planet",
+    "with a stick",
 ];
 
 let songs = [
@@ -90,7 +91,7 @@ let songs = [
     "Monkey Wrench, by the Foo Fighters",
     "The Monkees - Daydream Believer",
     "Monkey Man, by the Rolling Stones",
-    "Copa Banana, by Barry Manilow",
+    "Copa Banana, by Barry Bananilow",
     "Gorillaz - Rock The House feat. Del The Funky Homosapien",
     "My Brother The Ape, by They Might Be Giants",
     "Bananarama - Venus",
@@ -107,6 +108,7 @@ let songs = [
     "Tweeter and the Monkey Man, by the Traveling Wilburys",
     "99 Red Baboons, by Nena",
     "Code Monkey, by Jonathan Coulton",
+    "Everybody's Got Something to Hide Except Me and My Monkey, by The Beatles",
 ];
 
 module.exports = {
