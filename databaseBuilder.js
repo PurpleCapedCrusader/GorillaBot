@@ -31,6 +31,7 @@ async function createSchemaIfNotExist() {
                 author_id bigint,
                 author_username character varying(32) COLLATE pg_catalog."default",
                 waiting_for_responses_message_id bigint,
+                round_winner_message_id bigint,
                 CONSTRAINT game_id_pkey PRIMARY KEY (game_id)
             )
             WITH (
@@ -60,6 +61,7 @@ async function createSchemaIfNotExist() {
                 letters_given character varying(250) COLLATE pg_catalog."default",
                 title_tagline character varying(250) COLLATE pg_catalog."default",
                 title_tagline_is_submitted boolean NOT NULL,
+                turn_scored boolean,
                 point_earned int,
                 dice_and_tagline character varying(500) COLLATE pg_catalog."default",
                 CONSTRAINT turns_id_pkey PRIMARY KEY (turns_id)
