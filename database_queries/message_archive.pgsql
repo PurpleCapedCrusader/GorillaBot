@@ -1,0 +1,1 @@
+SELECT * FROM gorilla_schema.message_archive ORDER BY messagearchive_id DESC;

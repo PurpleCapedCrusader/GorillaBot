@@ -1,0 +1,1 @@
+SELECT * FROM gorilla_schema.dm_archive ORDER BY dm_archive_id DESC;

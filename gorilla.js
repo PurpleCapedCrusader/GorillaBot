@@ -679,6 +679,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 				turnScored = row.turn_scored;
 				pointEarned = row.point_earned;
 				diceAndTagline = row.dice_and_tagline;
+				titleTagline = row.title_tagline;
 			});
 			if (activePlayerId == user.id &&
 			String(turnIsActive) == 'true' &&
@@ -742,7 +743,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 							gameChannel = results;
 						})
 						.then(roundWinnerMessage = gameChannel.send(
-							`\n\u200b\n\u200bThe :banana: goes to <@${playerId}>` +
+							`\n\u200b\n\u200bThe :banana: goes to <@${playerId}> for "${titleTagline}".` +
 							`\n\u200b\n\u200bReady for next player to **!roll**`
 						)
 						.then(roundWinnerMessage => updateRoundWinnerMessageID(gameSessionId, roundWinnerMessage.id)))
@@ -756,7 +757,7 @@ bot.on("messageReactionAdd", async (reaction, user) => {
 						.then((results) => {
 							gameChannel = results;
 							gameChannel.send(
-								`\n\u200b\n\u200bThe last :banana: goes to <@${playerId}>` +
+								`\n\u200b\n\u200bThe last :banana: goes to <@${playerId}> for "${titleTagline}".` +
 								`\n\u200b\n\u200b**Final Score:**`
 							);
 						})
