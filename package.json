@@ -9,7 +9,7 @@
     "discord.js": "^12.5.1",
     "express": "^4.17.1",
     "install-peers": "^1.0.3",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.21",
     "lower-case": "^2.0.2",
     "node-fetch": "^2.6.1",
     "pg": "^8.5.1",
