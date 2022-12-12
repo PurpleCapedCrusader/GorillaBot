@@ -7,7 +7,7 @@
     "check-types": "^11.1.2",
     "dblapi.js": "^2.4.0",
     "discord.js": "^12.5.1",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "install-peers": "^1.0.3",
     "lodash": "^4.17.19",
     "lower-case": "^2.0.2",
